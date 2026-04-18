@@ -117,6 +117,8 @@ const Signup: React.FC = () => {
       });
       if (resolvedRole === "COMPANY_ADMIN") {
         navigate("/company-admin-request");
+      } else if (resolvedRole === "DRIVER") {
+        navigate("/driver-application");
       } else {
         navigate("/home");
       }

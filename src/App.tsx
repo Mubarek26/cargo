@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import CompanyAdminRequest from "./pages/CompanyAdminRequest";
 import CompanyAdminReview from "./pages/CompanyAdminReview";
+import DriverApplication from "./pages/DriverApplication";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // Dashboard
@@ -55,6 +56,7 @@ const App = () => (
           <Route path="/signup" element={<Signup />} />
           <Route path="/company-admin-request" element={<CompanyAdminRequest />} />
           <Route path="/company-admin-review" element={<CompanyAdminReview />} />
+          <Route path="/driver-application" element={<DriverApplication />} />
           
           <Route element={<ProtectedRoute />}>
             <Route path="/home" element={<Index />} />
