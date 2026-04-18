@@ -11,12 +11,14 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
+import { useSignup } from "@/hooks/use-signup";
 
 const roles = ["SHIPPER", "VENDOR", "DRIVER", "COMPANY_ADMIN"] as const;
 type Role = (typeof roles)[number];
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
+  const { signup, isLoading } = useSignup();
 
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -49,7 +51,7 @@ const Signup: React.FC = () => {
     };
   }, [photoPreview]);
 
-  const handleSubmit = (ev: React.FormEvent) => {
+  const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault();
 
     if (
@@ -82,18 +84,52 @@ const Signup: React.FC = () => {
       return;
     }
 
-    toast({
-      title: "Signing up",
-      description: "Creating your account...",
-    });
+    try {
+      const data = await signup({
+        fullName: fullName.trim(),
+        phoneNumber: phoneNumber.trim(),
+        email: email.trim(),
+        password,
+        passwordConfirm,
+        role,
+        photo,
+      });
 
-    setTimeout(() => {
+      const token =
+        (data as any)?.token ||
+        (data as any)?.accessToken ||
+        (data as any)?.data?.token ||
+        (data as any)?.data?.accessToken;
+      const user = (data as any)?.data?.user || (data as any)?.user;
+      const resolvedRole = user?.role || role;
+
+      if (token) {
+        localStorage.setItem("authToken", token);
+      }
+
+      if (resolvedRole) {
+        localStorage.setItem("userRole", resolvedRole);
+      }
+
       toast({
         title: "Success",
         description: "Account created — redirecting...",
       });
-      navigate("/home");
-    }, 900);
+      if (resolvedRole === "COMPANY_ADMIN") {
+        navigate("/company-admin-request");
+      } else {
+        navigate("/home");
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to reach the server. Please try again.";
+      toast({
+        title: "Signup failed",
+        description: message,
+      });
+    }
   };
 
   return (
@@ -218,8 +254,8 @@ const Signup: React.FC = () => {
             </div>
 
             <div className="pt-2">
-              <Button type="submit" className="w-full">
-                Sign up
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Creating account..." : "Sign up"}
               </Button>
             </div>
           </form>

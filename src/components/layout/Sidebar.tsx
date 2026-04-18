@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Map,
@@ -40,7 +40,7 @@ const navigation: NavSection[] = [
   {
     title: "Dashboard",
     items: [
-      { label: "Overview", href: "/", icon: LayoutDashboard },
+      { label: "Overview", href: "/home", icon: LayoutDashboard },
       { label: "Live Shipment Map", href: "/dashboard/map", icon: Map },
       { label: "Fleet Status", href: "/dashboard/fleet-status", icon: Truck },
     ],
@@ -93,10 +93,61 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
+const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
+  {
+    prefixes: ["/home"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER", "VENDOR"],
+  },
+  {
+    prefixes: ["/dashboard"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER"],
+  },
+  {
+    prefixes: ["/shipments"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"],
+  },
+  {
+    prefixes: ["/fleet"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "DRIVER"],
+  },
+  {
+    prefixes: ["/warehouses"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"],
+  },
+  {
+    prefixes: ["/vendors", "/clients"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"],
+  },
+  {
+    prefixes: ["/orders"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"],
+  },
+];
+
+const isRouteAllowed = (role: string | null, href: string) => {
+  if (!role) return false;
+  if (role === "SUPER_ADMIN") return true;
+
+  const rule = ROLE_RULES.find((entry) =>
+    entry.prefixes.some((prefix) => href.startsWith(prefix))
+  );
+
+  if (!rule) return false;
+  return rule.roles.includes(role);
+};
+
 export function Sidebar({ isOpen, onToggle }: SidebarProps) {
+  const navigate = useNavigate();
   const [expandedSections, setExpandedSections] = useState<string[]>(
     navigation.map((s) => s.title)
   );
+  const userRole = localStorage.getItem("userRole");
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userRole");
+    navigate("/login", { replace: true });
+  };
 
   const toggleSection = (title: string) => {
     setExpandedSections((prev) =>
@@ -143,7 +194,15 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="h-[calc(100%-4rem)] overflow-y-auto p-4">
-          {navigation.map((section) => (
+          {navigation
+            .map((section) => ({
+              ...section,
+              items: section.items.filter((item) =>
+                isRouteAllowed(userRole, item.href)
+              ),
+            }))
+            .filter((section) => section.items.length > 0)
+            .map((section) => (
             <div key={section.title} className="mb-4">
               <button
                 onClick={() => toggleSection(section.title)}
@@ -181,6 +240,16 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
               )}
             </div>
           ))}
+          <div className="mt-6 border-t border-sidebar-border pt-4">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
+              <X className="h-4 w-4" />
+              Logout
+            </button>
+          </div>
         </nav>
       </aside>
     </>

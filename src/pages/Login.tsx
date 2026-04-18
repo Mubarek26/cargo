@@ -1,9 +1,102 @@
 import * as React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useLogin } from "@/hooks/use-login";
 
 const Login: React.FC = () => {
+  const navigate = useNavigate();
+  const { login, isLoading } = useLogin();
+  const [emailOrPhone, setEmailOrPhone] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [showPassword, setShowPassword] = React.useState(false);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!emailOrPhone.trim() || !password) {
+      toast.error("Email/phone and password are required.");
+      return;
+    }
+
+    const trimmed = emailOrPhone.trim();
+    const isEmail = /@/.test(trimmed);
+    const payload = {
+      password,
+      email: isEmail ? trimmed : undefined,
+      phoneNumber: isEmail ? undefined : trimmed,
+    };
+
+    try {
+      const data = await login(payload);
+      const token =
+        (data as any)?.token ||
+        (data as any)?.accessToken ||
+        (data as any)?.data?.token ||
+        (data as any)?.data?.accessToken;
+      const user = (data as any)?.data?.user || (data as any)?.user;
+
+      if (token) {
+        localStorage.setItem("authToken", token);
+      }
+
+      if (user?.role) {
+        localStorage.setItem("userRole", user.role);
+      }
+
+      // Company admin: check application status before navigating
+      if (user?.role === "COMPANY_ADMIN") {
+        try {
+          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || "https://fleet-management-kzif.onrender.com"}/api/v1/company/me`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            credentials: "include",
+          });
+
+          if (res.status === 404) {
+            toast.info("Please submit your company application.");
+            navigate("/company-admin-request");
+            return;
+          }
+
+          if (res.ok) {
+            const companyData = await res.json();
+
+            const status = companyData?.data?.company?.status || companyData?.company?.status;
+            if (!status) {
+              toast.info("Please submit your company application.");
+              navigate("/company-admin-request");
+              return;
+            }
+
+            if (status === "APPROVED") {
+              toast.success("Login successful.");
+              navigate("/home");
+            } else {
+              toast.info("Your application is under review.");
+              navigate("/company-admin-review");
+            }
+          } else {
+            toast.info("Your application is under review.");
+            navigate("/company-admin-review");
+          }
+        } catch {
+          toast.info("Your application is under review.");
+          navigate("/company-admin-review");
+        }
+        return;
+      }
+
+      toast.success("Login successful.");
+      navigate("/home");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to reach the server. Please try again.";
+      toast.error(message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-6xl bg-white rounded-lg shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 min-h-[520px]">
@@ -20,16 +113,33 @@ const Login: React.FC = () => {
           <h1 className="text-3xl font-extrabold text-slate-900">Welcome Back!</h1>
           <p className="mt-3 text-sm text-slate-500">Sign in to manage menus, track and deliver live orders, and keep your account details up to date.</p>
 
-          <form className="mt-8 space-y-4 w-full max-w-lg">
+          <form className="mt-8 space-y-4 w-full max-w-lg" onSubmit={handleSubmit}>
             <div>
-              <label className="sr-only">Email</label>
-              <Input placeholder="mezid58@gmail.com" type="email" />
+              <label className="sr-only">Email or phone</label>
+              <Input
+                placeholder="Email or phone number"
+                type="text"
+                value={emailOrPhone}
+                onChange={(event) => setEmailOrPhone(event.target.value)}
+                autoComplete="username"
+              />
             </div>
 
             <div className="relative">
               <label className="sr-only">Password</label>
-              <Input placeholder="Password" type="password" />
-              <button type="button" aria-label="toggle password" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+              <Input
+                placeholder="Password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? "hide password" : "show password"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -43,7 +153,9 @@ const Login: React.FC = () => {
             </div>
 
             <div className="pt-2">
-              <Button className="w-full rounded-full h-12" type="submit">Sign In</Button>
+              <Button className="w-full rounded-full h-12" type="submit" disabled={isLoading}>
+                {isLoading ? "Signing In..." : "Sign In"}
+              </Button>
             </div>
             <div className="mt-3 text-center text-sm">
               <span className="text-slate-600">Don't have an account? </span>

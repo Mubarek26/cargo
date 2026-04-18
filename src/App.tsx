@@ -7,6 +7,9 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import CompanyAdminRequest from "./pages/CompanyAdminRequest";
+import CompanyAdminReview from "./pages/CompanyAdminReview";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Dashboard
 import LiveShipmentMap from "./pages/dashboard/LiveShipmentMap";
@@ -50,37 +53,66 @@ const App = () => (
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/home" element={<Index />} />
+          <Route path="/company-admin-request" element={<CompanyAdminRequest />} />
+          <Route path="/company-admin-review" element={<CompanyAdminReview />} />
           
-          {/* Dashboard */}
-          <Route path="/dashboard/map" element={<LiveShipmentMap />} />
-          <Route path="/dashboard/fleet-status" element={<FleetStatus />} />
-          
-          {/* Shipments */}
-          <Route path="/shipments" element={<AllShipments />} />
-          <Route path="/shipments/track" element={<TrackShipment />} />
-          <Route path="/shipments/create" element={<CreateShipment />} />
-          <Route path="/shipments/delayed" element={<DelayedShipments />} />
-          
-          {/* Fleet */}
-          <Route path="/fleet/vehicles" element={<VehicleList />} />
-          <Route path="/fleet/maintenance" element={<MaintenanceLogs />} />
-          <Route path="/fleet/drivers" element={<DriverAssignments />} />
-          
-          {/* Warehouses */}
-          <Route path="/warehouses" element={<WarehouseLocations />} />
-          <Route path="/warehouses/inventory" element={<InventoryLevels />} />
-          <Route path="/warehouses/restock" element={<RestockRequests />} />
-          
-          {/* Vendors & Clients */}
-          <Route path="/vendors" element={<VendorDirectory />} />
-          <Route path="/vendors/add" element={<AddVendor />} />
-          <Route path="/clients" element={<ClientsList />} />
-          <Route path="/clients/feedback" element={<ClientFeedback />} />
-          
-          {/* Orders */}
-          <Route path="/orders" element={<AllOrders />} />
-          <Route path="/orders/scheduled" element={<ScheduledDeliveries />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/home" element={<Index />} />
+
+            {/* Dashboard */}
+            <Route
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER"]} />}
+            >
+              <Route path="/dashboard/map" element={<LiveShipmentMap />} />
+              <Route path="/dashboard/fleet-status" element={<FleetStatus />} />
+            </Route>
+
+            {/* Shipments */}
+            <Route
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"]} />}
+            >
+              <Route path="/shipments" element={<AllShipments />} />
+              <Route path="/shipments/track" element={<TrackShipment />} />
+              <Route path="/shipments/create" element={<CreateShipment />} />
+              <Route path="/shipments/delayed" element={<DelayedShipments />} />
+            </Route>
+
+            {/* Fleet */}
+            <Route
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "DRIVER"]} />}
+            >
+              <Route path="/fleet/vehicles" element={<VehicleList />} />
+              <Route path="/fleet/maintenance" element={<MaintenanceLogs />} />
+              <Route path="/fleet/drivers" element={<DriverAssignments />} />
+            </Route>
+
+            {/* Warehouses */}
+            <Route
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"]} />}
+            >
+              <Route path="/warehouses" element={<WarehouseLocations />} />
+              <Route path="/warehouses/inventory" element={<InventoryLevels />} />
+              <Route path="/warehouses/restock" element={<RestockRequests />} />
+            </Route>
+
+            {/* Vendors & Clients */}
+            <Route
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"]} />}
+            >
+              <Route path="/vendors" element={<VendorDirectory />} />
+              <Route path="/vendors/add" element={<AddVendor />} />
+              <Route path="/clients" element={<ClientsList />} />
+              <Route path="/clients/feedback" element={<ClientFeedback />} />
+            </Route>
+
+            {/* Orders */}
+            <Route
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"]} />}
+            >
+              <Route path="/orders" element={<AllOrders />} />
+              <Route path="/orders/scheduled" element={<ScheduledDeliveries />} />
+            </Route>
+          </Route>
           
           <Route path="*" element={<NotFound />} />
         </Routes>
