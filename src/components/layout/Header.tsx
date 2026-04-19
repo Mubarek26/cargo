@@ -27,7 +27,7 @@ export function Header({ onSidebarToggle }: HeaderProps) {
   };
 
   const handleProfile = () => {
-    toast.info("Profile page coming soon.");
+    navigate("/profile");
   };
 
   const handleSettings = () => {

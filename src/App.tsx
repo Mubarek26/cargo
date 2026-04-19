@@ -10,6 +10,9 @@ import Signup from "./pages/Signup";
 import CompanyAdminRequest from "./pages/CompanyAdminRequest";
 import CompanyAdminReview from "./pages/CompanyAdminReview";
 import DriverApplication from "./pages/DriverApplication";
+import VendorApplication from "./pages/VendorApplication";
+import DriverApplicationReview from "./pages/DriverApplicationReview";
+import VendorApplicationReview from "./pages/VendorApplicationReview";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // Dashboard
@@ -37,6 +40,9 @@ import VendorDirectory from "./pages/vendors/VendorDirectory";
 import AddVendor from "./pages/vendors/AddVendor";
 import ClientsList from "./pages/clients/ClientsList";
 import ClientFeedback from "./pages/clients/ClientFeedback";
+import CompanyDirectory from "./pages/companies/CompanyDirectory";
+import Profile from "./pages/Profile";
+import ApplicationsReview from "./pages/admin/ApplicationsReview";
 
 // Orders
 import AllOrders from "./pages/orders/AllOrders";
@@ -57,9 +63,13 @@ const App = () => (
           <Route path="/company-admin-request" element={<CompanyAdminRequest />} />
           <Route path="/company-admin-review" element={<CompanyAdminReview />} />
           <Route path="/driver-application" element={<DriverApplication />} />
+          <Route path="/vendor-application" element={<VendorApplication />} />
+          <Route path="/driver-application-review" element={<DriverApplicationReview />} />
+          <Route path="/vendor-application-review" element={<VendorApplicationReview />} />
           
           <Route element={<ProtectedRoute />}>
             <Route path="/home" element={<Index />} />
+            <Route path="/profile" element={<Profile />} />
 
             {/* Dashboard */}
             <Route
@@ -105,6 +115,20 @@ const App = () => (
               <Route path="/vendors/add" element={<AddVendor />} />
               <Route path="/clients" element={<ClientsList />} />
               <Route path="/clients/feedback" element={<ClientFeedback />} />
+            </Route>
+
+            {/* Companies */}
+            <Route
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]} />}
+            >
+              <Route path="/companies" element={<CompanyDirectory />} />
+            </Route>
+
+            {/* Applications */}
+            <Route
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]} />}
+            >
+              <Route path="/applications" element={<ApplicationsReview />} />
             </Route>
 
             {/* Orders */}

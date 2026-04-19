@@ -1,42 +1,32 @@
 import * as React from "react";
-import { API_BASE_URL } from "@/lib/api";
+import {
+  login as loginRequest,
+  type AuthResponse,
+  type LoginPayload,
+} from "@/services/authService";
 
-export type LoginPayload = {
-  email?: string;
-  phoneNumber?: string;
-  password: string;
-};
-
-type LoginResponse = Record<string, unknown> | null;
+export type { LoginPayload };
 
 export function useLogin() {
   const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<Error | null>(null);
+  const [data, setData] = React.useState<AuthResponse>(null);
 
   const login = React.useCallback(async (payload: LoginPayload) => {
     setIsLoading(true);
+    setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/users/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data: LoginResponse = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        const message =
-          (data && typeof data === "object" && "message" in data && data.message) ||
-          "Login failed. Please try again.";
-        throw new Error(String(message));
-      }
-
-      return data;
+      const response = await loginRequest(payload);
+      setData(response);
+      return response;
+    } catch (err) {
+      const errorObj = err instanceof Error ? err : new Error("Login failed.");
+      setError(errorObj);
+      throw errorObj;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  return { login, isLoading };
+  return { login, isLoading, error, data };
 }

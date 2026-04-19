@@ -20,6 +20,8 @@ import {
   MessageSquare,
   ShoppingCart,
   Calendar,
+  User,
+  ClipboardCheck,
   ChevronDown,
   ChevronRight,
   Menu,
@@ -80,6 +82,24 @@ const navigation: NavSection[] = [
     ],
   },
   {
+    title: "Companies",
+    items: [
+      { label: "Company Directory", href: "/companies", icon: Building2 },
+    ],
+  },
+  {
+    title: "Account",
+    items: [
+      { label: "Profile", href: "/profile", icon: User },
+    ],
+  },
+  {
+    title: "Applications",
+    items: [
+      { label: "Review Applications", href: "/applications", icon: ClipboardCheck },
+    ],
+  },
+  {
     title: "Orders",
     items: [
       { label: "All Orders", href: "/orders", icon: ShoppingCart },
@@ -121,6 +141,18 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   {
     prefixes: ["/orders"],
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"],
+  },
+  {
+    prefixes: ["/companies"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN"],
+  },
+  {
+    prefixes: ["/profile"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER", "VENDOR"],
+  },
+  {
+    prefixes: ["/applications"],
+    roles: ["SUPER_ADMIN"],
   },
 ];
 

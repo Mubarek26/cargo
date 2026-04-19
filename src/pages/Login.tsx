@@ -4,10 +4,12 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLogin } from "@/hooks/use-login";
+import { useLoginApplicationGate } from "@/hooks/use-login-application-gate";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login, isLoading } = useLogin();
+  const { checkApplicationGate } = useLoginApplicationGate();
   const [emailOrPhone, setEmailOrPhone] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
@@ -45,47 +47,38 @@ const Login: React.FC = () => {
         localStorage.setItem("userRole", user.role);
       }
 
-      // Company admin: check application status before navigating
-      if (user?.role === "COMPANY_ADMIN") {
-        try {
-          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || "https://fleet-management-kzif.onrender.com"}/api/v1/company/me`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            credentials: "include",
-          });
-
-          if (res.status === 404) {
-            toast.info("Please submit your company application.");
-            navigate("/company-admin-request");
-            return;
-          }
-
-          if (res.ok) {
-            const companyData = await res.json();
-
-            const status = companyData?.data?.company?.status || companyData?.company?.status;
-            if (!status) {
-              toast.info("Please submit your company application.");
-              navigate("/company-admin-request");
-              return;
-            }
-
-            if (status === "APPROVED") {
-              toast.success("Login successful.");
-              navigate("/home");
-            } else {
-              toast.info("Your application is under review.");
-              navigate("/company-admin-review");
-            }
-          } else {
-            toast.info("Your application is under review.");
-            navigate("/company-admin-review");
-          }
-        } catch {
+      const wasHandled = await checkApplicationGate(user?.role, token, {
+        onApproved: () => {
+          toast.success("Login successful.");
+          navigate("/home");
+        },
+        onCompanyMissing: () => {
+          toast.info("Please submit your company application.");
+          navigate("/company-admin-request");
+        },
+        onCompanyReview: () => {
           toast.info("Your application is under review.");
           navigate("/company-admin-review");
-        }
+        },
+        onDriverMissing: () => {
+          toast.info("Please submit your driver application.");
+          navigate("/driver-application");
+        },
+        onDriverReview: () => {
+          toast.info("Your application is under review.");
+          navigate("/driver-application-review");
+        },
+        onVendorMissing: () => {
+          toast.info("Please submit your vendor application.");
+          navigate("/vendor-application");
+        },
+        onVendorReview: () => {
+          toast.info("Your application is under review.");
+          navigate("/vendor-application-review");
+        },
+      });
+
+      if (wasHandled) {
         return;
       }
 

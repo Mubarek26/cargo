@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
-import { API_BASE_URL } from "@/lib/api";
+import { useCompanyAdminRequest } from "@/hooks/use-company-admin-request";
 
 const CompanyAdminRequest: React.FC = () => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const CompanyAdminRequest: React.FC = () => {
   const [photoFile, setPhotoFile] = React.useState<File | null>(null);
   const [numberOfCars, setNumberOfCars] = React.useState("");
   const [address, setAddress] = React.useState("");
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { submitRequest, isLoading } = useCompanyAdminRequest();
 
   const validateEmail = (value: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -61,38 +61,18 @@ const CompanyAdminRequest: React.FC = () => {
       return;
     }
 
-    setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append("companyName", companyName.trim());
-      formData.append("phoneNumber", phoneNumber.trim());
-      formData.append("email", email.trim());
-      if (website.trim()) {
-        formData.append("website", website.trim());
-      }
-      formData.append("description", description.trim());
-      formData.append("businessLicense", businessLicense.trim());
-      formData.append("photo", photoFile);
-      formData.append("address", address.trim());
-      formData.append("numberOfCars", numberOfCars.trim());
-
-      const response = await fetch(`${API_BASE_URL}/api/v1/company`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+      await submitRequest(token, {
+        companyName: companyName.trim(),
+        phoneNumber: phoneNumber.trim(),
+        email: email.trim(),
+        website: website.trim() || undefined,
+        description: description.trim(),
+        businessLicense: businessLicense.trim(),
+        photoFile: photoFile!,
+        address: address.trim(),
+        numberOfCars: numberOfCars.trim(),
       });
-
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        const message =
-          (data && typeof data === "object" && "message" in data && data.message) ||
-          "Unable to submit the request. Please try again.";
-        throw new Error(String(message));
-      }
 
       toast({
         title: "Application submitted",
@@ -118,8 +98,6 @@ const CompanyAdminRequest: React.FC = () => {
         title: "Submission failed",
         description: message,
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -233,8 +211,8 @@ const CompanyAdminRequest: React.FC = () => {
             </div>
 
             <div className="pt-2">
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit request"}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Submitting..." : "Submit request"}
               </Button>
             </div>
           </form>

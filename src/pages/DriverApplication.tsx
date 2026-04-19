@@ -12,7 +12,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-import { API_BASE_URL } from "@/lib/api";
+import { useDriverApplication } from "@/hooks/use-driver-application";
 
 const DriverApplication: React.FC = () => {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ const DriverApplication: React.FC = () => {
   const [nationalIdOrPassportFile, setNationalIdOrPassportFile] = React.useState<File | null>(null);
   const [driversLicenseImageFile, setDriversLicenseImageFile] = React.useState<File | null>(null);
   const [profilePhotoFile, setProfilePhotoFile] = React.useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { submitApplication, isLoading } = useDriverApplication();
 
   const validateEmail = (value: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -80,51 +80,25 @@ const DriverApplication: React.FC = () => {
       return;
     }
 
-    setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append("fullName", fullName.trim());
-      formData.append("contactNumber", contactNumber.trim());
-      formData.append("email", email.trim());
-      formData.append("address", address.trim());
-      formData.append("vehicleType", vehicleType.trim());
-      formData.append("vehicleRegistrationNumber", vehicleRegistrationNumber.trim());
-      formData.append("driversLicenseNumber", driversLicenseNumber.trim());
-      formData.append("licenseExpiryDate", licenseExpiryDate.trim());
-      formData.append("nationalIdOrPassportImage", nationalIdOrPassportFile);
-      formData.append("nationalIdOrPassport", nationalIdOrPassportFile.name);
-      formData.append("yearsOfExperience", yearsOfExperience.trim());
-      formData.append("availability", availability.trim());
-      formData.append("driversLicenseImage", driversLicenseImageFile);
-      formData.append("profilePhoto", profilePhotoFile);
-
-      if (notes.trim()) {
-        formData.append("notes", notes.trim());
-      }
-      if (vehicleModel.trim()) {
-        formData.append("vehicleModel", vehicleModel.trim());
-      }
-      if (vehicleCapacityKg.trim()) {
-        formData.append("vehicleCapacityKg", vehicleCapacityKg.trim());
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/v1/private-transporter/apply`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+      await submitApplication(token, {
+        fullName: fullName.trim(),
+        contactNumber: contactNumber.trim(),
+        email: email.trim(),
+        address: address.trim(),
+        vehicleType: vehicleType.trim(),
+        vehicleRegistrationNumber: vehicleRegistrationNumber.trim(),
+        driversLicenseNumber: driversLicenseNumber.trim(),
+        licenseExpiryDate: licenseExpiryDate.trim(),
+        nationalIdOrPassportFile: nationalIdOrPassportFile!,
+        yearsOfExperience: yearsOfExperience.trim(),
+        availability: availability.trim(),
+        driversLicenseImageFile: driversLicenseImageFile!,
+        profilePhotoFile: profilePhotoFile!,
+        notes: notes.trim() || undefined,
+        vehicleModel: vehicleModel.trim() || undefined,
+        vehicleCapacityKg: vehicleCapacityKg.trim() || undefined,
       });
-
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        const message =
-          (data && typeof data === "object" && "message" in data && data.message) ||
-          "Unable to submit the application. Please try again.";
-        throw new Error(String(message));
-      }
 
       toast({
         title: "Application submitted",
@@ -147,6 +121,7 @@ const DriverApplication: React.FC = () => {
       setNationalIdOrPassportFile(null);
       setDriversLicenseImageFile(null);
       setProfilePhotoFile(null);
+      navigate("/driver-application-review");
     } catch (error) {
       const message =
         error instanceof Error
@@ -156,8 +131,6 @@ const DriverApplication: React.FC = () => {
         title: "Submission failed",
         description: message,
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -350,8 +323,8 @@ const DriverApplication: React.FC = () => {
             </div>
 
             <div className="pt-2">
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit application"}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Submitting..." : "Submit application"}
               </Button>
             </div>
           </form>

@@ -119,6 +119,8 @@ const Signup: React.FC = () => {
         navigate("/company-admin-request");
       } else if (resolvedRole === "DRIVER") {
         navigate("/driver-application");
+      } else if (resolvedRole === "VENDOR") {
+        navigate("/vendor-application");
       } else {
         navigate("/home");
       }
