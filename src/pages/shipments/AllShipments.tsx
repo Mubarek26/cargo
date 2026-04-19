@@ -1,29 +1,171 @@
+import * as React from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Package, Search, Filter, Download, Plus, CheckCircle, Clock, Truck, AlertTriangle } from "lucide-react";
+import { Package, Search, Filter, Download, Plus, CheckCircle, Clock, Truck, AlertTriangle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { getCompanyTrips, getDriverTripsHistory, getTrips } from "@/services/tripService";
 
-const shipments = [
-  { id: "SHP-2024-00142", origin: "New York, NY", destination: "Los Angeles, CA", status: "in_transit", customer: "Acme Corp", weight: "2,450 lbs", date: "Dec 10, 2024", eta: "Dec 15, 2024" },
-  { id: "SHP-2024-00143", origin: "Chicago, IL", destination: "Miami, FL", status: "delivered", customer: "Tech Solutions", weight: "1,200 lbs", date: "Dec 08, 2024", eta: "Dec 12, 2024" },
-  { id: "SHP-2024-00144", origin: "Seattle, WA", destination: "Denver, CO", status: "pending", customer: "Global Retail", weight: "3,100 lbs", date: "Dec 12, 2024", eta: "Dec 18, 2024" },
-  { id: "SHP-2024-00145", origin: "Boston, MA", destination: "Atlanta, GA", status: "delayed", customer: "Fast Logistics", weight: "890 lbs", date: "Dec 09, 2024", eta: "Dec 17, 2024" },
-  { id: "SHP-2024-00146", origin: "Dallas, TX", destination: "Phoenix, AZ", status: "in_transit", customer: "Prime Shipping", weight: "1,750 lbs", date: "Dec 11, 2024", eta: "Dec 16, 2024" },
-  { id: "SHP-2024-00147", origin: "San Francisco, CA", destination: "Portland, OR", status: "delivered", customer: "West Coast Inc", weight: "2,100 lbs", date: "Dec 07, 2024", eta: "Dec 10, 2024" },
-  { id: "SHP-2024-00148", origin: "Philadelphia, PA", destination: "Detroit, MI", status: "in_transit", customer: "Motor City Co", weight: "4,200 lbs", date: "Dec 12, 2024", eta: "Dec 14, 2024" },
-  { id: "SHP-2024-00149", origin: "Houston, TX", destination: "New Orleans, LA", status: "pending", customer: "Gulf Trading", weight: "1,500 lbs", date: "Dec 13, 2024", eta: "Dec 19, 2024" },
-];
+type TripRecord = Record<string, unknown> & {
+  id?: string | number;
+  _id?: string | number;
+  tripId?: string | number;
+  trackingNumber?: string;
+  status?: string;
+};
 
-const statusConfig = {
+const extractTrips = (payload: unknown): TripRecord[] => {
+  if (Array.isArray(payload)) return payload as TripRecord[];
+  if (!payload || typeof payload !== "object") return [];
+
+  const data = payload as Record<string, unknown>;
+  if (Array.isArray(data.trips)) return data.trips as TripRecord[];
+  if (Array.isArray(data.data)) return data.data as TripRecord[];
+  if (Array.isArray(data.shipments)) return data.shipments as TripRecord[];
+
+  const nested = data.data;
+  if (nested && typeof nested === "object") {
+    const nestedData = nested as Record<string, unknown>;
+    if (Array.isArray(nestedData.trips)) return nestedData.trips as TripRecord[];
+    if (Array.isArray(nestedData.shipments)) return nestedData.shipments as TripRecord[];
+  }
+
+  return [];
+};
+
+const resolveTripId = (trip: TripRecord, index: number) =>
+  String(trip.id ?? trip._id ?? trip.tripId ?? trip.trackingNumber ?? `trip-${index + 1}`);
+
+const toText = (value: unknown) => (value === null || value === undefined ? "-" : String(value));
+
+const resolveRefId = (value: unknown) => {
+  if (!value) return "-";
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (typeof value === "object") {
+    return String((value as any)?._id || (value as any)?.id || "-");
+  }
+  return String(value);
+};
+
+const resolveDriverName = (value: unknown) => {
+  if (!value) return "-";
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (typeof value === "object") {
+    return String(
+      (value as any)?.fullName ||
+      (value as any)?.name ||
+      (value as any)?.driverName ||
+      (value as any)?.email ||
+      (value as any)?.phoneNumber ||
+      "-"
+    );
+  }
+  return String(value);
+};
+
+const resolveVehicleLabel = (value: unknown) => {
+  if (!value) return "-";
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (typeof value === "object") {
+    return String(
+      (value as any)?.plateNumber ||
+      (value as any)?.model ||
+      (value as any)?.vehicleType ||
+      (value as any)?.name ||
+      "-"
+    );
+  }
+  return String(value);
+};
+
+const resolveStatus = (value: unknown) =>
+  String(value || "pending")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/-/g, "_");
+
+const formatMilestone = (value: unknown) => {
+  if (!value) return "pending";
+  return String(value).toLowerCase().replace(/\s+/g, "_");
+};
+
+const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; className: string }> = {
   in_transit: { label: "In Transit", icon: Truck, className: "text-primary bg-primary/10" },
   delivered: { label: "Delivered", icon: CheckCircle, className: "text-success bg-success/10" },
   pending: { label: "Pending", icon: Clock, className: "text-warning bg-warning/10" },
   delayed: { label: "Delayed", icon: AlertTriangle, className: "text-destructive bg-destructive/10" },
+  cancelled: { label: "Cancelled", icon: XCircle, className: "text-destructive bg-destructive/10" },
+  completed: { label: "Completed", icon: CheckCircle, className: "text-success bg-success/10" },
 };
 
 export default function AllShipments() {
+  const navigate = useNavigate();
+  const [trips, setTrips] = React.useState<TripRecord[]>([]);
+  const [query, setQuery] = React.useState("");
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const loadTrips = React.useCallback(async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const role = localStorage.getItem("userRole");
+      const result =
+        role === "COMPANY_ADMIN"
+          ? await getCompanyTrips(token)
+          : role === "DRIVER"
+          ? await getDriverTripsHistory(token)
+          : await getTrips(token);
+      if (!result.ok) {
+        const message =
+          (result.data && typeof result.data === "object" && "message" in result.data && result.data.message) ||
+          "Unable to load trips.";
+        setError(String(message));
+        setTrips([]);
+        return;
+      }
+
+      setTrips(extractTrips(result.data));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to load trips.";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [navigate]);
+
+  React.useEffect(() => {
+    loadTrips();
+  }, [loadTrips]);
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredTrips = trips.filter((trip, index) => {
+    if (!normalizedQuery) return true;
+    const id = resolveTripId(trip, index);
+    const haystack = [
+      id,
+      resolveRefId((trip as any)?.orderId),
+      resolveDriverName((trip as any)?.driverId),
+      resolveVehicleLabel((trip as any)?.vehicleId),
+      toText((trip as any)?.milestone),
+      toText((trip as any)?.lastNote),
+    ]
+      .filter(Boolean)
+      .map((value) => String(value).toLowerCase())
+      .join(" ");
+
+    return haystack.includes(normalizedQuery);
+  });
+
   return (
     <DashboardLayout>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -47,7 +189,12 @@ export default function AllShipments() {
       <div className="mb-6 flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search by tracking number, customer..." className="pl-10" />
+          <Input
+            placeholder="Search by trip ID, customer..."
+            className="pl-10"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
@@ -59,57 +206,78 @@ export default function AllShipments() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-secondary/50">
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tracking #</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Route</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Customer</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Weight</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ship Date</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">ETA</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {shipments.map((shipment) => {
-                const status = statusConfig[shipment.status as keyof typeof statusConfig];
-                const StatusIcon = status.icon;
-
-                return (
-                  <tr key={shipment.id} className="hover:bg-secondary/30 transition-colors cursor-pointer">
-                    <td className="whitespace-nowrap px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4 text-primary" />
-                        <span className="font-medium text-card-foreground">{shipment.id}</span>
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-4">
-                      <div className="text-sm">
-                        <p className="text-card-foreground">{shipment.origin}</p>
-                        <p className="text-muted-foreground">→ {shipment.destination}</p>
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-4 text-sm text-card-foreground">{shipment.customer}</td>
-                    <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{shipment.weight}</td>
-                    <td className="whitespace-nowrap px-5 py-4">
-                      <Badge className={cn("gap-1", status.className)}>
-                        <StatusIcon className="h-3 w-3" />
-                        {status.label}
-                      </Badge>
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{shipment.date}</td>
-                    <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{shipment.eta}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      {isLoading ? (
+        <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
+          Loading trips...
         </div>
-      </div>
+      ) : error ? (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-6 text-sm text-destructive">
+          {error}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border bg-secondary/50">
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Trip ID</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Driver</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Vehicle</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Milestone</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Updated</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filteredTrips.map((trip, index) => {
+                  const id = resolveTripId(trip, index);
+                  const statusKey = resolveStatus((trip as any)?.milestone);
+                  const status = statusConfig[statusKey] || statusConfig.pending;
+                  const StatusIcon = status.icon;
+
+                  return (
+                    <tr
+                      key={id}
+                      className="hover:bg-secondary/30 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/trips/${id}`)}
+                    >
+                      <td className="whitespace-nowrap px-5 py-4">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-primary" />
+                          <span className="font-medium text-card-foreground">{id}</span>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
+                        {resolveDriverName((trip as any)?.driverId)}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
+                        {resolveVehicleLabel((trip as any)?.vehicleId)}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
+                        {formatMilestone((trip as any)?.milestone)}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4">
+                        <Badge className={cn("gap-1", status.className)}>
+                          <StatusIcon className="h-3 w-3" />
+                          {status.label}
+                        </Badge>
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
+                        {toText((trip as any)?.updatedAt || (trip as any)?.createdAt)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {filteredTrips.length === 0 && (
+            <div className="border-t border-border px-6 py-8 text-center text-sm text-muted-foreground">
+              No trips found.
+            </div>
+          )}
+        </div>
+      )}
     </DashboardLayout>
   );
 }

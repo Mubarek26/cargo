@@ -24,6 +24,7 @@ import AllShipments from "./pages/shipments/AllShipments";
 import TrackShipment from "./pages/shipments/TrackShipment";
 import CreateShipment from "./pages/shipments/CreateShipment";
 import DelayedShipments from "./pages/shipments/DelayedShipments";
+import TripDetails from "./pages/trips/TripDetails";
 
 // Fleet
 import VehicleList from "./pages/fleet/VehicleList";
@@ -81,9 +82,10 @@ const App = () => (
 
             {/* Shipments */}
             <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"]} />}
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER"]} />}
             >
               <Route path="/shipments" element={<AllShipments />} />
+              <Route path="/trips/:tripId" element={<TripDetails />} />
               <Route path="/shipments/track" element={<TrackShipment />} />
               <Route path="/shipments/create" element={<CreateShipment />} />
               <Route path="/shipments/delayed" element={<DelayedShipments />} />
