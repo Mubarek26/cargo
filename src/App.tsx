@@ -29,7 +29,7 @@ import TripDetails from "./pages/trips/TripDetails";
 // Fleet
 import VehicleList from "./pages/fleet/VehicleList";
 import MaintenanceLogs from "./pages/fleet/MaintenanceLogs";
-import DriverAssignments from "./pages/fleet/DriverAssignments";
+import DriverList from "./pages/fleet/DriverList";
 
 // Warehouses
 import WarehouseLocations from "./pages/warehouses/WarehouseLocations";
@@ -97,7 +97,7 @@ const App = () => (
             >
               <Route path="/fleet/vehicles" element={<VehicleList />} />
               <Route path="/fleet/maintenance" element={<MaintenanceLogs />} />
-              <Route path="/fleet/drivers" element={<DriverAssignments />} />
+              <Route path="/fleet/drivers" element={<DriverList />} />
             </Route>
 
             {/* Warehouses */}

@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { getCompanies } from "@/services/companyService";
-import { getAllDrivers } from "@/services/driverService";
+import { getCompanies, getCompanyMe } from "@/services/companyService";
+import { getAllDrivers, getCompanyDrivers } from "@/services/driverService";
 
 type CompanyRecord = Record<string, unknown> & {
   id?: string | number;
@@ -113,6 +113,8 @@ const extractDrivers = (payload: unknown): DriverRecord[] => {
 
 export default function DriverList() {
   const navigate = useNavigate();
+  const userRole = localStorage.getItem("userRole");
+  const isCompanyAdmin = userRole === "COMPANY_ADMIN";
   const [drivers, setDrivers] = React.useState<DriverRecord[]>([]);
   const [companies, setCompanies] = React.useState<CompanyRecord[]>([]);
   const [query, setQuery] = React.useState("");
@@ -121,6 +123,17 @@ export default function DriverList() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [expandedDriverId, setExpandedDriverId] = React.useState<string | null>(null);
+
+  const getCompanyIdFromMe = (payload: Record<string, unknown> | null) => {
+    if (!payload) return null;
+    const company =
+      (payload as any)?.data?.company ||
+      (payload as any)?.company ||
+      null;
+
+    if (!company || typeof company !== "object") return null;
+    return String((company as any)._id || (company as any).companyId || (company as any).id || "");
+  };
 
   const loadDrivers = React.useCallback(() => {
     const token = localStorage.getItem("authToken");
@@ -132,7 +145,31 @@ export default function DriverList() {
     setIsLoading(true);
     setError(null);
 
-    Promise.all([getAllDrivers(token), getCompanies(token)])
+    const driverRequest = isCompanyAdmin
+      ? getCompanyMe(token).then((result) => {
+          if (!result.ok) {
+            return {
+              ok: false,
+              status: result.status,
+              data: result.data,
+            } as const;
+          }
+
+          const companyId = getCompanyIdFromMe(result.data as Record<string, unknown> | null);
+          if (!companyId) {
+            return {
+              ok: false,
+              status: 400,
+              data: { message: "Company profile not found." },
+            } as const;
+          }
+
+          return getCompanyDrivers(token, companyId);
+        })
+      : getAllDrivers(token);
+    const companyRequest = isCompanyAdmin ? Promise.resolve(null) : getCompanies(token);
+
+    Promise.all([driverRequest, companyRequest])
       .then(([driverResult, companyResult]) => {
         if (!driverResult.ok) {
           const message =
@@ -147,8 +184,10 @@ export default function DriverList() {
           setDrivers(extractDrivers(driverResult.data));
         }
 
-        if (companyResult.ok) {
+        if (companyResult && companyResult.ok) {
           setCompanies(extractCompanies(companyResult.data));
+        } else if (isCompanyAdmin) {
+          setCompanies([]);
         }
       })
       .catch((err) => {
@@ -220,22 +259,24 @@ export default function DriverList() {
           />
         </div>
         <div className="flex flex-wrap gap-2">
-          <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="All companies" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All companies</SelectItem>
-              {companies.map((company, index) => {
-                const companyId = getCompanyId(company, index);
-                return (
-                  <SelectItem key={companyId} value={companyId}>
-                    {getCompanyDisplayName(company)}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+          {!isCompanyAdmin && (
+            <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="All companies" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All companies</SelectItem>
+                {companies.map((company, index) => {
+                  const companyId = getCompanyId(company, index);
+                  return (
+                    <SelectItem key={companyId} value={companyId}>
+                      {getCompanyDisplayName(company)}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          )}
           <Select value={selectedStatus} onValueChange={setSelectedStatus}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="All statuses" />

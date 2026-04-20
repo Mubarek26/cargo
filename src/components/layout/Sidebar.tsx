@@ -61,7 +61,7 @@ const navigation: NavSection[] = [
     items: [
       { label: "Vehicle List", href: "/fleet/vehicles", icon: Car },
       { label: "Maintenance Logs", href: "/fleet/maintenance", icon: Wrench },
-      { label: "Driver Assignments", href: "/fleet/drivers", icon: Users },
+      { label: "Driver List", href: "/fleet/drivers", icon: Users },
     ],
   },
   {

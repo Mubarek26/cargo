@@ -101,6 +101,40 @@ export const getPrivateTransporters = async (token: string) => {
   } as const;
 };
 
+export const getAllDrivers = async (token: string) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/company/drivers/all`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    credentials: "include",
+  });
+
+  const data = await response.json().catch(() => null);
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data,
+  } as const;
+};
+
+export const getCompanyDrivers = async (token: string, companyId: string) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/company/${companyId}/drivers`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    credentials: "include",
+  });
+
+  const data = await response.json().catch(() => null);
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data,
+  } as const;
+};
+
 export const updatePrivateTransporterStatus = async (
   token: string,
   transporterId: string,
