@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Package, Search, Filter, Download, Plus, CheckCircle, Clock, Truck, AlertTriangle, XCircle } from "lucide-react";
+import { Package, Search, Filter, Download, Plus, CheckCircle, Clock, Truck, AlertTriangle, XCircle, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -49,7 +49,20 @@ const resolveRefId = (value: unknown) => {
   return String(value);
 };
 
-const resolveDriverName = (value: unknown) => {
+const resolveDriverName = (trip: TripRecord) => {
+  // Check aggregation-embedded driverInfo first
+  const driverInfo = (trip as any)?.driverInfo;
+  if (driverInfo && typeof driverInfo === "object") {
+    return String(
+      driverInfo.fullName ||
+      driverInfo.name ||
+      driverInfo.email ||
+      driverInfo.phoneNumber ||
+      "-"
+    );
+  }
+  // Fallback to populated driverId
+  const value = (trip as any)?.driverId;
   if (!value) return "-";
   if (typeof value === "string" || typeof value === "number") return String(value);
   if (typeof value === "object") {
@@ -65,7 +78,20 @@ const resolveDriverName = (value: unknown) => {
   return String(value);
 };
 
-const resolveVehicleLabel = (value: unknown) => {
+const resolveVehicleLabel = (trip: TripRecord) => {
+  // Check aggregation-embedded vehicleInfo first
+  const vehicleInfo = (trip as any)?.vehicleInfo;
+  if (vehicleInfo && typeof vehicleInfo === "object") {
+    return String(
+      vehicleInfo.plateNumber ||
+      vehicleInfo.model ||
+      vehicleInfo.vehicleType ||
+      vehicleInfo.name ||
+      "-"
+    );
+  }
+  // Fallback to populated vehicleId
+  const value = (trip as any)?.vehicleId;
   if (!value) return "-";
   if (typeof value === "string" || typeof value === "number") return String(value);
   if (typeof value === "object") {
@@ -92,6 +118,8 @@ const formatMilestone = (value: unknown) => {
 };
 
 const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; className: string }> = {
+  started: { label: "Started", icon: PlayCircle, className: "text-blue-600 bg-blue-100" },
+  arrived: { label: "Arrived", icon: CheckCircle, className: "text-emerald-600 bg-emerald-100" },
   in_transit: { label: "In Transit", icon: Truck, className: "text-primary bg-primary/10" },
   delivered: { label: "Delivered", icon: CheckCircle, className: "text-success bg-success/10" },
   pending: { label: "Pending", icon: Clock, className: "text-warning bg-warning/10" },
@@ -154,8 +182,8 @@ export default function AllShipments() {
     const haystack = [
       id,
       resolveRefId((trip as any)?.orderId),
-      resolveDriverName((trip as any)?.driverId),
-      resolveVehicleLabel((trip as any)?.vehicleId),
+      resolveDriverName(trip),
+      resolveVehicleLabel(trip),
       toText((trip as any)?.milestone),
       toText((trip as any)?.lastNote),
     ]
@@ -248,10 +276,10 @@ export default function AllShipments() {
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
-                        {resolveDriverName((trip as any)?.driverId)}
+                        {resolveDriverName(trip)}
                       </td>
                       <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
-                        {resolveVehicleLabel((trip as any)?.vehicleId)}
+                        {resolveVehicleLabel(trip)}
                       </td>
                       <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
                         {formatMilestone((trip as any)?.milestone)}
