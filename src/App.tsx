@@ -47,7 +47,10 @@ import ApplicationsReview from "./pages/admin/ApplicationsReview";
 
 // Orders
 import AllOrders from "./pages/orders/AllOrders";
+import OrderDetails from "./pages/orders/OrderDetails";
 import ScheduledDeliveries from "./pages/orders/ScheduledDeliveries";
+import DriverTrips from "./pages/driver/DriverTrips";
+import DriverTripDetails from "./pages/driver/DriverTripDetails";
 
 const queryClient = new QueryClient();
 
@@ -138,7 +141,15 @@ const App = () => (
               element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"]} />}
             >
               <Route path="/orders" element={<AllOrders />} />
+              <Route path="/orders/:orderId" element={<OrderDetails />} />
               <Route path="/orders/scheduled" element={<ScheduledDeliveries />} />
+            </Route>
+
+            <Route
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "DRIVER", "PRIVATE_TRANSPORTER"]} />}
+            >
+              <Route path="/driver/trips" element={<DriverTrips />} />
+              <Route path="/driver/trips/:tripId" element={<DriverTripDetails />} />
             </Route>
           </Route>
           

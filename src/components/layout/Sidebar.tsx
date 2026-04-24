@@ -106,6 +106,12 @@ const navigation: NavSection[] = [
       { label: "Scheduled Deliveries", href: "/orders/scheduled", icon: Calendar },
     ],
   },
+  {
+    title: "Driver Portal",
+    items: [
+      { label: "My Trips", href: "/driver/trips", icon: Truck },
+    ],
+  },
 ];
 
 interface SidebarProps {
@@ -153,6 +159,10 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   {
     prefixes: ["/applications"],
     roles: ["SUPER_ADMIN"],
+  },
+  {
+    prefixes: ["/driver"],
+    roles: ["DRIVER", "PRIVATE_TRANSPORTER", "SUPER_ADMIN"],
   },
 ];
 

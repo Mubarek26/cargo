@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Truck, Plus, Search, CheckCircle, Wrench, AlertTriangle, MoreVertical, ChevronDown, ChevronUp } from "lucide-react";
+import { Truck, Plus, Search, CheckCircle, Wrench, AlertTriangle, MoreVertical, ChevronDown, ChevronUp, XCircle, Loader2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -37,16 +37,6 @@ type VehicleRecord = Record<string, unknown> & {
   } | string;
 };
 
-const statusConfig = {
-  active: { label: "Active", icon: CheckCircle, className: "text-success bg-success/10" },
-  inactive: { label: "Inactive", icon: AlertTriangle, className: "text-muted-foreground bg-secondary" },
-  maintenance: { label: "Maintenance", icon: Wrench, className: "text-warning bg-warning/10" },
-  unknown: { label: "Unknown", icon: AlertTriangle, className: "text-muted-foreground bg-secondary" },
-};
-
-const getCompanyDisplayName = (company: CompanyRecord) =>
-  String(company.companyName || company.name || "Unnamed Company");
-
 const getCompanyId = (company: CompanyRecord, index: number) => {
   const id = company.id ?? company.companyId ?? company._id ?? null;
   return id ? String(id) : `company-${index + 1}`;
@@ -69,36 +59,8 @@ const extractCompanies = (payload: unknown): CompanyRecord[] => {
 };
 
 const getVehicleId = (vehicle: VehicleRecord, index: number) => {
-  const id = vehicle.id ?? vehicle._id ?? vehicle.plateNumber ?? null;
+  const id = (vehicle as any).id ?? (vehicle as any)._id ?? vehicle.plateNumber ?? null;
   return id ? String(id) : `vehicle-${index + 1}`;
-};
-
-const getVehicleStatus = (vehicle: VehicleRecord) =>
-  String(vehicle.status || "unknown").toLowerCase();
-
-const getStatusLabel = (status: string) =>
-  statusConfig[status as keyof typeof statusConfig]?.label ||
-  status
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-
-const getVehicleCompanyId = (vehicle: VehicleRecord) => {
-  if (!vehicle.companyId) return null;
-  if (typeof vehicle.companyId === "string") return vehicle.companyId;
-  const companyId = vehicle.companyId as CompanyRecord;
-  return String(companyId._id ?? companyId.companyId ?? companyId.id ?? "");
-};
-
-const getVehicleCompanyName = (vehicle: VehicleRecord) => {
-  if (!vehicle.companyId) return "-";
-  if (typeof vehicle.companyId === "string") return vehicle.companyId;
-  return getCompanyDisplayName(vehicle.companyId as CompanyRecord);
-};
-
-const getVehicleDriverName = (vehicle: VehicleRecord) => {
-  if (!vehicle.currentDriverId) return "-";
-  if (typeof vehicle.currentDriverId === "string") return vehicle.currentDriverId;
-  return String(vehicle.currentDriverId.fullName || "-");
 };
 
 const extractVehicles = (payload: unknown): VehicleRecord[] => {
@@ -116,6 +78,31 @@ const extractVehicles = (payload: unknown): VehicleRecord[] => {
   return [];
 };
 
+const statusConfig = {
+  ACTIVE: { label: "Active", icon: CheckCircle, className: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
+  INACTIVE: { label: "Inactive", icon: XCircle, className: "text-slate-400 bg-slate-400/10 border-slate-400/20" },
+  MAINTENANCE: { label: "Maintenance", icon: Wrench, className: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
+  unknown: { label: "Unknown", icon: AlertTriangle, className: "text-muted-foreground bg-secondary" },
+};
+
+const getCompanyDisplayName = (company: any) => {
+  if (!company) return "-";
+  if (typeof company === 'string') return company;
+  return company.companyName || company.name || "Unnamed Company";
+};
+
+const getVehicleStatus = (vehicle: VehicleRecord) =>
+  String(vehicle.status || "unknown").toUpperCase();
+
+const getStatusLabel = (status: string) =>
+  statusConfig[status as keyof typeof statusConfig]?.label || status;
+
+const getVehicleDriverName = (vehicle: any) => {
+  if (!vehicle.currentDriverId) return "No Driver Assigned";
+  if (typeof vehicle.currentDriverId === "string") return vehicle.currentDriverId;
+  return vehicle.currentDriverId.fullName || "Unnamed Driver";
+};
+
 export default function VehicleList() {
   const navigate = useNavigate();
   const userRole = localStorage.getItem("userRole");
@@ -128,7 +115,6 @@ export default function VehicleList() {
   const [selectedStatus, setSelectedStatus] = React.useState("all");
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [expandedVehicleId, setExpandedVehicleId] = React.useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [plateNumber, setPlateNumber] = React.useState("");
@@ -146,19 +132,15 @@ export default function VehicleList() {
     setIsLoading(true);
     setError(null);
 
-    const vehicleRequest = isCompanyAdmin ? getCompanyVehicles(token) : getAllVehicles(token);
-    const companyRequest = isCompanyAdmin ? Promise.resolve(null) : getCompanies(token);
+    const isSuperAdmin = userRole === "SUPER_ADMIN";
+    const vehicleRequest = isSuperAdmin ? getAllVehicles(token) : getCompanyVehicles(token);
+    const companyRequest = isSuperAdmin ? getCompanies(token) : Promise.resolve({ ok: true, data: { companies: [] } });
 
     Promise.all([vehicleRequest, companyRequest])
       .then(([vehicleResult, companyResult]) => {
         if (!vehicleResult.ok) {
-          const message =
-            (vehicleResult.data &&
-              typeof vehicleResult.data === "object" &&
-              "message" in vehicleResult.data &&
-              vehicleResult.data.message) ||
-            "Unable to load vehicles.";
-          setError(String(message));
+          const message = (vehicleResult.data as any)?.message || "Unable to load vehicles.";
+          setError(message);
           setVehicles([]);
         } else {
           setVehicles(extractVehicles(vehicleResult.data));
@@ -166,122 +148,54 @@ export default function VehicleList() {
 
         if (companyResult && companyResult.ok) {
           setCompanies(extractCompanies(companyResult.data));
-        } else if (isCompanyAdmin) {
-          setCompanies([]);
         }
       })
-      .catch((err) => {
-        const message = err instanceof Error ? err.message : "Unable to load vehicles.";
-        setError(message);
-      })
+      .catch(() => setError("Unable to load vehicles."))
       .finally(() => setIsLoading(false));
-  }, [navigate]);
+  }, [navigate, isCompanyAdmin]);
 
   React.useEffect(() => {
     loadVehicles();
   }, [loadVehicles]);
 
-  const normalizedQuery = query.trim().toLowerCase();
   const filteredVehicles = vehicles.filter((vehicle) => {
     const status = getVehicleStatus(vehicle);
-    const companyId = getVehicleCompanyId(vehicle);
+    const company = vehicle.companyId;
+    const companyId = typeof company === 'string' ? company : (company as any)?._id;
 
     if (selectedStatus !== "all" && status !== selectedStatus) return false;
     if (selectedCompany !== "all" && companyId !== selectedCompany) return false;
 
-    if (!normalizedQuery) return true;
-    const haystack = [
-      vehicle.plateNumber,
-      vehicle.model,
-      vehicle.vehicleType,
-      getVehicleDriverName(vehicle),
-      getVehicleCompanyName(vehicle),
-    ]
-      .filter(Boolean)
-      .map((value) => String(value).toLowerCase())
-      .join(" ");
-
-    return haystack.includes(normalizedQuery);
+    if (!query) return true;
+    const q = query.toLowerCase();
+    return (
+      vehicle.plateNumber?.toLowerCase().includes(q) ||
+      vehicle.model?.toLowerCase().includes(q) ||
+      vehicle.vehicleType?.toLowerCase().includes(q) ||
+      getVehicleDriverName(vehicle).toLowerCase().includes(q) ||
+      getCompanyDisplayName(vehicle.companyId).toLowerCase().includes(q)
+    );
   });
 
-  const statusOptions = React.useMemo(() => {
-    const seen = new Set<string>();
-    vehicles.forEach((vehicle) => {
-      seen.add(getVehicleStatus(vehicle));
-    });
-    return Array.from(seen).filter((status) => status !== "unknown");
-  }, [vehicles]);
-
-  const toggleVehicleDetails = (vehicleId: string) => {
-    setExpandedVehicleId((current) => (current === vehicleId ? null : vehicleId));
-  };
-
-  const resetAddForm = () => {
-    setPlateNumber("");
-    setVehicleType("");
-    setModel("");
-    setCapacityKg("");
-  };
-
-  const handleAddVehicle = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleAddVehicle = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!isCompanyAdmin) return;
-
     const token = localStorage.getItem("authToken");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    const normalizedPlate = plateNumber.trim();
-    const normalizedType = vehicleType.trim().toUpperCase();
-    const normalizedModel = model.trim();
-    const numericCapacity = Number(capacityKg);
-
-    if (!normalizedPlate || !normalizedType || !normalizedModel || !Number.isFinite(numericCapacity)) {
-      toast({
-        title: "Missing fields",
-        description: "Plate number, type, model, and capacity are required.",
-      });
-      return;
-    }
+    if (!token) return;
 
     setIsSubmitting(true);
     try {
       const result = await createVehicle(token, {
-        plateNumber: normalizedPlate,
-        vehicleType: normalizedType,
-        model: normalizedModel,
-        capacityKg: numericCapacity,
+        plateNumber: plateNumber.toUpperCase(),
+        vehicleType: vehicleType.toUpperCase(),
+        model,
+        capacityKg: Number(capacityKg),
       });
 
-      if (!result.ok) {
-        const message =
-          (result.data &&
-            typeof result.data === "object" &&
-            "message" in result.data &&
-            result.data.message) ||
-          "Unable to add vehicle.";
-        toast({
-          title: "Add vehicle failed",
-          description: String(message),
-        });
-        return;
+      if (result.ok) {
+        setIsAddOpen(false);
+        setPlateNumber(""); setVehicleType(""); setModel(""); setCapacityKg("");
+        loadVehicles();
       }
-
-      toast({
-        title: "Vehicle added",
-        description: "The vehicle is now available in the list.",
-      });
-      setIsAddOpen(false);
-      resetAddForm();
-      loadVehicles();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to add vehicle.";
-      toast({
-        title: "Add vehicle failed",
-        description: message,
-      });
     } finally {
       setIsSubmitting(false);
     }
@@ -289,68 +203,51 @@ export default function VehicleList() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Vehicle List</h1>
-          <p className="text-muted-foreground">Manage your fleet vehicles</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Fleet Vehicles</h1>
+          <p className="text-muted-foreground mt-1">Manage and monitor your transportation assets</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={loadVehicles} disabled={isLoading}>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="lg" onClick={loadVehicles} disabled={isLoading} className="shadow-sm">
             Refresh
           </Button>
           {isCompanyAdmin && (
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
+                <Button size="lg" className="shadow-md">
+                  <Plus className="mr-2 h-5 w-5" />
                   Add Vehicle
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                  <DialogTitle>Add Vehicle</DialogTitle>
+                  <DialogTitle className="text-2xl">New Vehicle</DialogTitle>
+                  <p className="text-sm text-muted-foreground">Register a new asset to your company fleet.</p>
                 </DialogHeader>
-                <form className="grid gap-4" onSubmit={handleAddVehicle}>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Plate number</label>
-                    <Input
-                      value={plateNumber}
-                      onChange={(event) => setPlateNumber(event.target.value)}
-                      placeholder="WXY1234"
-                    />
+                <form className="grid gap-6 py-4" onSubmit={handleAddVehicle}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold">Plate Number</label>
+                      <Input value={plateNumber} onChange={(e) => setPlateNumber(e.target.value)} placeholder="ABC-123" required />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold">Vehicle Type</label>
+                      <Input value={vehicleType} onChange={(e) => setVehicleType(e.target.value)} placeholder="VAN / TRUCK" required />
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Vehicle type</label>
-                    <Input
-                      value={vehicleType}
-                      onChange={(event) => setVehicleType(event.target.value)}
-                      placeholder="VAN"
-                    />
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Model / Make</label>
+                    <Input value={model} onChange={(e) => setModel(e.target.value)} placeholder="Toyota Hiace 2024" required />
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Model</label>
-                    <Input
-                      value={model}
-                      onChange={(event) => setModel(event.target.value)}
-                      placeholder="Toyota Hiace"
-                    />
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Payload Capacity (kg)</label>
+                    <Input type="number" value={capacityKg} onChange={(e) => setCapacityKg(e.target.value)} placeholder="1500" required />
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Capacity (kg)</label>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={capacityKg}
-                      onChange={(event) => setCapacityKg(event.target.value)}
-                      placeholder="1500"
-                    />
-                  </div>
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? "Saving..." : "Save Vehicle"}
+                  <DialogFooter className="pt-4">
+                    <Button type="button" variant="ghost" onClick={() => setIsAddOpen(false)}>Cancel</Button>
+                    <Button type="submit" disabled={isSubmitting} className="min-w-[120px]">
+                      {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Register Vehicle"}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -360,208 +257,131 @@ export default function VehicleList() {
         </div>
       </div>
 
-      <div className="mb-6 flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center">
+      <div className="mb-8 flex flex-col gap-4 rounded-2xl border border-border bg-card/50 p-6 backdrop-blur-sm sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by plate, model, driver, company..."
-            className="pl-10"
+            placeholder="Search by plate, model, driver..."
+            className="pl-11 h-12 bg-background/50 border-border/50 text-lg"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-3">
           {!isCompanyAdmin && (
             <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-[200px] h-12">
                 <SelectValue placeholder="All companies" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All companies</SelectItem>
-                {companies.map((company, index) => {
-                  const companyId = getCompanyId(company, index);
-                  return (
-                    <SelectItem key={companyId} value={companyId}>
-                      {getCompanyDisplayName(company)}
-                    </SelectItem>
-                  );
-                })}
+                <SelectItem value="all">All Companies</SelectItem>
+                {companies.map((company, index) => (
+                  <SelectItem key={getCompanyId(company, index)} value={String(company._id)}>
+                    {getCompanyDisplayName(company)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           )}
           <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="All statuses" />
+            <SelectTrigger className="w-[180px] h-12">
+              <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              {statusOptions.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {getStatusLabel(status)}
-                </SelectItem>
-              ))}
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="ACTIVE">Active</SelectItem>
+              <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
+              <SelectItem value="INACTIVE">Inactive</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
-          Loading vehicles...
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
         </div>
       ) : error ? (
-        <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-6 text-sm text-destructive">
-          {error}
+        <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-12 text-center">
+          <AlertTriangle className="mx-auto h-12 w-12 text-destructive mb-4" />
+          <p className="text-lg font-medium text-destructive">{error}</p>
+          <Button variant="outline" className="mt-4" onClick={loadVehicles}>Try Again</Button>
+        </div>
+      ) : filteredVehicles.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border p-20 text-center">
+          <Truck className="mx-auto h-16 w-16 text-muted-foreground/20 mb-4" />
+          <p className="text-xl font-medium text-muted-foreground">No vehicles found matching your criteria</p>
+          {(query || selectedStatus !== 'all') && (
+            <Button variant="link" onClick={() => {setQuery(""); setSelectedStatus("all");}} className="mt-2 text-primary">
+              Clear all filters
+            </Button>
+          )}
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-secondary/50">
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Vehicle</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Driver</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Capacity</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredVehicles.map((vehicle, index) => {
-                  const vehicleId = getVehicleId(vehicle, index);
-                  const statusKey = getVehicleStatus(vehicle) as keyof typeof statusConfig;
-                  const status = statusConfig[statusKey] ?? statusConfig.unknown;
-                  const StatusIcon = status.icon;
-                  const isExpanded = expandedVehicleId === vehicleId;
-                  const companyId = getVehicleCompanyId(vehicle);
-                  const companyRecord =
-                    vehicle.companyId && typeof vehicle.companyId !== "string"
-                      ? (vehicle.companyId as CompanyRecord)
-                      : null;
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredVehicles.map((vehicle, index) => {
+            const statusKey = getVehicleStatus(vehicle) as keyof typeof statusConfig;
+            const status = statusConfig[statusKey] || statusConfig.unknown;
+            const StatusIcon = status.icon;
 
-                  return (
-                    <React.Fragment key={vehicleId}>
-                      <tr className="hover:bg-secondary/30 transition-colors">
-                        <td className="whitespace-nowrap px-5 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                              <Truck className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                              <button
-                                type="button"
-                                onClick={() => toggleVehicleDetails(vehicleId)}
-                                className="text-left font-medium text-card-foreground hover:underline"
-                              >
-                                {vehicle.plateNumber ? String(vehicle.plateNumber) : "-"}
-                              </button>
-                              <p className="text-xs text-muted-foreground">
-                                {vehicle.model ? String(vehicle.model) : "-"}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap px-5 py-4 text-sm text-card-foreground">
-                          {getVehicleCompanyName(vehicle)}
-                        </td>
-                        <td className="whitespace-nowrap px-5 py-4 text-sm text-card-foreground">
+            return (
+              <div 
+                key={getVehicleId(vehicle, index)}
+                className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-xl transition-all duration-300"
+              >
+                {/* Status Bar */}
+                <div className={cn("h-1.5 w-full", status.className.split(' ')[1])} />
+                
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 group-hover:scale-110 transition-transform">
+                      <Truck className="h-6 w-6 text-primary" />
+                    </div>
+                    <Badge variant="outline" className={cn("px-2.5 py-1 text-[10px] font-bold border", status.className)}>
+                      <StatusIcon className="mr-1 h-3 w-3" />
+                      {status.label.toUpperCase()}
+                    </Badge>
+                  </div>
+
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-foreground leading-tight">{vehicle.plateNumber}</h3>
+                    <p className="text-sm font-medium text-muted-foreground">{vehicle.model || "Unknown Model"}</p>
+                  </div>
+
+                  <div className="space-y-3 pt-4 border-t border-border/50">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Type</span>
+                      <span className="font-semibold text-foreground px-2 py-0.5 rounded bg-secondary">{vehicle.vehicleType}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Capacity</span>
+                      <span className="font-semibold text-foreground">{vehicle.capacityKg} kg</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Company</span>
+                      <span className="font-medium text-foreground truncate max-w-[120px]">
+                        {getCompanyDisplayName(vehicle.companyId)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 rounded-xl bg-secondary/30 p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-background flex items-center justify-center">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div className="overflow-hidden">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Current Driver</p>
+                        <p className="text-xs font-semibold text-foreground truncate">
                           {getVehicleDriverName(vehicle)}
-                        </td>
-                        <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
-                          {vehicle.vehicleType ? String(vehicle.vehicleType) : "-"}
-                        </td>
-                        <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
-                          {vehicle.capacityKg ? `${vehicle.capacityKg} kg` : "-"}
-                        </td>
-                        <td className="whitespace-nowrap px-5 py-4">
-                          <Badge className={cn("gap-1", status.className)}>
-                            <StatusIcon className="h-3 w-3" />
-                            {status.label}
-                          </Badge>
-                        </td>
-                        <td className="whitespace-nowrap px-5 py-4">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => toggleVehicleDetails(vehicleId)}
-                            aria-expanded={isExpanded}
-                          >
-                            {isExpanded ? (
-                              <ChevronUp className="mr-2 h-4 w-4" />
-                            ) : (
-                              <ChevronDown className="mr-2 h-4 w-4" />
-                            )}
-                            Details
-                          </Button>
-                        </td>
-                      </tr>
-                      {isExpanded && (
-                        <tr className="bg-secondary/10">
-                          <td colSpan={7} className="px-5 py-4 text-sm">
-                            <div className="grid gap-3 md:grid-cols-3">
-                              <div>
-                                <p className="text-xs uppercase tracking-wide text-muted-foreground">Company</p>
-                                <p className="text-card-foreground">{getVehicleCompanyName(vehicle)}</p>
-                              </div>
-                              <div>
-                                <p className="text-xs uppercase tracking-wide text-muted-foreground">Company ID</p>
-                                <p className="text-card-foreground">{companyId || "-"}</p>
-                              </div>
-                              <div>
-                                <p className="text-xs uppercase tracking-wide text-muted-foreground">Driver</p>
-                                <p className="text-card-foreground">{getVehicleDriverName(vehicle)}</p>
-                              </div>
-                              <div>
-                                <p className="text-xs uppercase tracking-wide text-muted-foreground">Type</p>
-                                <p className="text-card-foreground">
-                                  {vehicle.vehicleType ? String(vehicle.vehicleType) : "-"}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-xs uppercase tracking-wide text-muted-foreground">Capacity</p>
-                                <p className="text-card-foreground">
-                                  {vehicle.capacityKg ? `${vehicle.capacityKg} kg` : "-"}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-xs uppercase tracking-wide text-muted-foreground">Status</p>
-                                <p className="text-card-foreground">{status.label}</p>
-                              </div>
-                              {companyRecord?.email && (
-                                <div>
-                                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Company Email</p>
-                                  <p className="text-card-foreground">{String(companyRecord.email)}</p>
-                                </div>
-                              )}
-                              {companyRecord?.phoneNumber && (
-                                <div>
-                                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Company Phone</p>
-                                  <p className="text-card-foreground">{String(companyRecord.phoneNumber)}</p>
-                                </div>
-                              )}
-                              {companyRecord?.address && (
-                                <div>
-                                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Company Address</p>
-                                  <p className="text-card-foreground">{String(companyRecord.address)}</p>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {filteredVehicles.length === 0 && (
-            <div className="border-t border-border px-6 py-8 text-center text-sm text-muted-foreground">
-              No vehicles found.
-            </div>
-          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </DashboardLayout>
