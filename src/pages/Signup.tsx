@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
 import { useSignup } from "@/hooks/use-signup";
+import { User, Phone, Mail, Lock, Camera, ArrowRight, Truck, ShieldCheck, Briefcase } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const roles = ["SHIPPER", "VENDOR", "DRIVER", "COMPANY_ADMIN"] as const;
 type Role = (typeof roles)[number];
@@ -44,7 +46,6 @@ const Signup: React.FC = () => {
     setPhotoPreview(url);
   };
 
-  // cleanup on unmount
   useEffect(() => {
     return () => {
       if (photoPreview) URL.revokeObjectURL(photoPreview);
@@ -64,6 +65,7 @@ const Signup: React.FC = () => {
       toast({
         title: "Missing fields",
         description: "Please fill all required fields.",
+        variant: "destructive",
       });
       return;
     }
@@ -72,6 +74,7 @@ const Signup: React.FC = () => {
       toast({
         title: "Invalid email",
         description: "Please provide a valid email address.",
+        variant: "destructive",
       });
       return;
     }
@@ -80,6 +83,7 @@ const Signup: React.FC = () => {
       toast({
         title: "Password mismatch",
         description: "Passwords do not match.",
+        variant: "destructive",
       });
       return;
     }
@@ -115,6 +119,7 @@ const Signup: React.FC = () => {
         title: "Success",
         description: "Account created — redirecting...",
       });
+      
       if (resolvedRole === "COMPANY_ADMIN") {
         navigate("/company-admin-request");
       } else if (resolvedRole === "DRIVER") {
@@ -132,141 +137,230 @@ const Signup: React.FC = () => {
       toast({
         title: "Signup failed",
         description: message,
+        variant: "destructive",
       });
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-6xl bg-white rounded-lg shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 min-h-[520px]">
-        {/* Left side image for desktop */}
-        <div className="hidden md:block">
-          <div className="h-full w-full">
-            <img src="/images/logo-DGT-qY52.svg" alt="Signup illustration" className="w-full h-full object-cover" />
+    <div className="min-h-screen bg-white flex flex-col md:flex-row">
+      <div className="w-full flex flex-col md:flex-row min-h-screen overflow-hidden">
+        
+        {/* Left Side: Illustration & Branding (Hidden on small screens) */}
+        <div className="relative hidden lg:flex lg:w-1/2 bg-slate-900 overflow-hidden group">
+          <img 
+            src="/images/auth_signup_bg.png" 
+            alt="Logistics Terminal" 
+            className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700 ease-out"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+          
+          <div className="relative z-10 p-16 flex flex-col justify-end h-full w-full text-white">
+            <div className="flex items-center gap-3 mb-8 bg-white/10 backdrop-blur-md w-fit px-4 py-2 rounded-full border border-white/10">
+              <ShieldCheck className="h-5 w-5 text-green-400" />
+              <span className="text-sm font-medium">Join the Global Network</span>
+            </div>
+            <h2 className="text-5xl font-bold leading-tight mb-6">
+              Connect to <br />
+              <span className="text-blue-400">Unlimited Growth</span>
+            </h2>
+            <p className="text-slate-300 text-lg max-w-md leading-relaxed mb-12">
+              The world's most intuitive platform for transporters, vendors, and shippers to collaborate seamlessly.
+            </p>
+            
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-blue-600/20 border border-blue-600/30 flex items-center justify-center">
+                  <Truck className="h-6 w-6 text-blue-400" />
+                </div>
+                <div>
+                  <p className="font-bold text-white">Optimized Routing</p>
+                  <p className="text-slate-400 text-sm">Save up to 30% on fuel costs.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-green-600/20 border border-green-600/30 flex items-center justify-center">
+                  <Briefcase className="h-6 w-6 text-green-400" />
+                </div>
+                <div>
+                  <p className="font-bold text-white">Marketplace Access</p>
+                  <p className="text-slate-400 text-sm">Find new loads and partners daily.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Signup form */}
-        <div className="p-8 md:p-16 flex flex-col justify-center">
-          <div className="flex justify-end mb-4">
-            <img src="/images/logo-DGT-qY52.svg" alt="Logo" className="h-10 w-auto" />
+        {/* Right Side: Signup Form */}
+        <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center bg-white overflow-y-auto">
+          <div className="mb-10 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="bg-blue-600 p-2 rounded-xl">
+                <Truck className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold tracking-tight text-slate-900">Cargo<span className="text-blue-600">Dash</span></span>
+            </div>
+            <Link to="/login" className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+              Already have an account?
+            </Link>
           </div>
-          <h2 className="text-2xl font-semibold text-slate-900">Create account</h2>
-          <p className="text-sm text-slate-500 mt-1">Fill the required fields to sign up.</p>
 
-          <form
-            onSubmit={handleSubmit}
-            className="mt-6 grid grid-cols-1 gap-4"
-          >
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Full name *
-              </label>
-              <Input
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Doe"
-              />
-            </div>
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-slate-900 mb-3">Get Started</h1>
+            <p className="text-slate-500 text-lg">Create your professional account today.</p>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Phone number *
-              </label>
-              <Input
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="+1 555 555 5555"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Email *
-              </label>
-              <Input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                type="email"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700">
-                  Password *
-                </label>
-                <Input
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  type="password"
-                  placeholder="Password"
-                />
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700 ml-1">Full Name</label>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <Input
+                    className="pl-12 h-13 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all"
+                    placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700">
-                  Confirm password *
-                </label>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700 ml-1">Phone Number</label>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                    <Phone className="h-5 w-5" />
+                  </div>
+                  <Input
+                    className="pl-12 h-13 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all"
+                    placeholder="+251 9xx xxx xxx"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700 ml-1">Email Address</label>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                  <Mail className="h-5 w-5" />
+                </div>
                 <Input
-                  value={passwordConfirm}
-                  onChange={(e) => setPasswordConfirm(e.target.value)}
-                  type="password"
-                  placeholder="Confirm password"
+                  className="pl-12 h-13 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all"
+                  placeholder="name@company.com"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Role (optional)
-              </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700 ml-1">Password</label>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                    <Lock className="h-5 w-5" />
+                  </div>
+                  <Input
+                    className="pl-12 h-13 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all"
+                    placeholder="••••••••"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700 ml-1">Confirm Password</label>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                    <Lock className="h-5 w-5" />
+                  </div>
+                  <Input
+                    className="pl-12 h-13 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all"
+                    placeholder="••••••••"
+                    type="password"
+                    value={passwordConfirm}
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700 ml-1">Your Primary Role</label>
               <Select value={role} onValueChange={(val: Role) => setRole(val)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
+                <SelectTrigger className="h-13 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all">
+                  <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
                   {roles.map((r) => (
-                    <SelectItem key={r} value={r}>
-                      {r}
+                    <SelectItem key={r} value={r} className="rounded-xl my-1 focus:bg-blue-50 focus:text-blue-600 font-medium cursor-pointer">
+                      {r.replace(/_/g, ' ')}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Photo (optional)
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) =>
-                  handlePhoto(e.target.files?.[0])
-                }
-                className="mt-1"
-              />
-              {photoPreview && (
-                <img
-                  src={photoPreview}
-                  alt="preview"
-                  className="mt-2 h-24 w-24 object-cover rounded-md"
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700 ml-1">Profile Photo (Recommended)</label>
+              <div 
+                className="group relative flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-[1.5rem] p-6 bg-slate-50 hover:bg-slate-100/50 hover:border-blue-300 transition-all cursor-pointer overflow-hidden"
+                onClick={() => document.getElementById('photo-upload')?.click()}
+              >
+                {photoPreview ? (
+                  <div className="relative">
+                    <img src={photoPreview} alt="Preview" className="h-20 w-20 rounded-2xl object-cover ring-4 ring-white" />
+                    <div className="absolute -bottom-1 -right-1 bg-blue-600 rounded-full p-1.5 border-2 border-white">
+                      <Camera className="h-3 w-3 text-white" />
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="bg-white p-3 rounded-2xl shadow-sm mb-2 text-slate-400 group-hover:text-blue-600 transition-colors">
+                      <Camera className="h-6 w-6" />
+                    </div>
+                    <p className="text-sm text-slate-500 font-medium">Click to upload photo</p>
+                    <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">PNG, JPG up to 5MB</p>
+                  </>
+                )}
+                <input
+                  id="photo-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handlePhoto(e.target.files?.[0])}
+                  className="hidden"
                 />
-              )}
+              </div>
             </div>
 
-            <div className="pt-2">
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Sign up"}
+            <div className="pt-4">
+              <Button 
+                className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-lg font-bold shadow-lg shadow-blue-600/20 group transition-all" 
+                type="submit" 
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Creating account...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    Create Account
+                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                )}
               </Button>
             </div>
           </form>
-          <div className="mt-6 text-center text-sm">
-            <span className="text-slate-600">Already have an account? </span>
-            <Link to="/login" className="text-primary font-medium hover:underline">Sign in</Link>
-          </div>
         </div>
       </div>
     </div>

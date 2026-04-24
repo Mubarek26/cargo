@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLogin } from "@/hooks/use-login";
 import { useLoginApplicationGate } from "@/hooks/use-login-application-gate";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Truck } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -18,7 +20,7 @@ const Login: React.FC = () => {
     event.preventDefault();
 
     if (!emailOrPhone.trim() || !password) {
-      toast.error("Email/phone and password are required.");
+      toast.error("Please enter your credentials.");
       return;
     }
 
@@ -49,7 +51,7 @@ const Login: React.FC = () => {
 
       const wasHandled = await checkApplicationGate(user?.role, token, {
         onApproved: () => {
-          toast.success("Login successful.");
+          toast.success("Welcome back!");
           navigate("/home");
         },
         onCompanyMissing: () => {
@@ -91,70 +93,137 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-6xl bg-white rounded-lg shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-2 min-h-[520px]">
-        <div className="hidden md:block">
-          <div className="h-full w-full">
-            <img src="/images/logo-DGT-qY52.svg" alt="Login illustration" className="w-full h-full object-cover" />
+    <div className="min-h-screen bg-white flex flex-col md:flex-row">
+      <div className="w-full flex flex-col md:flex-row min-h-screen overflow-hidden">
+        
+        {/* Left Side: Illustration & Branding */}
+        <div className="relative hidden lg:flex lg:w-1/2 bg-slate-900 overflow-hidden group">
+          <img 
+            src="/images/auth_login_bg.png" 
+            alt="Logistics Dashboard" 
+            className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700 ease-out"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+          
+          <div className="relative z-10 p-16 flex flex-col justify-end h-full w-full text-white">
+            <div className="flex items-center gap-3 mb-8 bg-white/10 backdrop-blur-md w-fit px-4 py-2 rounded-full border border-white/10">
+              <ShieldCheck className="h-5 w-5 text-blue-400" />
+              <span className="text-sm font-medium">Enterprise Grade Security</span>
+            </div>
+            <h2 className="text-5xl font-bold leading-tight mb-6">
+              Empowering Global <br />
+              <span className="text-blue-400">Logistics Networks</span>
+            </h2>
+            <p className="text-slate-300 text-lg max-w-md leading-relaxed mb-12">
+              The all-in-one platform for fleet management, real-time tracking, and marketplace collaboration.
+            </p>
+            
+            <div className="grid grid-cols-2 gap-8 border-t border-white/10 pt-8">
+              <div>
+                <p className="text-2xl font-bold text-white">2.5k+</p>
+                <p className="text-slate-400 text-sm">Active Carriers</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">99.9%</p>
+                <p className="text-slate-400 text-sm">Uptime SLA</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="p-10 md:p-16 flex flex-col justify-center">
-          <div className="flex justify-end mb-4">
-            <img src="/images/logo-DGT-qY52.svg" alt="Logo" className="h-10 w-auto" />
+        {/* Right Side: Form */}
+        <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-20 flex flex-col justify-center bg-white">
+          <div className="mb-12 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="bg-blue-600 p-2 rounded-xl">
+                <Truck className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold tracking-tight text-slate-900">Cargo<span className="text-blue-600">Dash</span></span>
+            </div>
+            <Link to="/signup" className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+              Create an account
+            </Link>
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900">Welcome Back!</h1>
-          <p className="mt-3 text-sm text-slate-500">Sign in to manage menus, track and deliver live orders, and keep your account details up to date.</p>
 
-          <form className="mt-8 space-y-4 w-full max-w-lg" onSubmit={handleSubmit}>
-            <div>
-              <label className="sr-only">Email or phone</label>
-              <Input
-                placeholder="Email or phone number"
-                type="text"
-                value={emailOrPhone}
-                onChange={(event) => setEmailOrPhone(event.target.value)}
-                autoComplete="username"
-              />
+          <div className="mb-10">
+            <h1 className="text-4xl font-bold text-slate-900 mb-3">Welcome Back</h1>
+            <p className="text-slate-500 text-lg">Enter your credentials to access your dashboard.</p>
+          </div>
+
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700 ml-1">Email or Phone</label>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                  <Mail className="h-5 w-5" />
+                </div>
+                <Input
+                  className="pl-12 h-14 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all text-lg"
+                  placeholder="name@company.com"
+                  type="text"
+                  value={emailOrPhone}
+                  onChange={(e) => setEmailOrPhone(e.target.value)}
+                  autoComplete="username"
+                />
+              </div>
             </div>
 
-            <div className="relative">
-              <label className="sr-only">Password</label>
-              <Input
-                placeholder="Password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete="current-password"
-              />
-              <button
-                type="button"
-                aria-label={showPassword ? "hide password" : "show password"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
-                onClick={() => setShowPassword((prev) => !prev)}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between ml-1">
+                <label className="text-sm font-semibold text-slate-700">Password</label>
+                <Link to="/forgot-password" name="forgot-password-link" className="text-xs font-semibold text-blue-600 hover:underline">Forgot Password?</Link>
+              </div>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <Input
+                  className="pl-12 pr-12 h-14 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all text-lg"
+                  placeholder="••••••••"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <Button 
+                className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-lg font-bold shadow-lg shadow-blue-600/20 group transition-all" 
+                type="submit" 
+                disabled={isLoading}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div />
-              <Link to="#" className="text-sm text-primary hover:underline">Forgot password?</Link>
-            </div>
-
-            <div className="pt-2">
-              <Button className="w-full rounded-full h-12" type="submit" disabled={isLoading}>
-                {isLoading ? "Signing In..." : "Sign In"}
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Signing In...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    Sign In
+                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                )}
               </Button>
             </div>
-            <div className="mt-3 text-center text-sm">
-              <span className="text-slate-600">Don't have an account? </span>
-              <a href="/signup" className="text-primary font-medium hover:underline">Sign up</a>
-            </div>
           </form>
+
+          <div className="mt-12 pt-8 border-t border-slate-100 flex items-center justify-center gap-6">
+            <div className="flex -space-x-3 overflow-hidden">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-slate-200" />
+              ))}
+            </div>
+            <p className="text-sm text-slate-500">Joined by <span className="font-bold text-slate-900">10,000+</span> professionals worldwide.</p>
+          </div>
         </div>
       </div>
     </div>

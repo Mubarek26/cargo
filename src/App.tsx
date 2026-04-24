@@ -13,6 +13,8 @@ import DriverApplication from "./pages/DriverApplication";
 import VendorApplication from "./pages/VendorApplication";
 import DriverApplicationReview from "./pages/DriverApplicationReview";
 import VendorApplicationReview from "./pages/VendorApplicationReview";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // Dashboard
@@ -75,6 +77,8 @@ const App = () => (
           <Route path="/vendor-application" element={<VendorApplication />} />
           <Route path="/driver-application-review" element={<DriverApplicationReview />} />
           <Route path="/vendor-application-review" element={<VendorApplicationReview />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/resetPassword/:token" element={<ResetPassword />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/home" element={<Index />} />

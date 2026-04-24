@@ -100,3 +100,45 @@ export const checkAuth = async (token: string) => {
     data,
   } as const;
 };
+
+export const forgotPassword = async (email: string): Promise<{ status: string; message: string }> => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/users/forgotPassword`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      (data && typeof data === "object" && "message" in data && data.message) ||
+      "Failed to send reset email. Please try again.";
+    throw new Error(String(message));
+  }
+
+  return data;
+};
+
+export const resetPassword = async (token: string, password: string, passwordConfirm: string): Promise<AuthResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/users/resetPassword/${token}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ password, passwordConfirm }),
+  });
+
+  const data: AuthResponse = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      (data && typeof data === "object" && "message" in data && data.message) ||
+      "Failed to reset password. Please try again.";
+    throw new Error(String(message));
+  }
+
+  return data;
+};
