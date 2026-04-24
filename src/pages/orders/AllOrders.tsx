@@ -42,6 +42,7 @@ export default function AllOrders() {
   const [user, setUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [assignmentFilter, setAssignmentFilter] = useState<string>("ALL");
 
   useEffect(() => {
     const init = async () => {
@@ -77,8 +78,9 @@ export default function AllOrders() {
       order.deliveryLocation?.city?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesStatus = statusFilter === "ALL" || order.status === statusFilter;
+    const matchesAssignment = assignmentFilter === "ALL" || order.assignmentMode === assignmentFilter;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesAssignment;
   });
 
   const handleAcceptOrder = async (e: React.MouseEvent, orderId: string) => {
@@ -201,13 +203,25 @@ export default function AllOrders() {
             <SelectItem value="CANCELLED">Cancelled</SelectItem>
           </SelectContent>
         </Select>
-        { (searchQuery || statusFilter !== "ALL") && (
+        <Select value={assignmentFilter} onValueChange={setAssignmentFilter}>
+          <SelectTrigger>
+            <SelectValue placeholder="Order Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All Types</SelectItem>
+            <SelectItem value="OPEN_MARKETPLACE">Open Marketplace</SelectItem>
+            <SelectItem value="DIRECT_COMPANY">Direct Company</SelectItem>
+            <SelectItem value="DIRECT_PRIVATE_TRANSPORTER">Direct Transporter</SelectItem>
+          </SelectContent>
+        </Select>
+        { (searchQuery || statusFilter !== "ALL" || assignmentFilter !== "ALL") && (
           <Button 
             variant="ghost" 
             className="gap-2 text-muted-foreground"
             onClick={() => {
               setSearchQuery("");
               setStatusFilter("ALL");
+              setAssignmentFilter("ALL");
             }}
           >
             <X className="h-4 w-4" /> Clear Filters
@@ -237,13 +251,12 @@ export default function AllOrders() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-secondary/50">
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Order Number</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Title / Date</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Route</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Budget</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payment</th>
-                  <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Order Info</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Route</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Budget & Payment</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -261,39 +274,57 @@ export default function AllOrders() {
                   const canAction = isAssignedToMyCompany && order.status === 'PENDING';
 
                   return (
-                    <tr key={order._id} className="hover:bg-secondary/30 transition-colors cursor-pointer" onClick={() => navigate(`/orders/${order._id}`)}>
-                      <td className="whitespace-nowrap px-5 py-4">
+                    <tr 
+                        key={order._id} 
+                        className="hover:bg-secondary/30 transition-colors cursor-pointer" 
+                        onClick={() => {
+                          if (order.assignmentMode === 'OPEN_MARKETPLACE') {
+                            navigate(`/marketplace/orders/${order._id}`);
+                          } else {
+                            navigate(`/orders/${order._id}`);
+                          }
+                        }}
+                      >
+                      <td className="whitespace-nowrap px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <ShoppingCart className="h-4 w-4 text-primary" />
-                          <span className="font-medium text-card-foreground">{order.orderNumber}</span>
+                          <div className="rounded-full bg-primary/10 p-1.5 shrink-0">
+                            <ShoppingCart className="h-3.5 w-3.5 text-primary" />
+                          </div>
+                          <div className="text-sm">
+                            <p className="font-bold text-card-foreground leading-tight">{order.orderNumber}</p>
+                            <p className="text-xs text-muted-foreground truncate max-w-[140px]">{order.title}</p>
+                            <p className="text-[10px] text-muted-foreground/60">{new Date(order.createdAt).toLocaleDateString()}</p>
+                          </div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap px-5 py-4">
-                        <div className="text-sm">
-                          <p className="text-card-foreground font-medium">{order.title}</p>
-                          <p className="text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</p>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-4">
-                        <div className="flex items-center gap-1 text-sm">
-                           <span className="text-card-foreground">{order.pickupLocation?.city || "N/A"}</span>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <div className="flex items-center gap-1.5 text-xs">
+                           <span className="text-card-foreground font-medium">{order.pickupLocation?.city || "N/A"}</span>
                            <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                           <span className="text-card-foreground">{order.deliveryLocation?.city || "N/A"}</span>
+                           <span className="text-card-foreground font-medium">{order.deliveryLocation?.city || "N/A"}</span>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap px-5 py-4 font-medium text-card-foreground">
-                        {order.pricing?.proposedBudget} {order.pricing?.currency}
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <Badge variant="outline" className={cn(
+                          "text-[10px] px-2 py-0 h-5 font-normal",
+                          order.assignmentMode === 'OPEN_MARKETPLACE' ? "border-primary text-primary" : "border-muted-foreground/30 text-muted-foreground"
+                        )}>
+                          {order.assignmentMode ? order.assignmentMode.replace(/_/g, ' ') : 'N/A'}
+                        </Badge>
                       </td>
-                      <td className="whitespace-nowrap px-5 py-4">
-                        <Badge className={cn("gap-1", status.className)}>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <Badge className={cn("gap-1 text-[10px] px-2 py-0 h-5", status.className)}>
                           <StatusIcon className="h-3 w-3" />
                           {status.label}
                         </Badge>
                       </td>
-                      <td className="whitespace-nowrap px-5 py-4">
-                        <Badge variant="outline" className={payment.className}>{payment.label}</Badge>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <div className="text-sm">
+                          <p className="font-bold text-card-foreground">{order.pricing?.proposedBudget} <span className="text-[10px] text-muted-foreground font-normal">{order.pricing?.currency}</span></p>
+                          <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 h-4 mt-1 font-normal", payment.className)}>{payment.label}</Badge>
+                        </div>
                       </td>
-                      <td className="whitespace-nowrap px-5 py-4 text-right">
+                      <td className="whitespace-nowrap px-4 py-3 text-right">
                         {canAction ? (
                           <div className="flex justify-end gap-2">
                             <Button 

@@ -16,6 +16,8 @@ import { getCompanyVehicles } from "@/services/vehicleService";
 import { useCheckAuth } from "@/hooks/use-check-auth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { RouteMap } from "@/components/RouteMap";
+import { calculateDistance, formatDistance } from "@/utils/distance";
 
 const statusConfig: any = {
   PENDING: { label: "Pending", icon: Clock, className: "text-warning bg-warning/10" },
@@ -42,6 +44,7 @@ export default function OrderDetails() {
 
   const [selectedDriver, setSelectedDriver] = useState<string>("");
   const [selectedVehicle, setSelectedVehicle] = useState<string>("");
+  const [roadData, setRoadData] = useState<{ distanceKm: number; durationMin: number } | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -55,7 +58,7 @@ export default function OrderDetails() {
       }
     };
     init();
-  }, [orderId]);
+  }, [orderId, navigate]);
 
   const fetchOrderDetails = async () => {
     if (!orderId) return;
@@ -63,6 +66,10 @@ export default function OrderDetails() {
     try {
       const res = await orderService.getOrder(orderId);
       if (res.status === "success") {
+        if (res.data.order.assignmentMode === 'OPEN_MARKETPLACE') {
+          navigate(`/marketplace/orders/${orderId}`, { replace: true });
+          return;
+        }
         setOrder(res.data.order);
         
         // If the order is ACCEPTED, we might need to fetch drivers and vehicles for assignment
@@ -268,6 +275,46 @@ export default function OrderDetails() {
                 <MapPin className="h-5 w-5 text-primary" />
                 Route Information
               </h3>
+              
+              {order.pickupLocation?.latitude && order.pickupLocation?.longitude && 
+               order.deliveryLocation?.latitude && order.deliveryLocation?.longitude && (
+                <div className="mb-6">
+                  <RouteMap 
+                    pickup={{ 
+                      lat: order.pickupLocation.latitude, 
+                      lng: order.pickupLocation.longitude,
+                      address: order.pickupLocation.address 
+                    }} 
+                    delivery={{ 
+                      lat: order.deliveryLocation.latitude, 
+                      lng: order.deliveryLocation.longitude,
+                      address: order.deliveryLocation.address
+                    }}
+                    onRouteCalculated={setRoadData}
+                    className="h-[280px] w-full"
+                  />
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1 bg-secondary/30 p-3 rounded-xl border border-border">
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Optimal Road Distance</span>
+                      <span className="font-bold text-lg text-primary">
+                        {roadData ? formatDistance(roadData.distanceKm) : formatDistance(calculateDistance(
+                          order.pickupLocation.latitude, 
+                          order.pickupLocation.longitude,
+                          order.deliveryLocation.latitude, 
+                          order.deliveryLocation.longitude
+                        ))}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1 bg-secondary/30 p-3 rounded-xl border border-border">
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Estimated Travel Time</span>
+                      <span className="font-bold text-lg text-foreground">
+                        {roadData ? `${Math.round(roadData.durationMin)} mins` : "Calculating..."}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-6">
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Pickup</p>

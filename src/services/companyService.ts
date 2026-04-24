@@ -101,3 +101,10 @@ export const approveCompany = async (token: string, companyId: string) => {
 
   return data as Record<string, unknown> | null;
 };
+
+export const companyService = {
+  getCompanies,
+  getCompanyMe,
+  approveCompany,
+  submitCompanyRequest,
+};

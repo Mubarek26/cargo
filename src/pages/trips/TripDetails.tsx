@@ -4,6 +4,8 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getTripById } from "@/services/tripService";
+import { RouteMap } from "@/components/RouteMap";
+import { calculateDistance, formatDistance } from "@/utils/distance";
 
 const toText = (value: unknown) => (value === null || value === undefined ? "-" : String(value));
 
@@ -26,6 +28,7 @@ export default function TripDetails() {
   const [trip, setTrip] = React.useState<Record<string, unknown> | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [roadData, setRoadData] = React.useState<{ distanceKm: number; durationMin: number } | null>(null);
 
   const loadTrip = React.useCallback(async () => {
     const token = localStorage.getItem("authToken");
@@ -112,22 +115,67 @@ export default function TripDetails() {
             </div>
           </Section>
 
-          <Section title="Map">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Last location</p>
-                <p className="text-sm text-foreground">
-                  {toText((trip as any)?.lastLocation?.lat)}, {toText((trip as any)?.lastLocation?.lng)}
-                </p>
+          <Section title="Trip Route & Distance">
+            {pickup?.latitude && pickup?.longitude && 
+             delivery?.latitude && delivery?.longitude ? (
+              <div className="space-y-4">
+                <RouteMap 
+                  pickup={{ 
+                    lat: pickup.latitude, 
+                    lng: pickup.longitude,
+                    address: pickup.address 
+                  }} 
+                  delivery={{ 
+                    lat: delivery.latitude, 
+                    lng: delivery.longitude,
+                    address: delivery.address
+                  }}
+                  onRouteCalculated={setRoadData}
+                  className="h-[300px] w-full"
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col bg-secondary/30 p-3 rounded-lg border border-border">
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground">Optimal Road Distance</span>
+                    <span className="font-bold text-lg text-primary">
+                      {roadData ? formatDistance(roadData.distanceKm) : formatDistance(calculateDistance(
+                        pickup.latitude, 
+                        pickup.longitude,
+                        delivery.latitude, 
+                        delivery.longitude
+                      ))}
+                    </span>
+                  </div>
+                  <div className="flex flex-col bg-secondary/30 p-3 rounded-lg border border-border text-right">
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground">Est. Drive Time</span>
+                    <span className="font-bold text-lg text-foreground">
+                      {roadData ? `${Math.round(roadData.durationMin)} mins` : "Calculating..."}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground bg-secondary/10 p-2 rounded border border-border">
+                  <span>Last Known Location</span>
+                  <span className="font-medium text-foreground">
+                    {toText((trip as any)?.lastLocation?.lat)}, {toText((trip as any)?.lastLocation?.lng)}
+                  </span>
+                </div>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Speed / Heading</p>
-                <p className="text-sm text-foreground">
-                  {toText((trip as any)?.lastLocation?.speed)} km/h • {toText((trip as any)?.lastLocation?.heading)}
-                </p>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Last location</p>
+                  <p className="text-sm text-foreground">
+                    {toText((trip as any)?.lastLocation?.lat)}, {toText((trip as any)?.lastLocation?.lng)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Speed / Heading</p>
+                  <p className="text-sm text-foreground">
+                    {toText((trip as any)?.lastLocation?.speed)} km/h • {toText((trip as any)?.lastLocation?.heading)}
+                  </p>
+                </div>
+                <p className="col-span-2 text-sm text-muted-foreground italic">Coordinate data is missing for map visualization.</p>
               </div>
-            </div>
-            <p className="mt-4 text-sm text-muted-foreground">Map view can be wired to your live tracking component.</p>
+            )}
           </Section>
 
           <Section title="Shipment Info">

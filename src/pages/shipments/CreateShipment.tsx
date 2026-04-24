@@ -9,7 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { orderService, CreateOrderPayload } from "@/services/orderService";
 import { getCompanies } from "@/services/companyService";
+import { contractService } from "@/services/contractService";
 import { toast } from "sonner";
+import { LocationPicker } from "@/components/LocationPicker";
 
 export default function CreateShipment() {
   const navigate = useNavigate();
@@ -40,24 +42,43 @@ export default function CreateShipment() {
     proposedBudget: "",
     currency: "ETB",
     paymentMethod: "BANK_TRANSFER",
-    specialInstructions: ""
+    specialInstructions: "",
+    pickupLat: null as number | null,
+    pickupLng: null as number | null,
+    deliveryLat: null as number | null,
+    deliveryLng: null as number | null,
   });
 
+  const [isPickupPickerOpen, setIsPickupPickerOpen] = useState(false);
+  const [isDeliveryPickerOpen, setIsDeliveryPickerOpen] = useState(false);
+
   useEffect(() => {
-    const fetchCompanies = async () => {
+    const fetchData = async () => {
       const token = localStorage.getItem("authToken");
+      const userRole = localStorage.getItem("userRole");
       if (token) {
         try {
-          const res = await getCompanies(token);
-          if (res.ok && res.data && (res.data as any).data) {
-            setCompanies((res.data as any).data.companies || []);
+          if (userRole === "VENDOR") {
+            const contractRes = await contractService.getVendorContracts();
+            if (contractRes.status === "success") {
+              const activeCompanies = contractRes.data.contracts
+                .filter((c: any) => c.status === "ACCEPTED")
+                .map((c: any) => c.transporterCompanyId)
+                .filter(Boolean);
+              setCompanies(activeCompanies);
+            }
+          } else {
+            const res = await getCompanies(token);
+            if (res.ok && res.data && (res.data as any).data) {
+              setCompanies((res.data as any).data.companies || []);
+            }
           }
         } catch (error) {
           console.error("Failed to fetch companies", error);
         }
       }
     };
-    fetchCompanies();
+    fetchData();
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -74,6 +95,16 @@ export default function CreateShipment() {
     
     if (!formData.title || !formData.pickupAddress || !formData.deliveryAddress || !formData.pickupDate || !formData.proposedBudget) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (!formData.pickupLat || !formData.pickupLng) {
+      toast.error("Please select the pickup location from the map");
+      return;
+    }
+
+    if (!formData.deliveryLat || !formData.deliveryLng) {
+      toast.error("Please select the delivery location from the map");
       return;
     }
 
@@ -94,12 +125,16 @@ export default function CreateShipment() {
         city: formData.pickupCity,
         contactName: formData.pickupContactName,
         contactPhone: formData.pickupContactPhone,
+        latitude: formData.pickupLat || undefined,
+        longitude: formData.pickupLng || undefined,
       },
       deliveryLocation: {
         address: formData.deliveryAddress,
         city: formData.deliveryCity,
         contactName: formData.deliveryContactName,
         contactPhone: formData.deliveryContactPhone,
+        latitude: formData.deliveryLat || undefined,
+        longitude: formData.deliveryLng || undefined,
       },
       cargo: {
         type: formData.cargoType,
@@ -212,7 +247,19 @@ export default function CreateShipment() {
                 <h4 className="text-sm font-medium text-muted-foreground">Pickup Location</h4>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="pickupAddress">Address *</Label>
+                    <Label htmlFor="pickupAddress" className="flex justify-between">
+                      Address *
+                      <Button 
+                        type="button" 
+                        variant="link" 
+                        size="sm" 
+                        className="h-auto p-0 text-primary flex items-center gap-1"
+                        onClick={() => setIsPickupPickerOpen(true)}
+                      >
+                        <MapPin className="h-3 w-3" />
+                        {formData.pickupLat ? "Location Set" : "Pick from Map *"}
+                      </Button>
+                    </Label>
                     <Input 
                       id="pickupAddress" 
                       placeholder="Street address" 
@@ -255,7 +302,19 @@ export default function CreateShipment() {
                 <h4 className="text-sm font-medium text-muted-foreground">Delivery Location</h4>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="deliveryAddress">Address *</Label>
+                    <Label htmlFor="deliveryAddress" className="flex justify-between">
+                      Address *
+                      <Button 
+                        type="button" 
+                        variant="link" 
+                        size="sm" 
+                        className="h-auto p-0 text-primary flex items-center gap-1"
+                        onClick={() => setIsDeliveryPickerOpen(true)}
+                      >
+                        <MapPin className="h-3 w-3" />
+                        {formData.deliveryLat ? "Location Set" : "Pick from Map *"}
+                      </Button>
+                    </Label>
                     <Input 
                       id="deliveryAddress" 
                       placeholder="Street address" 
@@ -497,6 +556,22 @@ export default function CreateShipment() {
           </div>
         </div>
       </form>
+
+      <LocationPicker 
+        isOpen={isPickupPickerOpen}
+        onClose={() => setIsPickupPickerOpen(false)}
+        onSelect={(lat, lng) => setFormData(prev => ({ ...prev, pickupLat: lat, pickupLng: lng }))}
+        title="Pick Pickup Location"
+        initialLocation={formData.pickupLat && formData.pickupLng ? { lat: formData.pickupLat, lng: formData.pickupLng } : undefined}
+      />
+
+      <LocationPicker 
+        isOpen={isDeliveryPickerOpen}
+        onClose={() => setIsDeliveryPickerOpen(false)}
+        onSelect={(lat, lng) => setFormData(prev => ({ ...prev, deliveryLat: lat, deliveryLng: lng }))}
+        title="Pick Delivery Location"
+        initialLocation={formData.deliveryLat && formData.deliveryLng ? { lat: formData.deliveryLat, lng: formData.deliveryLng } : undefined}
+      />
     </DashboardLayout>
   );
 }

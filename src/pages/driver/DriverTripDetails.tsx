@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { tripService } from "@/services/tripService";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { RouteMap } from "@/components/RouteMap";
+import { calculateDistance, formatDistance } from "@/utils/distance";
 
 const milestoneConfig: any = {
   STARTED: { label: "Started", icon: Clock, className: "text-blue-500 bg-blue-500/10", next: "ARRIVED", action: "Arrive at Pickup" },
@@ -31,6 +33,7 @@ export default function DriverTripDetails() {
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [note, setNote] = useState("");
   const [otpCode, setOtpCode] = useState("");
+  const [roadData, setRoadData] = useState<{ distanceKm: number; durationMin: number } | null>(null);
 
   useEffect(() => {
     fetchTripDetails();
@@ -181,6 +184,46 @@ export default function DriverTripDetails() {
               <MapPin className="h-5 w-5 text-primary" />
               Delivery Route
             </h3>
+
+            {order?.pickupLocation?.latitude && order?.pickupLocation?.longitude && 
+             order?.deliveryLocation?.latitude && order?.deliveryLocation?.longitude && (
+              <div className="mb-6">
+                <RouteMap 
+                  pickup={{ 
+                    lat: order.pickupLocation.latitude, 
+                    lng: order.pickupLocation.longitude,
+                    address: order.pickupLocation.address 
+                  }} 
+                  delivery={{ 
+                    lat: order.deliveryLocation.latitude, 
+                    lng: order.deliveryLocation.longitude,
+                    address: order.deliveryLocation.address
+                  }}
+                  onRouteCalculated={setRoadData}
+                  className="h-[280px] w-full"
+                />
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1 bg-secondary/30 p-3 rounded-xl border border-border">
+                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Road Trip Distance</span>
+                    <span className="font-bold text-lg text-primary">
+                      {roadData ? formatDistance(roadData.distanceKm) : formatDistance(calculateDistance(
+                        order.pickupLocation.latitude, 
+                        order.pickupLocation.longitude,
+                        order.deliveryLocation.latitude, 
+                        order.deliveryLocation.longitude
+                      ))}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1 bg-secondary/30 p-3 rounded-xl border border-border">
+                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Estimated Duration</span>
+                    <span className="font-bold text-lg text-foreground">
+                      {roadData ? `${Math.round(roadData.durationMin)} mins` : "Calculating..."}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="relative space-y-8 before:absolute before:left-[11px] before:top-2 before:h-[calc(100%-16px)] before:w-[2px] before:bg-muted">
               <div className="relative pl-8">
                 <div className="absolute left-0 top-1.5 h-[24px] w-[24px] rounded-full border-4 border-background bg-primary" />

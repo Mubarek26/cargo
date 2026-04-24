@@ -131,6 +131,55 @@ export const orderService = {
     return response.json();
   },
 
+  getMarketplaceOrders: async () => {
+    const token = localStorage.getItem("authToken");
+    const response = await fetch(`${API_BASE_URL}/api/v1/orders/marketplace`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch marketplace orders");
+    }
+
+    return response.json();
+  },
+
+  getOrderById: async (orderId: string) => {
+    const token = localStorage.getItem("authToken");
+    const response = await fetch(`${API_BASE_URL}/api/v1/orders/${orderId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch order details");
+    }
+
+    return response.json();
+  },
+
+  adminRejectOrder: async (orderId: string, reason: string) => {
+    const token = localStorage.getItem("authToken");
+    const response = await fetch(`${API_BASE_URL}/api/v1/orders/${orderId}/admin-reject`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ reason }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to reject order");
+    }
+
+    return response.json();
+  },
+
   assignOrder: async (orderId: string, driverId: string, vehicleId: string) => {
     const token = localStorage.getItem("authToken");
     const response = await fetch(`${API_BASE_URL}/api/v1/orders/${orderId}/assign`, {

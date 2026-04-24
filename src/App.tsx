@@ -44,6 +44,11 @@ import ClientFeedback from "./pages/clients/ClientFeedback";
 import CompanyDirectory from "./pages/companies/CompanyDirectory";
 import Profile from "./pages/Profile";
 import ApplicationsReview from "./pages/admin/ApplicationsReview";
+import UserManagement from "./pages/admin/UserManagement";
+import VendorContracts from "./pages/vendors/VendorContracts";
+import CompanyContracts from "./pages/companies/CompanyContracts";
+import OpenMarketplace from "./pages/marketplace/OpenMarketplace";
+import MarketplaceOrderDetails from "./pages/marketplace/MarketplaceOrderDetails";
 
 // Orders
 import AllOrders from "./pages/orders/AllOrders";
@@ -70,7 +75,7 @@ const App = () => (
           <Route path="/vendor-application" element={<VendorApplication />} />
           <Route path="/driver-application-review" element={<DriverApplicationReview />} />
           <Route path="/vendor-application-review" element={<VendorApplicationReview />} />
-          
+
           <Route element={<ProtectedRoute />}>
             <Route path="/home" element={<Index />} />
             <Route path="/profile" element={<Profile />} />
@@ -85,7 +90,7 @@ const App = () => (
 
             {/* Shipments */}
             <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER"]} />}
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER", "VENDOR"]} />}
             >
               <Route path="/shipments" element={<AllShipments />} />
               <Route path="/trips/:tripId" element={<TripDetails />} />
@@ -118,15 +123,17 @@ const App = () => (
             >
               <Route path="/vendors" element={<VendorDirectory />} />
               <Route path="/vendors/add" element={<AddVendor />} />
+              <Route path="/vendors/contracts" element={<VendorContracts />} />
               <Route path="/clients" element={<ClientsList />} />
               <Route path="/clients/feedback" element={<ClientFeedback />} />
             </Route>
 
             {/* Companies */}
             <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]} />}
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN"]} />}
             >
               <Route path="/companies" element={<CompanyDirectory />} />
+              <Route path="/companies/contracts" element={<CompanyContracts />} />
             </Route>
 
             {/* Applications */}
@@ -134,15 +141,18 @@ const App = () => (
               element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]} />}
             >
               <Route path="/applications" element={<ApplicationsReview />} />
+              <Route path="/admin/users" element={<UserManagement />} />
             </Route>
 
             {/* Orders */}
             <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"]} />}
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR"]} />}
             >
               <Route path="/orders" element={<AllOrders />} />
               <Route path="/orders/:orderId" element={<OrderDetails />} />
               <Route path="/orders/scheduled" element={<ScheduledDeliveries />} />
+              <Route path="/marketplace" element={<OpenMarketplace />} />
+              <Route path="/marketplace/orders/:orderId" element={<MarketplaceOrderDetails />} />
             </Route>
 
             <Route
@@ -152,7 +162,7 @@ const App = () => (
               <Route path="/driver/trips/:tripId" element={<DriverTripDetails />} />
             </Route>
           </Route>
-          
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

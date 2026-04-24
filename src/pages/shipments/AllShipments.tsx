@@ -248,12 +248,12 @@ export default function AllShipments() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-secondary/50">
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Trip ID</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Driver</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Vehicle</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Milestone</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Updated</th>
+                <tr className="border-b border-border bg-secondary/50">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Shipment Details</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logistics</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Updated</th>
+                </tr>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -269,28 +269,39 @@ export default function AllShipments() {
                       className="hover:bg-secondary/30 transition-colors cursor-pointer"
                       onClick={() => navigate(`/trips/${id}`)}
                     >
-                      <td className="whitespace-nowrap px-5 py-4">
+                      <td className="whitespace-nowrap px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <Package className="h-4 w-4 text-primary" />
-                          <span className="font-medium text-card-foreground">{id}</span>
+                          <div className="rounded-full bg-primary/10 p-1.5 shrink-0">
+                            <Package className="h-3.5 w-3.5 text-primary" />
+                          </div>
+                          <div className="text-sm">
+                            <p className="font-bold text-card-foreground leading-tight">
+                              {(trip as any)?.orderId?.orderNumber || (trip as any)?.orderNumber || id}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate max-w-[120px]">
+                              {(trip as any)?.orderId?.title || "Shipment"}
+                            </p>
+                          </div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
-                        {resolveDriverName(trip)}
+                      <td className="whitespace-nowrap px-4 py-3 text-sm">
+                        <div className="flex flex-col">
+                          <span className="font-medium text-card-foreground">{resolveDriverName(trip)}</span>
+                          <span className="text-[10px] text-muted-foreground">{resolveVehicleLabel(trip)}</span>
+                        </div>
                       </td>
-                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
-                        {resolveVehicleLabel(trip)}
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <div className="flex flex-col gap-1">
+                          <Badge className={cn("gap-1 text-[10px] px-2 py-0 h-5 w-fit", status.className)}>
+                            <StatusIcon className="h-3 w-3" />
+                            {status.label}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground italic pl-1">
+                            {formatMilestone((trip as any)?.milestone)}
+                          </span>
+                        </div>
                       </td>
-                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
-                        {formatMilestone((trip as any)?.milestone)}
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-4">
-                        <Badge className={cn("gap-1", status.className)}>
-                          <StatusIcon className="h-3 w-3" />
-                          {status.label}
-                        </Badge>
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
                         {toText((trip as any)?.updatedAt || (trip as any)?.createdAt)}
                       </td>
                     </tr>

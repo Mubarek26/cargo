@@ -26,6 +26,8 @@ import {
   ChevronRight,
   Menu,
   X,
+  Handshake,
+  Briefcase,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +47,14 @@ const navigation: NavSection[] = [
       { label: "Overview", href: "/home", icon: LayoutDashboard },
       { label: "Live Shipment Map", href: "/dashboard/map", icon: Map },
       { label: "Fleet Status", href: "/dashboard/fleet-status", icon: Truck },
+      { label: "Marketplace", href: "/marketplace", icon: Briefcase },
+    ],
+  },
+  {
+    title: "Partnerships",
+    items: [
+      { label: "My Contracts", href: "/vendors/contracts", icon: Handshake },
+      { label: "Vendor Contracts", href: "/companies/contracts", icon: Handshake },
     ],
   },
   {
@@ -52,7 +62,7 @@ const navigation: NavSection[] = [
     items: [
       { label: "All Shipments", href: "/shipments", icon: Package },
       { label: "Track Shipment", href: "/shipments/track", icon: Navigation },
-      { label: "Create Shipment", href: "/shipments/create", icon: PlusCircle },
+      { label: "Create Order", href: "/shipments/create", icon: PlusCircle },
       { label: "Delayed Shipments", href: "/shipments/delayed", icon: Clock },
     ],
   },
@@ -94,8 +104,9 @@ const navigation: NavSection[] = [
     ],
   },
   {
-    title: "Applications",
+    title: "Administration",
     items: [
+      { label: "User Management", href: "/admin/users", icon: Users },
       { label: "Review Applications", href: "/applications", icon: ClipboardCheck },
     ],
   },
@@ -121,16 +132,24 @@ interface SidebarProps {
 
 const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   {
-    prefixes: ["/home"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER", "VENDOR"],
+    prefixes: ["/home", "/marketplace"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER", "VENDOR", "PRIVATE_TRANSPORTER"],
   },
   {
     prefixes: ["/dashboard"],
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER"],
   },
   {
+    prefixes: ["/vendors/contracts"],
+    roles: ["SUPER_ADMIN", "VENDOR"],
+  },
+  {
+    prefixes: ["/companies/contracts"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN"],
+  },
+  {
     prefixes: ["/shipments"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR"],
   },
   {
     prefixes: ["/fleet"],
@@ -146,7 +165,7 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   },
   {
     prefixes: ["/orders"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR"],
   },
   {
     prefixes: ["/companies"],
@@ -157,7 +176,7 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER", "VENDOR"],
   },
   {
-    prefixes: ["/applications"],
+    prefixes: ["/applications", "/admin"],
     roles: ["SUPER_ADMIN"],
   },
   {
