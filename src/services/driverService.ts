@@ -161,3 +161,100 @@ export const updatePrivateTransporterStatus = async (
 
   return data as Record<string, unknown> | null;
 };
+export const streamLocation = async (token: string, payload: { tripId: string; location: any; speed?: number; heading?: number }) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/driver/location`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      (data && typeof data === "object" && "message" in data && data.message) ||
+      "Unable to update location.";
+    throw new Error(String(message));
+  }
+
+  return data;
+};
+
+export const updateMyStatus = async (token: string, payload: { status: string }) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/driver/status`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      (data && typeof data === "object" && "message" in data && data.message) ||
+      "Unable to update driver status.";
+    throw new Error(String(message));
+  }
+
+  return data;
+};
+export const acceptAssignment = async (token: string, orderId: string) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/driver/assignments/${orderId}/accept`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    credentials: "include",
+  });
+  return handleResponse(response);
+};
+
+export const rejectAssignment = async (token: string, orderId: string) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/driver/assignments/${orderId}/reject`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    credentials: "include",
+  });
+  return handleResponse(response);
+};
+
+export const startAssignment = async (token: string, orderId: string) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/driver/assignments/${orderId}/start`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    credentials: "include",
+  });
+  return handleResponse(response);
+};
+
+export const arriveAssignment = async (token: string, orderId: string) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/driver/assignments/${orderId}/arrive`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    credentials: "include",
+  });
+  return handleResponse(response);
+};
+
+export const completeAssignment = async (token: string, orderId: string) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/driver/assignments/${orderId}/complete`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    credentials: "include",
+  });
+  return handleResponse(response);
+};
+
+const handleResponse = async (response: Response) => {
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error((data && data.message) || "Action failed");
+  }
+  return data;
+};

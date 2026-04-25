@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useCheckAuth } from "@/hooks/use-check-auth";
 import { getCompanyMe } from "@/services/companyService";
 import { getVendorApplication } from "@/services/vendorService";
-import { getDriverApplication } from "@/services/driverService";
+import { getDriverApplication, updateMyStatus } from "@/services/driverService";
+import { toast } from "sonner";
 
 type RecordMap = Record<string, unknown> | null;
 
@@ -59,6 +60,21 @@ export default function Profile() {
   const [company, setCompany] = React.useState<RecordMap>(null);
   const [vendorApplication, setVendorApplication] = React.useState<RecordMap>(null);
   const [driverApplication, setDriverApplication] = React.useState<RecordMap>(null);
+
+  const handleStatusChange = async (newStatus: string) => {
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
+
+    try {
+      setIsLoading(true);
+      await updateMyStatus(token, { status: newStatus });
+      toast.success(`Status updated to ${newStatus}`);
+      await loadProfile();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update status");
+      setIsLoading(false);
+    }
+  };
 
   const loadProfile = React.useCallback(async () => {
     setIsLoading(true);
@@ -193,6 +209,35 @@ export default function Profile() {
           {companyItems.length > 0 && <DetailSection title="Company" items={companyItems} />}
           {vendorItems.length > 0 && <DetailSection title="Vendor Application" items={vendorItems} />}
           {driverItems.length > 0 && <DetailSection title="Driver Application" items={driverItems} />}
+
+          {((user as any)?.role === "DRIVER" || (user as any)?.role === "PRIVATE_TRANSPORTER") && (
+            <section className="rounded-xl border border-border bg-card p-6">
+              <h2 className="text-lg font-semibold text-foreground mb-4">Driver Status</h2>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Current Status: {toValue((driverApplication as any)?.status || "PENDING")}</p>
+                  <p className="text-sm text-muted-foreground">Toggle your availability to receive new assignments.</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant={(driverApplication as any)?.status === "ACTIVE" ? "default" : "outline"}
+                    onClick={() => handleStatusChange("ACTIVE")}
+                    disabled={isLoading}
+                    className={(driverApplication as any)?.status === "ACTIVE" ? "bg-success hover:bg-success/90" : ""}
+                  >
+                    Active
+                  </Button>
+                  <Button 
+                    variant={(driverApplication as any)?.status === "OFFLINE" ? "default" : "outline"}
+                    onClick={() => handleStatusChange("OFFLINE")}
+                    disabled={isLoading}
+                  >
+                    Offline
+                  </Button>
+                </div>
+              </div>
+            </section>
+          )}
         </div>
       )}
     </DashboardLayout>

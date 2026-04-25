@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { 
-  ArrowLeft, Truck, MapPin, Package, Clock, CheckCircle, 
+import {
+  ArrowLeft, Truck, MapPin, Package, Clock, CheckCircle,
   XCircle, Loader2, Navigation, MessageSquare, Phone, User,
-  Calendar, Check
+  Calendar, Check, Shield, AlertTriangle, AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,17 +27,61 @@ const milestoneConfig: any = {
 export default function DriverTripDetails() {
   const { tripId } = useParams<{ tripId: string }>();
   const navigate = useNavigate();
-  
+  const token = localStorage.getItem("authToken") || "";
+
   const [trip, setTrip] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [note, setNote] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [roadData, setRoadData] = useState<{ distanceKm: number; durationMin: number } | null>(null);
+  const [currentCoords, setCurrentCoords] = useState<[number, number] | null>(null);
 
   useEffect(() => {
     fetchTripDetails();
   }, [tripId]);
+
+  // GPS Tracking Effect
+  useEffect(() => {
+    if (!tripId || !trip || !["STARTED", "ARRIVED", "IN_TRANSIT"].includes(trip.milestone)) return;
+
+    let watchId: number;
+    let streamInterval: NodeJS.Timeout;
+
+    if ("geolocation" in navigator) {
+      // 1. Watch for precise movement to update the UI
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          setCurrentCoords([pos.coords.longitude, pos.coords.latitude]);
+        },
+        (err) => console.error("GPS Error:", err),
+        { enableHighAccuracy: true }
+      );
+
+      // 2. Periodic stream to backend (every 30 seconds)
+      streamInterval = setInterval(async () => {
+        if (!currentCoords) return;
+
+        try {
+          await streamLocation(token, {
+            tripId,
+            location: {
+              type: "Point",
+              coordinates: currentCoords
+            }
+          });
+          console.log("Location streamed:", currentCoords);
+        } catch (err) {
+          console.error("Failed to stream location:", err);
+        }
+      }, 30000);
+    }
+
+    return () => {
+      if (watchId) navigator.geolocation.clearWatch(watchId);
+      if (streamInterval) clearInterval(streamInterval);
+    };
+  }, [tripId, trip?.milestone, currentCoords, token]);
 
   const fetchTripDetails = async () => {
     if (!tripId) return;
@@ -56,7 +100,7 @@ export default function DriverTripDetails() {
 
   const handleUpdateMilestone = async () => {
     if (!tripId || !trip) return;
-    
+
     const currentMilestone = milestoneConfig[trip.milestone];
     if (!currentMilestone?.next) return;
 
@@ -67,19 +111,18 @@ export default function DriverTripDetails() {
 
     setIsActionLoading(true);
     try {
-      // In a real app, we would get the current GPS coordinates here
-      const dummyLocation = {
-        type: "Point",
-        coordinates: [38.7578, 8.9806] // Addis Ababa coordinates as fallback
-      };
+      // Use current GPS coordinates if available
+      const location = currentCoords
+        ? { type: "Point", coordinates: currentCoords }
+        : { type: "Point", coordinates: [38.7578, 8.9806] }; // Fallback
 
       await tripService.updateMilestone(tripId, {
         milestone: currentMilestone.next,
-        location: dummyLocation,
+        location: location,
         note: note,
         otpCode: otpCode
       });
-      
+
       toast.success(`Trip status updated to ${currentMilestone.next}`);
       setNote("");
       setOtpCode("");
@@ -142,13 +185,13 @@ export default function DriverTripDetails() {
             <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-6">
               <h3 className="mb-2 text-lg font-semibold text-foreground">Update Progress</h3>
               <p className="mb-4 text-sm text-muted-foreground">Update the trip status as you reach milestones.</p>
-              
+
               <div className="space-y-4">
                 {currentMilestone.next === "COMPLETED" && (
                   <div className="space-y-2">
                     <span className="text-sm font-bold text-primary">Delivery OTP Verification</span>
-                    <Input 
-                      placeholder="Enter 6-digit OTP from customer" 
+                    <Input
+                      placeholder="Enter 6-digit OTP from customer"
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value)}
                       className="bg-background text-lg tracking-widest text-center h-12"
@@ -159,16 +202,16 @@ export default function DriverTripDetails() {
                 )}
                 <div className="space-y-2">
                   <span className="text-sm font-medium">Add a note (optional)</span>
-                  <Textarea 
-                    placeholder="e.g., Arrived at pickup location, Cargo loaded..." 
+                  <Textarea
+                    placeholder="e.g., Arrived at pickup location, Cargo loaded..."
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     className="bg-background"
                   />
                 </div>
-                <Button 
-                  className="w-full gap-2 h-12 text-lg" 
-                  onClick={handleUpdateMilestone} 
+                <Button
+                  className="w-full gap-2 h-12 text-lg"
+                  onClick={handleUpdateMilestone}
                   disabled={isActionLoading}
                 >
                   {isActionLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
@@ -185,44 +228,46 @@ export default function DriverTripDetails() {
               Delivery Route
             </h3>
 
-            {order?.pickupLocation?.latitude && order?.pickupLocation?.longitude && 
-             order?.deliveryLocation?.latitude && order?.deliveryLocation?.longitude && (
-              <div className="mb-6">
-                <RouteMap 
-                  pickup={{ 
-                    lat: order.pickupLocation.latitude, 
-                    lng: order.pickupLocation.longitude,
-                    address: order.pickupLocation.address 
-                  }} 
-                  delivery={{ 
-                    lat: order.deliveryLocation.latitude, 
-                    lng: order.deliveryLocation.longitude,
-                    address: order.deliveryLocation.address
-                  }}
-                  onRouteCalculated={setRoadData}
-                  className="h-[280px] w-full"
-                />
-                <div className="mt-3 grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1 bg-secondary/30 p-3 rounded-xl border border-border">
-                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Road Trip Distance</span>
-                    <span className="font-bold text-lg text-primary">
-                      {roadData ? formatDistance(roadData.distanceKm) : formatDistance(calculateDistance(
-                        order.pickupLocation.latitude, 
-                        order.pickupLocation.longitude,
-                        order.deliveryLocation.latitude, 
-                        order.deliveryLocation.longitude
-                      ))}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1 bg-secondary/30 p-3 rounded-xl border border-border">
-                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Estimated Duration</span>
-                    <span className="font-bold text-lg text-foreground">
-                      {roadData ? `${Math.round(roadData.durationMin)} mins` : "Calculating..."}
-                    </span>
+            {order?.pickupLocation?.latitude && order?.pickupLocation?.longitude &&
+              order?.deliveryLocation?.latitude && order?.deliveryLocation?.longitude && (
+                <div className="mb-6">
+                  <RouteMap
+                    pickup={{
+                      lat: order.pickupLocation.latitude,
+                      lng: order.pickupLocation.longitude,
+                      address: order.pickupLocation.address
+                    }}
+                    delivery={{
+                      lat: order.deliveryLocation.latitude,
+                      lng: order.deliveryLocation.longitude,
+                      address: order.deliveryLocation.address
+                    }}
+                    currentLocation={currentCoords ? { lat: currentCoords[1], lng: currentCoords[0] } : undefined}
+                    geofences={trip.geofences}
+                    onRouteCalculated={setRoadData}
+                    className="h-[280px] w-full"
+                  />
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1 bg-secondary/30 p-3 rounded-xl border border-border">
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Road Trip Distance</span>
+                      <span className="font-bold text-lg text-primary">
+                        {roadData ? formatDistance(roadData.distanceKm) : formatDistance(calculateDistance(
+                          order.pickupLocation.latitude,
+                          order.pickupLocation.longitude,
+                          order.deliveryLocation.latitude,
+                          order.deliveryLocation.longitude
+                        ))}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1 bg-secondary/30 p-3 rounded-xl border border-border">
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Estimated Duration</span>
+                      <span className="font-bold text-lg text-foreground">
+                        {roadData ? `${Math.round(roadData.durationMin)} mins` : "Calculating..."}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
             <div className="relative space-y-8 before:absolute before:left-[11px] before:top-2 before:h-[calc(100%-16px)] before:w-[2px] before:bg-muted">
               <div className="relative pl-8">
@@ -328,6 +373,60 @@ export default function DriverTripDetails() {
             ) : (
               <p className="text-sm text-muted-foreground">No vehicle assigned</p>
             )}
+          </div>
+
+          {/* Restricted Areas Card */}
+          <div className="rounded-xl border border-border bg-card p-6">
+            <h3 className="mb-4 flex items-center gap-2 font-semibold">
+              <Shield className="h-5 w-5 text-destructive" />
+              Restricted Areas
+            </h3>
+
+            {/* Real-time Status Alert */}
+            {trip.lastNote?.includes("Geofence Status:") && (
+              <div className={cn(
+                "mb-4 p-3 rounded-lg border flex items-start gap-3 animate-pulse",
+                trip.lastNote.includes("In Restricted") || trip.lastNote.includes("Off Route")
+                  ? "bg-destructive/10 border-destructive/30 text-destructive"
+                  : "bg-warning/10 border-warning/30 text-warning"
+              )}>
+                <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-xs font-bold uppercase tracking-tight">Safety Alert</p>
+                  <p className="text-sm font-medium leading-tight">
+                    {trip.lastNote.replace("Geofence Status: ", "")}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {(trip.geofences || []).length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">No restricted areas defined for this trip.</p>
+              ) : (
+                (trip.geofences || []).map((gf: any) => (
+                  <div key={gf._id} className="flex flex-col gap-1 p-2 rounded-lg border border-border bg-secondary/10">
+                    <div className="flex items-center gap-2">
+                      <div className={cn(
+                        "h-2 w-2 rounded-full",
+                        gf.type === 'restricted' ? "bg-destructive" : "bg-primary"
+                      )} />
+                      <span className="text-sm font-bold truncate">{gf.name}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                      <span>{gf.type === 'restricted' ? "Keep Out" : "Milestone"}</span>
+                      <span>{gf.radius}m Radius</span>
+                    </div>
+                  </div>
+                ))
+              )}
+              <div className="mt-4 p-3 rounded-lg bg-blue-500/5 border border-blue-500/20 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-blue-500" />
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Stay at least <span className="font-bold text-foreground">2km</span> away from red zones to avoid proximity alerts.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
