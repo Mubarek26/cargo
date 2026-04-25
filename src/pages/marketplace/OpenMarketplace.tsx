@@ -113,7 +113,7 @@ export default function OpenMarketplace() {
           <p className="text-muted-foreground mt-1">Discover and bid on available freight orders in real-time</p>
         </div>
         <div className="flex gap-2">
-          {currentUser?.role === "VENDOR" && (
+          {(currentUser?.role === "VENDOR" || currentUser?.role === "SHIPPER") && (
             <Button onClick={() => navigate("/shipments/create")} className="gap-2 shadow-lg shadow-primary/20">
               <Package className="h-4 w-4" /> Post a Load
             </Button>
@@ -132,7 +132,7 @@ export default function OpenMarketplace() {
                 {currentUser?.role === "SUPER_ADMIN" ? "All Proposals" : "My Proposals"} <Badge variant="secondary" className="ml-2 h-5 px-1.5">{myProposals.length}</Badge>
               </TabsTrigger>
             )}
-            {(currentUser?.role === "VENDOR" || currentUser?.role === "SUPER_ADMIN") && (
+            {(currentUser?.role === "VENDOR" || currentUser?.role === "SHIPPER" || currentUser?.role === "SUPER_ADMIN") && (
               <TabsTrigger value="postings" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 {currentUser?.role === "SUPER_ADMIN" ? "All Postings" : "My Postings"} <Badge variant="secondary" className="ml-2 h-5 px-1.5">{myPostings.length}</Badge>
               </TabsTrigger>
@@ -301,7 +301,12 @@ export default function OpenMarketplace() {
                           )}
                           disabled={order.status === 'REJECTED'}
                         >
-                          {order.status === 'REJECTED' ? "Closed" : "Bid Now"} <ChevronRight className="h-4 w-4" />
+                          {order.status === 'REJECTED' 
+                            ? "Closed" 
+                            : (currentUser?.role === 'VENDOR' || currentUser?.role === 'SHIPPER') 
+                              ? "View Details" 
+                              : "Bid Now"} 
+                          <ChevronRight className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>

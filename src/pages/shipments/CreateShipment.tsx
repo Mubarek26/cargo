@@ -12,6 +12,7 @@ import { getCompanies } from "@/services/companyService";
 import { contractService } from "@/services/contractService";
 import { toast } from "sonner";
 import { LocationPicker } from "@/components/LocationPicker";
+import { getLandingPage } from "@/lib/auth-utils";
 
 export default function CreateShipment() {
   const navigate = useNavigate();
@@ -152,7 +153,8 @@ export default function CreateShipment() {
     try {
       await orderService.createOrder(payload);
       toast.success("Order created successfully");
-      navigate("/orders");
+      const userRole = localStorage.getItem("userRole");
+      navigate(getLandingPage(userRole));
     } catch (error: any) {
       toast.error(error.message || "Failed to create order");
     } finally {

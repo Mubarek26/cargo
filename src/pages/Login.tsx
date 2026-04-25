@@ -49,10 +49,25 @@ const Login: React.FC = () => {
         localStorage.setItem("userRole", user.role);
       }
 
+      const getLandingPage = (role: string) => {
+        switch (role) {
+          case "SHIPPER":
+            return "/marketplace";
+          case "DRIVER":
+            return "/driver/trips";
+          case "SUPER_ADMIN":
+          case "COMPANY_ADMIN":
+          case "VENDOR":
+            return "/home";
+          default:
+            return "/home";
+        }
+      };
+
       const wasHandled = await checkApplicationGate(user?.role, token, {
         onApproved: () => {
           toast.success("Welcome back!");
-          navigate("/home");
+          navigate(getLandingPage(user?.role));
         },
         onCompanyMissing: () => {
           toast.info("Please submit your company application.");
@@ -85,7 +100,7 @@ const Login: React.FC = () => {
       }
 
       toast.success("Login successful.");
-      navigate("/home");
+      navigate(getLandingPage(user?.role));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to reach the server. Please try again.";
       toast.error(message);

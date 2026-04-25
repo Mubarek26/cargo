@@ -1,12 +1,22 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Package, Search, Filter, Download, Plus, CheckCircle, Clock, Truck, AlertTriangle, XCircle, PlayCircle } from "lucide-react";
+import { 
+  Package, Search, Filter, Download, Plus, CheckCircle, Clock, 
+  Truck, AlertTriangle, XCircle, PlayCircle, ArrowRight, Loader2, X 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { getCompanyTrips, getDriverTripsHistory, getTrips } from "@/services/tripService";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type TripRecord = Record<string, unknown> & {
   id?: string | number;
@@ -14,6 +24,10 @@ type TripRecord = Record<string, unknown> & {
   tripId?: string | number;
   trackingNumber?: string;
   status?: string;
+  milestone?: string;
+  orderId?: any;
+  updatedAt?: string;
+  createdAt?: string;
 };
 
 const extractTrips = (payload: unknown): TripRecord[] => {
@@ -50,58 +64,29 @@ const resolveRefId = (value: unknown) => {
 };
 
 const resolveDriverName = (trip: TripRecord) => {
-  // Check aggregation-embedded driverInfo first
   const driverInfo = (trip as any)?.driverInfo;
   if (driverInfo && typeof driverInfo === "object") {
-    return String(
-      driverInfo.fullName ||
-      driverInfo.name ||
-      driverInfo.email ||
-      driverInfo.phoneNumber ||
-      "-"
-    );
+    return String(driverInfo.fullName || driverInfo.name || driverInfo.email || "-");
   }
-  // Fallback to populated driverId
   const value = (trip as any)?.driverId;
   if (!value) return "-";
   if (typeof value === "string" || typeof value === "number") return String(value);
   if (typeof value === "object") {
-    return String(
-      (value as any)?.fullName ||
-      (value as any)?.name ||
-      (value as any)?.driverName ||
-      (value as any)?.email ||
-      (value as any)?.phoneNumber ||
-      "-"
-    );
+    return String((value as any)?.fullName || (value as any)?.name || (value as any)?.email || "-");
   }
   return String(value);
 };
 
 const resolveVehicleLabel = (trip: TripRecord) => {
-  // Check aggregation-embedded vehicleInfo first
   const vehicleInfo = (trip as any)?.vehicleInfo;
   if (vehicleInfo && typeof vehicleInfo === "object") {
-    return String(
-      vehicleInfo.plateNumber ||
-      vehicleInfo.model ||
-      vehicleInfo.vehicleType ||
-      vehicleInfo.name ||
-      "-"
-    );
+    return String(vehicleInfo.plateNumber || vehicleInfo.model || "-");
   }
-  // Fallback to populated vehicleId
   const value = (trip as any)?.vehicleId;
   if (!value) return "-";
   if (typeof value === "string" || typeof value === "number") return String(value);
   if (typeof value === "object") {
-    return String(
-      (value as any)?.plateNumber ||
-      (value as any)?.model ||
-      (value as any)?.vehicleType ||
-      (value as any)?.name ||
-      "-"
-    );
+    return String((value as any)?.plateNumber || (value as any)?.model || "-");
   }
   return String(value);
 };
@@ -111,11 +96,6 @@ const resolveStatus = (value: unknown) =>
     .toLowerCase()
     .replace(/\s+/g, "_")
     .replace(/-/g, "_");
-
-const formatMilestone = (value: unknown) => {
-  if (!value) return "pending";
-  return String(value).toLowerCase().replace(/\s+/g, "_");
-};
 
 const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; className: string }> = {
   started: { label: "Started", icon: PlayCircle, className: "text-blue-600 bg-blue-100" },
@@ -132,6 +112,7 @@ export default function AllShipments() {
   const navigate = useNavigate();
   const [trips, setTrips] = React.useState<TripRecord[]>([]);
   const [query, setQuery] = React.useState("");
+  const [statusFilter, setStatusFilter] = React.useState("ALL");
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -153,6 +134,7 @@ export default function AllShipments() {
           : role === "DRIVER"
           ? await getDriverTripsHistory(token)
           : await getTrips(token);
+      
       if (!result.ok) {
         const message =
           (result.data && typeof result.data === "object" && "message" in result.data && result.data.message) ||
@@ -175,24 +157,33 @@ export default function AllShipments() {
     loadTrips();
   }, [loadTrips]);
 
-  const normalizedQuery = query.trim().toLowerCase();
   const filteredTrips = trips.filter((trip, index) => {
-    if (!normalizedQuery) return true;
     const id = resolveTripId(trip, index);
-    const haystack = [
-      id,
-      resolveRefId((trip as any)?.orderId),
-      resolveDriverName(trip),
-      resolveVehicleLabel(trip),
-      toText((trip as any)?.milestone),
-      toText((trip as any)?.lastNote),
-    ]
-      .filter(Boolean)
-      .map((value) => String(value).toLowerCase())
-      .join(" ");
+    const orderNumber = trip.orderId?.orderNumber || (trip as any)?.orderNumber || id;
+    const title = trip.orderId?.title || "Shipment";
+    const driver = resolveDriverName(trip);
+    const vehicle = resolveVehicleLabel(trip);
+    const cityFrom = trip.orderId?.pickupLocation?.city || "";
+    const cityTo = trip.orderId?.deliveryLocation?.city || "";
 
-    return haystack.includes(normalizedQuery);
+    const matchesQuery = !query.trim() || [
+      id, orderNumber, title, driver, vehicle, cityFrom, cityTo
+    ].some(v => String(v).toLowerCase().includes(query.toLowerCase()));
+
+    const currentStatus = resolveStatus(trip.milestone);
+    const matchesStatus = statusFilter === "ALL" || currentStatus === statusFilter.toLowerCase();
+
+    return matchesQuery && matchesStatus;
   });
+
+  const stats = React.useMemo(() => {
+    return {
+      total: trips.length,
+      inTransit: trips.filter(t => ["in_transit", "started"].includes(resolveStatus(t.milestone))).length,
+      delivered: trips.filter(t => ["delivered", "completed", "arrived"].includes(resolveStatus(t.milestone))).length,
+      delayed: trips.filter(t => resolveStatus(t.milestone) === "delayed").length,
+    };
+  }, [trips]);
 
   return (
     <DashboardLayout>
@@ -206,37 +197,77 @@ export default function AllShipments() {
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          <Button>
+          <Button onClick={() => navigate("/shipments/create")}>
             <Plus className="mr-2 h-4 w-4" />
             New Shipment
           </Button>
         </div>
       </div>
 
+      {/* Stats Cards */}
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: "Total Shipments", value: stats.total, icon: Package, color: "text-primary", bg: "bg-primary/10" },
+          { label: "In Transit", value: stats.inTransit, icon: Truck, color: "text-blue-600", bg: "bg-blue-100" },
+          { label: "Delivered", value: stats.delivered, icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-100" },
+          { label: "Delayed", value: stats.delayed, icon: AlertTriangle, color: "text-destructive", bg: "bg-destructive/10" },
+        ].map((stat, i) => (
+          <div key={i} className="rounded-xl border border-border bg-card p-4 transition-all hover:shadow-md">
+            <div className="flex items-center gap-3">
+              <div className={cn("rounded-lg p-2", stat.bg)}>
+                <stat.icon className={cn("h-5 w-5", stat.color)} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-card-foreground">{stat.value}</p>
+                <p className="text-sm text-muted-foreground">{stat.label}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Filters */}
-      <div className="mb-6 flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="relative lg:col-span-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by trip ID, customer..."
+            placeholder="Search by ID, order #, driver or city..."
             className="pl-10"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
-            Filters
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger>
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All Statuses</SelectItem>
+            <SelectItem value="PENDING">Pending</SelectItem>
+            <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
+            <SelectItem value="DELIVERED">Delivered</SelectItem>
+            <SelectItem value="DELAYED">Delayed</SelectItem>
+            <SelectItem value="CANCELLED">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+        { (query || statusFilter !== "ALL") && (
+          <Button 
+            variant="ghost" 
+            className="gap-2 text-muted-foreground"
+            onClick={() => {
+              setQuery("");
+              setStatusFilter("ALL");
+            }}
+          >
+            <X className="h-4 w-4" /> Clear Filters
           </Button>
-          <Button variant="outline" size="sm">All Status</Button>
-          <Button variant="outline" size="sm">Date Range</Button>
-        </div>
+        )}
       </div>
 
       {isLoading ? (
-        <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
-          Loading trips...
+        <div className="flex flex-col items-center justify-center py-20 rounded-xl border border-border bg-card">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+          <p className="text-muted-foreground">Loading shipments...</p>
         </div>
       ) : error ? (
         <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-6 text-sm text-destructive">
@@ -248,18 +279,17 @@ export default function AllShipments() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-secondary/50">
-                <tr className="border-b border-border bg-secondary/50">
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Shipment Details</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logistics</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Route</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Drivers</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Status</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Updated</th>
-                </tr>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredTrips.map((trip, index) => {
                   const id = resolveTripId(trip, index);
-                  const statusKey = resolveStatus((trip as any)?.milestone);
+                  const statusKey = resolveStatus(trip.milestone);
                   const status = statusConfig[statusKey] || statusConfig.pending;
                   const StatusIcon = status.icon;
 
@@ -270,39 +300,41 @@ export default function AllShipments() {
                       onClick={() => navigate(`/trips/${id}`)}
                     >
                       <td className="whitespace-nowrap px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="rounded-full bg-primary/10 p-1.5 shrink-0">
-                            <Package className="h-3.5 w-3.5 text-primary" />
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-full bg-primary/10 p-2 shrink-0">
+                            <Package className="h-4 w-4 text-primary" />
                           </div>
                           <div className="text-sm">
                             <p className="font-bold text-card-foreground leading-tight">
-                              {(trip as any)?.orderId?.orderNumber || (trip as any)?.orderNumber || id}
+                              {trip.orderId?.orderNumber || (trip as any)?.orderNumber || id}
                             </p>
-                            <p className="text-xs text-muted-foreground truncate max-w-[120px]">
-                              {(trip as any)?.orderId?.title || "Shipment"}
+                            <p className="text-xs text-muted-foreground truncate max-w-[150px]">
+                              {trip.orderId?.title || "Standard Shipment"}
                             </p>
                           </div>
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">
+                        <div className="flex items-center gap-1.5">
+                           <span className="text-card-foreground font-medium">{trip.orderId?.pickupLocation?.city || "N/A"}</span>
+                           <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                           <span className="text-card-foreground font-medium">{trip.orderId?.deliveryLocation?.city || "N/A"}</span>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm">
                         <div className="flex flex-col">
                           <span className="font-medium text-card-foreground">{resolveDriverName(trip)}</span>
-                          <span className="text-[10px] text-muted-foreground">{resolveVehicleLabel(trip)}</span>
+                          <span className="text-[11px] text-muted-foreground">{resolveVehicleLabel(trip)}</span>
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
-                        <div className="flex flex-col gap-1">
-                          <Badge className={cn("gap-1 text-[10px] px-2 py-0 h-5 w-fit", status.className)}>
-                            <StatusIcon className="h-3 w-3" />
-                            {status.label}
-                          </Badge>
-                          <span className="text-[10px] text-muted-foreground italic pl-1">
-                            {formatMilestone((trip as any)?.milestone)}
-                          </span>
-                        </div>
+                        <Badge className={cn("gap-1 text-[11px] px-2.5 py-0.5 h-6 w-fit font-medium", status.className)}>
+                          <StatusIcon className="h-3.5 w-3.5" />
+                          {status.label}
+                        </Badge>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
-                        {toText((trip as any)?.updatedAt || (trip as any)?.createdAt)}
+                        {trip.updatedAt ? new Date(trip.updatedAt).toLocaleDateString() : (trip.createdAt ? new Date(trip.createdAt).toLocaleDateString() : "-")}
                       </td>
                     </tr>
                   );
@@ -311,8 +343,9 @@ export default function AllShipments() {
             </table>
           </div>
           {filteredTrips.length === 0 && (
-            <div className="border-t border-border px-6 py-8 text-center text-sm text-muted-foreground">
-              No trips found.
+            <div className="px-6 py-12 text-center">
+              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+              <p className="text-muted-foreground">No shipments found.</p>
             </div>
           )}
         </div>

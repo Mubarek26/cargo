@@ -159,6 +159,13 @@ export default function UserManagement() {
           >
             Vendors
           </Button>
+          <Button 
+            variant={roleFilter === "SHIPPER" ? "default" : "outline"} 
+            size="sm"
+            onClick={() => setRoleFilter("SHIPPER")}
+          >
+            Shippers
+          </Button>
         </div>
       </div>
 

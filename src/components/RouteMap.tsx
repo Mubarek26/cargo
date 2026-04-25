@@ -2,6 +2,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, Circle, Polyg
 import L from "leaflet";
 import { useEffect, useState } from "react";
 import { getRoadDistance } from "@/utils/distance";
+import { MapPin } from "lucide-react";
 
 // Custom icons for pickup and delivery
 const pickupIcon = L.divIcon({
@@ -56,9 +57,21 @@ export function RouteMap({ pickup, delivery, currentLocation, geofences, classNa
   const [routeGeometry, setRouteGeometry] = useState<[number, number][]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
+  // Safety check for valid coordinates
+  const isValidCoord = (c: any) => c && typeof c.lat === 'number' && typeof c.lng === 'number' && !isNaN(c.lat) && !isNaN(c.lng);
+
+  if (!isValidCoord(pickup) || !isValidCoord(delivery)) {
+    return (
+      <div className={`${className} rounded-xl border border-border bg-muted/30 flex flex-col items-center justify-center gap-2`}>
+        <MapPin className="h-8 w-8 text-muted-foreground/50" />
+        <p className="text-sm text-muted-foreground font-medium">Map coordinates unavailable</p>
+      </div>
+    );
+  }
+
   const pickupPos: [number, number] = [pickup.lat, pickup.lng];
   const deliveryPos: [number, number] = [delivery.lat, delivery.lng];
-  const currentPos: [number, number] | null = currentLocation ? [currentLocation.lat, currentLocation.lng] : null;
+  const currentPos: [number, number] | null = currentLocation && typeof currentLocation.lat === 'number' ? [currentLocation.lat, currentLocation.lng] : null;
   
   const bounds = L.latLngBounds([pickupPos, deliveryPos]);
   if (currentPos) bounds.extend(currentPos);

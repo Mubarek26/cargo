@@ -61,6 +61,7 @@ const navigation: NavSection[] = [
     title: "Shipments",
     items: [
       { label: "All Shipments", href: "/shipments", icon: Package },
+      { label: "My Orders", href: "/shipper/orders", icon: Package },
       { label: "Track Shipment", href: "/shipments/track", icon: Navigation },
       { label: "Create Order", href: "/shipments/create", icon: PlusCircle },
       { label: "Delayed Shipments", href: "/shipments/delayed", icon: Clock },
@@ -132,12 +133,16 @@ interface SidebarProps {
 
 const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   {
-    prefixes: ["/home", "/marketplace"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER", "VENDOR", "PRIVATE_TRANSPORTER"],
+    prefixes: ["/home"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"],
+  },
+  {
+    prefixes: ["/marketplace"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR"],
   },
   {
     prefixes: ["/dashboard"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN"],
   },
   {
     prefixes: ["/vendors/contracts"],
@@ -149,23 +154,27 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   },
   {
     prefixes: ["/shipments"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR"],
-  },
-  {
-    prefixes: ["/fleet"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "DRIVER"],
-  },
-  {
-    prefixes: ["/warehouses"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"],
-  },
-  {
-    prefixes: ["/vendors", "/clients"],
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"],
   },
   {
+    prefixes: ["/shipper/orders", "/shipments/create", "/shipments/track"],
+    roles: ["SUPER_ADMIN", "SHIPPER"],
+  },
+  {
+    prefixes: ["/fleet"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN"],
+  },
+  {
+    prefixes: ["/warehouses"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN"],
+  },
+  {
+    prefixes: ["/vendors", "/clients"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN"],
+  },
+  {
     prefixes: ["/orders"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"],
   },
   {
     prefixes: ["/companies"],
@@ -181,7 +190,7 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   },
   {
     prefixes: ["/driver"],
-    roles: ["DRIVER", "PRIVATE_TRANSPORTER", "SUPER_ADMIN"],
+    roles: ["DRIVER", "SUPER_ADMIN", "COMPANY_ADMIN"],
   },
 ];
 
@@ -264,43 +273,43 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
             }))
             .filter((section) => section.items.length > 0)
             .map((section) => (
-            <div key={section.title} className="mb-4">
-              <button
-                onClick={() => toggleSection(section.title)}
-                className="mb-2 flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-sidebar-muted"
-              >
-                {section.title}
-                {expandedSections.includes(section.title) ? (
-                  <ChevronDown className="h-3 w-3" />
-                ) : (
-                  <ChevronRight className="h-3 w-3" />
-                )}
-              </button>
+              <div key={section.title} className="mb-4">
+                <button
+                  onClick={() => toggleSection(section.title)}
+                  className="mb-2 flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-sidebar-muted"
+                >
+                  {section.title}
+                  {expandedSections.includes(section.title) ? (
+                    <ChevronDown className="h-3 w-3" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3" />
+                  )}
+                </button>
 
-              {expandedSections.includes(section.title) && (
-                <ul className="space-y-1">
-                  {section.items.map((item) => (
-                    <li key={item.href}>
-                      <NavLink
-                        to={item.href}
-                        className={({ isActive }) =>
-                          cn(
-                            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm sidebar-transition",
-                            isActive
-                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                          )
-                        }
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {item.label}
-                      </NavLink>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
+                {expandedSections.includes(section.title) && (
+                  <ul className="space-y-1">
+                    {section.items.map((item) => (
+                      <li key={item.href}>
+                        <NavLink
+                          to={item.href}
+                          className={({ isActive }) =>
+                            cn(
+                              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm sidebar-transition",
+                              isActive
+                                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                            )
+                          }
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {item.label}
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
           <div className="mt-6 border-t border-sidebar-border pt-4">
             <button
               type="button"

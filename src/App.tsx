@@ -26,6 +26,8 @@ import AllShipments from "./pages/shipments/AllShipments";
 import TrackShipment from "./pages/shipments/TrackShipment";
 import CreateShipment from "./pages/shipments/CreateShipment";
 import DelayedShipments from "./pages/shipments/DelayedShipments";
+import ShipperOrders from "./pages/shipper/ShipperOrders";
+import ShipperOrderDetails from "./pages/shipper/ShipperOrderDetails";
 import TripDetails from "./pages/trips/TripDetails";
 
 // Fleet
@@ -82,12 +84,21 @@ const App = () => (
           <Route path="/resetPassword/:token" element={<ResetPassword />} />
 
           <Route element={<ProtectedRoute />}>
-            <Route path="/home" element={<Index />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"]} />}
+            >
+              <Route path="/home" element={<Index />} />
+            </Route>
+
+            <Route
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER", "VENDOR"]} />}
+            >
+              <Route path="/profile" element={<Profile />} />
+            </Route>
 
             {/* Dashboard */}
             <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER"]} />}
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN"]} />}
             >
               <Route path="/dashboard/map" element={<LiveShipmentMap />} />
               <Route path="/dashboard/fleet-status" element={<FleetStatus />} />
@@ -95,9 +106,11 @@ const App = () => (
 
             {/* Shipments */}
             <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER", "VENDOR"]} />}
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR"]} />}
             >
               <Route path="/shipments" element={<AllShipments />} />
+              <Route path="/shipper/orders" element={<ShipperOrders />} />
+              <Route path="/shipper/orders/:orderId" element={<ShipperOrderDetails />} />
               <Route path="/trips/:tripId" element={<TripDetails />} />
               <Route path="/shipments/track" element={<TrackShipment />} />
               <Route path="/shipments/create" element={<CreateShipment />} />
@@ -106,7 +119,7 @@ const App = () => (
 
             {/* Fleet */}
             <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "DRIVER"]} />}
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN"]} />}
             >
               <Route path="/fleet/vehicles" element={<VehicleList />} />
               <Route path="/fleet/maintenance" element={<MaintenanceLogs />} />
@@ -116,7 +129,7 @@ const App = () => (
 
             {/* Warehouses */}
             <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"]} />}
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN"]} />}
             >
               <Route path="/warehouses" element={<WarehouseLocations />} />
               <Route path="/warehouses/inventory" element={<InventoryLevels />} />
@@ -125,7 +138,7 @@ const App = () => (
 
             {/* Vendors & Clients */}
             <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"]} />}
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN"]} />}
             >
               <Route path="/vendors" element={<VendorDirectory />} />
               <Route path="/vendors/add" element={<AddVendor />} />
@@ -150,19 +163,25 @@ const App = () => (
               <Route path="/admin/users" element={<UserManagement />} />
             </Route>
 
-            {/* Orders */}
+            {/* Marketplace */}
             <Route
               element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR"]} />}
             >
-              <Route path="/orders" element={<AllOrders />} />
-              <Route path="/orders/:orderId" element={<OrderDetails />} />
-              <Route path="/orders/scheduled" element={<ScheduledDeliveries />} />
               <Route path="/marketplace" element={<OpenMarketplace />} />
               <Route path="/marketplace/orders/:orderId" element={<MarketplaceOrderDetails />} />
             </Route>
 
+            {/* Orders */}
             <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "DRIVER", "PRIVATE_TRANSPORTER"]} />}
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"]} />}
+            >
+              <Route path="/orders" element={<AllOrders />} />
+              <Route path="/orders/:orderId" element={<OrderDetails />} />
+              <Route path="/orders/scheduled" element={<ScheduledDeliveries />} />
+            </Route>
+
+            <Route
+              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "DRIVER"]} />}
             >
               <Route path="/driver/trips" element={<DriverTrips />} />
               <Route path="/driver/trips/:tripId" element={<DriverTripDetails />} />
