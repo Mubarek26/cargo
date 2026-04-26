@@ -287,6 +287,34 @@ export const updateDriver = async (token: string, id: string, payload: any) => {
   } as const;
 };
 
+export const addDriver = async (token: string, companyId: string, payload: any) => {
+  const formData = new FormData();
+  formData.append("fullName", payload.fullName);
+  formData.append("phoneNumber", payload.phoneNumber);
+  formData.append("email", payload.email);
+  formData.append("password", payload.password);
+  formData.append("licenseNumber", payload.licenseNumber);
+  if (payload.driverPhotoFile) formData.append("driverPhoto", payload.driverPhotoFile);
+  if (payload.licensePhotoFile) formData.append("licensePhoto", payload.licensePhotoFile);
+
+  const response = await fetch(`${API_BASE_URL}/api/v1/company/${companyId}/drivers`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    credentials: "include",
+    body: formData,
+  });
+
+  const data = await response.json().catch(() => null);
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data,
+  } as const;
+};
+
 export const deleteDriver = async (token: string, id: string) => {
   const response = await fetch(`${API_BASE_URL}/api/v1/company/drivers/${id}`, {
     method: "DELETE",

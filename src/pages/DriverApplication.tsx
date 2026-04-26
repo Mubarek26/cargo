@@ -23,6 +23,7 @@ import {
   FileText, 
   Camera,
   ShieldCheck,
+  CheckCircle2,
   ChevronRight,
   ArrowRight,
   Info,

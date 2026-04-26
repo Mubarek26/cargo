@@ -67,125 +67,125 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="light" storageKey="cargo-theme">
       <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/company-admin-request" element={<CompanyAdminRequest />} />
-          <Route path="/company-admin-review" element={<CompanyAdminReview />} />
-          <Route path="/driver-application" element={<DriverApplication />} />
-          <Route path="/vendor-application" element={<VendorApplication />} />
-          <Route path="/driver-application-review" element={<DriverApplicationReview />} />
-          <Route path="/vendor-application-review" element={<VendorApplicationReview />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/resetPassword/:token" element={<ResetPassword />} />
-          <Route path="/verify-email/:token" element={<VerifyEmail />} />
-          <Route path="/verify-email-notice" element={<VerifyEmailNotice />} />
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/company-admin-request" element={<CompanyAdminRequest />} />
+            <Route path="/company-admin-review" element={<CompanyAdminReview />} />
+            <Route path="/driver-application" element={<DriverApplication />} />
+            <Route path="/vendor-application" element={<VendorApplication />} />
+            <Route path="/driver-application-review" element={<DriverApplicationReview />} />
+            <Route path="/vendor-application-review" element={<VendorApplicationReview />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/resetPassword/:token" element={<ResetPassword />} />
+            <Route path="/verify-email/:token" element={<VerifyEmail />} />
+            <Route path="/verify-email-notice" element={<VerifyEmailNotice />} />
 
-          <Route element={<ProtectedRoute />}>
-            <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"]} />}
-            >
-              <Route path="/home" element={<Index />} />
+            <Route element={<ProtectedRoute />}>
+              <Route
+                element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"]} />}
+              >
+                <Route path="/home" element={<Index />} />
+              </Route>
+
+              <Route
+                element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER", "VENDOR"]} />}
+              >
+                <Route path="/profile" element={<Profile />} />
+              </Route>
+
+              {/* Dashboard */}
+              <Route
+                element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN"]} />}
+              >
+                <Route path="/dashboard/map" element={<LiveShipmentMap />} />
+                <Route path="/dashboard/fleet-status" element={<FleetStatus />} />
+              </Route>
+
+              {/* Shipments */}
+              <Route
+                element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR"]} />}
+              >
+                <Route path="/shipments" element={<AllShipments />} />
+                <Route path="/shipper/orders" element={<ShipperOrders />} />
+                <Route path="/shipper/orders/:orderId" element={<ShipperOrderDetails />} />
+                <Route path="/trips/:tripId" element={<TripDetails />} />
+                <Route path="/shipments/track" element={<TrackShipment />} />
+                <Route path="/shipments/create" element={<CreateShipment />} />
+                <Route path="/shipments/delayed" element={<DelayedShipments />} />
+              </Route>
+
+              {/* Fleet */}
+              <Route
+                element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN"]} />}
+              >
+                <Route path="/fleet/vehicles" element={<VehicleList />} />
+                <Route path="/fleet/maintenance" element={<MaintenanceLogs />} />
+                <Route path="/fleet/drivers" element={<DriverList />} />
+                <Route path="/fleet/geofences" element={<Geofences />} />
+              </Route>
+
+
+              {/* Vendors & Clients */}
+              <Route
+                element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"]} />}
+              >
+                <Route path="/vendors" element={<VendorDirectory />} />
+                <Route path="/vendors/add" element={<AddVendor />} />
+                <Route path="/vendors/contracts" element={<VendorContracts />} />
+                <Route path="/clients" element={<ClientsList />} />
+                <Route path="/clients/feedback" element={<ClientFeedback />} />
+              </Route>
+
+              {/* Companies */}
+              <Route
+                element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN"]} />}
+              >
+                <Route path="/companies" element={<CompanyDirectory />} />
+                <Route path="/companies/contracts" element={<CompanyContracts />} />
+              </Route>
+
+              {/* Applications */}
+              <Route
+                element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]} />}
+              >
+                <Route path="/applications" element={<ApplicationsReview />} />
+                <Route path="/admin/users" element={<UserManagement />} />
+              </Route>
+
+              {/* Marketplace */}
+              <Route
+                element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR", "DRIVER"]} />}
+              >
+                <Route path="/marketplace" element={<OpenMarketplace />} />
+                <Route path="/marketplace/orders/:orderId" element={<MarketplaceOrderDetails />} />
+              </Route>
+
+              {/* Orders */}
+              <Route
+                element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"]} />}
+              >
+                <Route path="/orders" element={<AllOrders />} />
+                <Route path="/orders/:orderId" element={<OrderDetails />} />
+                <Route path="/orders/scheduled" element={<ScheduledDeliveries />} />
+              </Route>
+
+              <Route
+                element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "DRIVER"]} />}
+              >
+                <Route path="/driver/trips" element={<DriverTrips />} />
+                <Route path="/driver/trips/:tripId" element={<DriverTripDetails />} />
+              </Route>
             </Route>
 
-            <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER", "VENDOR"]} />}
-            >
-              <Route path="/profile" element={<Profile />} />
-            </Route>
-
-            {/* Dashboard */}
-            <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN"]} />}
-            >
-              <Route path="/dashboard/map" element={<LiveShipmentMap />} />
-              <Route path="/dashboard/fleet-status" element={<FleetStatus />} />
-            </Route>
-
-            {/* Shipments */}
-            <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR"]} />}
-            >
-              <Route path="/shipments" element={<AllShipments />} />
-              <Route path="/shipper/orders" element={<ShipperOrders />} />
-              <Route path="/shipper/orders/:orderId" element={<ShipperOrderDetails />} />
-              <Route path="/trips/:tripId" element={<TripDetails />} />
-              <Route path="/shipments/track" element={<TrackShipment />} />
-              <Route path="/shipments/create" element={<CreateShipment />} />
-              <Route path="/shipments/delayed" element={<DelayedShipments />} />
-            </Route>
-
-            {/* Fleet */}
-            <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN"]} />}
-            >
-              <Route path="/fleet/vehicles" element={<VehicleList />} />
-              <Route path="/fleet/maintenance" element={<MaintenanceLogs />} />
-              <Route path="/fleet/drivers" element={<DriverList />} />
-              <Route path="/fleet/geofences" element={<Geofences />} />
-            </Route>
-
-
-            {/* Vendors & Clients */}
-            <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN"]} />}
-            >
-              <Route path="/vendors" element={<VendorDirectory />} />
-              <Route path="/vendors/add" element={<AddVendor />} />
-              <Route path="/vendors/contracts" element={<VendorContracts />} />
-              <Route path="/clients" element={<ClientsList />} />
-              <Route path="/clients/feedback" element={<ClientFeedback />} />
-            </Route>
-
-            {/* Companies */}
-            <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN"]} />}
-            >
-              <Route path="/companies" element={<CompanyDirectory />} />
-              <Route path="/companies/contracts" element={<CompanyContracts />} />
-            </Route>
-
-            {/* Applications */}
-            <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]} />}
-            >
-              <Route path="/applications" element={<ApplicationsReview />} />
-              <Route path="/admin/users" element={<UserManagement />} />
-            </Route>
-
-            {/* Marketplace */}
-            <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR"]} />}
-            >
-              <Route path="/marketplace" element={<OpenMarketplace />} />
-              <Route path="/marketplace/orders/:orderId" element={<MarketplaceOrderDetails />} />
-            </Route>
-
-            {/* Orders */}
-            <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"]} />}
-            >
-              <Route path="/orders" element={<AllOrders />} />
-              <Route path="/orders/:orderId" element={<OrderDetails />} />
-              <Route path="/orders/scheduled" element={<ScheduledDeliveries />} />
-            </Route>
-
-            <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "DRIVER"]} />}
-            >
-              <Route path="/driver/trips" element={<DriverTrips />} />
-              <Route path="/driver/trips/:tripId" element={<DriverTripDetails />} />
-            </Route>
-          </Route>
-
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

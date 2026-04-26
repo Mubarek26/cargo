@@ -9,12 +9,17 @@ const handleResponse = async (response: Response) => {
   };
 };
 
-export const getTrips = async (token?: string) => {
+export const getTrips = async (token?: string, params?: Record<string, string>) => {
   const authToken = token || localStorage.getItem("authToken");
-  const response = await fetch(`${API_BASE_URL}/api/v1/trips`, {
+  const query = params ? '?' + new URLSearchParams(params).toString() : '';
+  const response = await fetch(`${API_BASE_URL}/api/v1/trips${query}`, {
     headers: { Authorization: `Bearer ${authToken}` },
   });
   return handleResponse(response);
+};
+
+export const getDelayedTrips = async (token?: string) => {
+  return getTrips(token, { delayed: "true" });
 };
 
 export const getCompanyTrips = async (token?: string) => {

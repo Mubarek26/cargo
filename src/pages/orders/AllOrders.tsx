@@ -267,11 +267,10 @@ export default function AllOrders() {
 
                   // Check if the current user can accept/reject this order
                   const isAssignedToMyCompany = 
-                    user?.role === 'COMPANY_ADMIN' && 
-                    order.assignmentMode === 'DIRECT_COMPANY' && 
-                    (order.targetCompanyId?._id === user.companyId || order.targetCompanyId === user.companyId);
+                    (user?.role === 'COMPANY_ADMIN' && (order.targetCompanyId?._id === user.companyId || order.targetCompanyId === user.companyId)) ||
+                    user?.role === 'SUPER_ADMIN';
                   
-                  const canAction = isAssignedToMyCompany && order.status === 'PENDING';
+                  const canAction = order.assignmentMode === 'DIRECT_COMPANY' && isAssignedToMyCompany && order.status === 'PENDING';
 
                   return (
                     <tr 

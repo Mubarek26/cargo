@@ -128,7 +128,7 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   },
   {
     prefixes: ["/marketplace"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR", "DRIVER"],
   },
   {
     prefixes: ["/dashboard"],
@@ -156,7 +156,7 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   },
   {
     prefixes: ["/vendors", "/clients"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN"],
+    roles: ["SUPER_ADMIN"],
   },
   {
     prefixes: ["/orders"],
@@ -164,7 +164,7 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   },
   {
     prefixes: ["/companies"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN"],
+    roles: ["SUPER_ADMIN"],
   },
   {
     prefixes: ["/profile"],

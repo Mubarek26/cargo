@@ -127,13 +127,7 @@ export default function AllShipments() {
     setError(null);
 
     try {
-      const role = localStorage.getItem("userRole");
-      const result =
-        role === "COMPANY_ADMIN"
-          ? await getCompanyTrips(token)
-          : role === "DRIVER"
-          ? await getDriverTripsHistory(token)
-          : await getTrips(token);
+      const result = await getTrips(token);
       
       if (!result.ok) {
         const message =

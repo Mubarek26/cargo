@@ -10,7 +10,8 @@ import {
   Edit, 
   Trash2, 
   XCircle, 
-  Loader2 
+  Loader2,
+  Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { getCompanies, getCompanyMe } from "@/services/companyService";
-import { getAllDrivers, getCompanyDrivers, updateDriver, deleteDriver } from "@/services/driverService";
+import { getAllDrivers, getCompanyDrivers, updateDriver, deleteDriver, addDriver } from "@/services/driverService";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -148,6 +149,16 @@ export default function DriverList() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [editingDriver, setEditingDriver] = React.useState<DriverRecord | null>(null);
   const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const [isAddOpen, setIsAddOpen] = React.useState(false);
+  const [addForm, setAddForm] = React.useState({
+    fullName: "",
+    phoneNumber: "",
+    email: "",
+    password: "",
+    licenseNumber: "",
+    driverPhotoFile: null as File | null,
+    licensePhotoFile: null as File | null,
+  });
   const [editForm, setEditForm] = React.useState({
     fullName: "",
     phoneNumber: "",
@@ -267,6 +278,45 @@ export default function DriverList() {
     setExpandedDriverId((current) => (current === driverId ? null : driverId));
   };
 
+  const handleAddDriver = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
+
+    setIsSubmitting(true);
+    try {
+      // We need the companyId. For COMPANY_ADMIN, we can get it from their profile or from the first driver.
+      // But more reliably, we fetch it from getCompanyMe.
+      const meResult = await getCompanyMe(token);
+      const companyId = getCompanyIdFromMe(meResult.data as Record<string, unknown> | null);
+
+      if (!companyId) {
+        toast({ title: "Error", description: "Could not identify your company. Please ensure your profile is set up.", variant: "destructive" });
+        return;
+      }
+
+      const result = await addDriver(token, companyId, addForm);
+      if (result.ok) {
+        setIsAddOpen(false);
+        setAddForm({
+          fullName: "",
+          phoneNumber: "",
+          email: "",
+          password: "",
+          licenseNumber: "",
+          driverPhotoFile: null,
+          licensePhotoFile: null,
+        });
+        loadDrivers();
+        toast({ title: "Driver Added", description: "The new driver has been successfully registered and linked to your company." });
+      } else {
+        toast({ title: "Error", description: (result.data as any)?.message || "Failed to add driver", variant: "destructive" });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleUpdateDriver = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!editingDriver) return;
@@ -343,10 +393,111 @@ export default function DriverList() {
           <h1 className="text-2xl font-bold text-foreground">Driver List</h1>
           <p className="text-muted-foreground">Review all registered drivers</p>
         </div>
-        <Button variant="outline" onClick={loadDrivers} disabled={isLoading}>
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={loadDrivers} disabled={isLoading}>
+            Refresh
+          </Button>
+          {isCompanyAdmin && (
+            <Button onClick={() => setIsAddOpen(true)}>
+              <Users className="mr-2 h-4 w-4" />
+              New Driver
+            </Button>
+          )}
+        </div>
       </div>
+
+      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Add New Driver</DialogTitle>
+            <p className="text-sm text-muted-foreground">Register a new driver for your fleet. They will receive an email with their credentials.</p>
+          </DialogHeader>
+          <form className="grid gap-5 py-4" onSubmit={handleAddDriver}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Full Name</label>
+                <Input 
+                  value={addForm.fullName} 
+                  onChange={(e) => setAddForm({ ...addForm, fullName: e.target.value })} 
+                  placeholder="Enter full name" 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Phone Number</label>
+                <Input 
+                  value={addForm.phoneNumber} 
+                  onChange={(e) => setAddForm({ ...addForm, phoneNumber: e.target.value })} 
+                  placeholder="+251..." 
+                  required 
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Email Address</label>
+                <Input 
+                  type="email"
+                  value={addForm.email} 
+                  onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} 
+                  placeholder="driver@example.com" 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Password</label>
+                <Input 
+                  type="password"
+                  value={addForm.password} 
+                  onChange={(e) => setAddForm({ ...addForm, password: e.target.value })} 
+                  placeholder="Temporary password" 
+                  required 
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">License Number</label>
+              <Input 
+                value={addForm.licenseNumber} 
+                onChange={(e) => setAddForm({ ...addForm, licenseNumber: e.target.value })} 
+                placeholder="Drivers license ID" 
+                required 
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Driver Photo</label>
+                <Input 
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setAddForm({ ...addForm, driverPhotoFile: e.target.files?.[0] || null })} 
+                />
+                <p className="text-[10px] text-muted-foreground italic">Professional headshot recommended</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">License Image</label>
+                <Input 
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setAddForm({ ...addForm, licensePhotoFile: e.target.files?.[0] || null })} 
+                />
+                <p className="text-[10px] text-muted-foreground italic">Scanned copy or clear photo</p>
+              </div>
+            </div>
+
+            <DialogFooter className="pt-4 gap-2">
+              <Button type="button" variant="ghost" onClick={() => setIsAddOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={isSubmitting} className="min-w-[140px]">
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                Register Driver
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="sm:max-w-[500px]">
