@@ -2,6 +2,7 @@ import { Bell, Globe, Search, Sun, Moon, PanelLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as React from "react";
 import { useCheckAuth } from "@/hooks/use-check-auth";
+import { useTheme } from "@/components/theme-provider";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,8 @@ interface HeaderProps {
 
 export function Header({ onSidebarToggle, isCollapsed, onCollapseToggle }: HeaderProps) {
   const navigate = useNavigate();
+
+  const { theme, setTheme } = useTheme();
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -53,7 +56,7 @@ export function Header({ onSidebarToggle, isCollapsed, onCollapseToggle }: Heade
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-white/10 bg-white/80 backdrop-blur-xl px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-white/10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl px-6 lg:px-8">
       <div className="flex items-center gap-6">
         <SidebarToggle onToggle={onSidebarToggle} />
         
@@ -78,9 +81,18 @@ export function Header({ onSidebarToggle, isCollapsed, onCollapseToggle }: Heade
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Theme toggle placeholder */}
-        <Button variant="ghost" size="icon" className="hidden sm:flex hover:bg-slate-100 rounded-xl transition-colors">
-          <Sun className="h-5 w-5 text-slate-600" />
+        {/* Theme toggle */}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="hidden sm:flex hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        >
+          {theme === "dark" ? (
+            <Moon className="h-5 w-5 text-primary" />
+          ) : (
+            <Sun className="h-5 w-5 text-slate-600" />
+          )}
         </Button>
 
         {/* Notifications */}

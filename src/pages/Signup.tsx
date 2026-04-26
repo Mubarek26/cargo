@@ -99,7 +99,7 @@ const Signup: React.FC = () => {
         title: "Account Created",
         description: "Please check your email to verify your account.",
       });
-      
+
       navigate("/verify-email-notice", { state: { email: email.trim() } });
     } catch (error) {
       const message =
@@ -117,33 +117,33 @@ const Signup: React.FC = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col md:flex-row">
       <div className="w-full flex flex-col md:flex-row min-h-screen overflow-hidden">
-        
+
         {/* Left Side: Illustration & Branding (Hidden on small screens) */}
-        <div className="relative hidden lg:flex lg:w-1/2 bg-slate-900 overflow-hidden group">
-          <img 
-            src="/images/auth_signup_bg.png" 
-            alt="Logistics Terminal" 
+        <div className="relative hidden lg:flex lg:w-1/2 bg-secondary overflow-hidden group">
+          <img
+            src="/images/auth_signup_bg.png"
+            alt="Logistics Terminal"
             className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700 ease-out"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
-          
+          <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/40 to-transparent" />
+
           <div className="relative z-10 p-16 flex flex-col justify-end h-full w-full text-white">
             <div className="flex items-center gap-3 mb-8 bg-white/10 backdrop-blur-md w-fit px-4 py-2 rounded-full border border-white/10">
-              <ShieldCheck className="h-5 w-5 text-green-400" />
+              <ShieldCheck className="h-5 w-5 text-primary" />
               <span className="text-sm font-medium">Join the Global Network</span>
             </div>
             <h2 className="text-5xl font-bold leading-tight mb-6">
               Connect to <br />
-              <span className="text-blue-400">Unlimited Growth</span>
+              <span className="text-primary">Unlimited Growth</span>
             </h2>
             <p className="text-slate-300 text-lg max-w-md leading-relaxed mb-12">
               The world's most intuitive platform for transporters, vendors, and shippers to collaborate seamlessly.
             </p>
-            
+
             <div className="space-y-6">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-blue-600/20 border border-blue-600/30 flex items-center justify-center">
-                  <Truck className="h-6 w-6 text-blue-400" />
+                <div className="h-12 w-12 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center">
+                  <Truck className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <p className="font-bold text-white">Optimized Routing</p>
@@ -151,8 +151,8 @@ const Signup: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-green-600/20 border border-green-600/30 flex items-center justify-center">
-                  <Briefcase className="h-6 w-6 text-green-400" />
+                <div className="h-12 w-12 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center">
+                  <Briefcase className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <p className="font-bold text-white">Marketplace Access</p>
@@ -167,12 +167,12 @@ const Signup: React.FC = () => {
         <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center bg-white overflow-y-auto">
           <div className="mb-10 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="bg-blue-600 p-2 rounded-xl">
+              <div className="bg-primary p-2 rounded-xl">
                 <Truck className="h-6 w-6 text-white" />
               </div>
-              <span className="text-2xl font-bold tracking-tight text-slate-900">Cargo<span className="text-blue-600">Dash</span></span>
+              <span className="text-2xl font-bold tracking-tight text-slate-900">Cargo<span className="text-primary">Dash</span></span>
             </div>
-            <Link to="/login" className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+            <Link to="/login" className="text-sm font-semibold text-primary hover:opacity-80 transition-opacity">
               Already have an account?
             </Link>
           </div>
@@ -185,13 +185,13 @@ const Signup: React.FC = () => {
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 ml-1">Full Name</label>
+                <label className="text-sm font-semibold text-muted-foreground ml-1">Full Name</label>
                 <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
                     <User className="h-5 w-5" />
                   </div>
                   <Input
-                    className="pl-12 h-13 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all"
+                    className="pl-12 h-13 bg-slate-50 !text-slate-900 border-none focus:ring-primary/20 rounded-2xl transition-all"
                     placeholder="John Doe"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
@@ -200,13 +200,13 @@ const Signup: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 ml-1">Phone Number</label>
+                <label className="text-sm font-semibold text-muted-foreground ml-1">Phone Number</label>
                 <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
                     <Phone className="h-5 w-5" />
                   </div>
                   <Input
-                    className="pl-12 h-13 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all"
+                    className="pl-12 h-13 bg-slate-50 !text-slate-900 border-none focus:ring-primary/20 rounded-2xl transition-all"
                     placeholder="+251 9xx xxx xxx"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
@@ -216,13 +216,13 @@ const Signup: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 ml-1">Email Address</label>
+              <label className="text-sm font-semibold text-muted-foreground ml-1">Email Address</label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
                   <Mail className="h-5 w-5" />
                 </div>
                 <Input
-                  className="pl-12 h-13 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all"
+                  className="pl-12 h-13 bg-slate-50 !text-slate-900 border-none focus:ring-primary/20 rounded-2xl transition-all"
                   placeholder="name@company.com"
                   type="email"
                   value={email}
@@ -233,13 +233,13 @@ const Signup: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 ml-1">Password</label>
+                <label className="text-sm font-semibold text-muted-foreground ml-1">Password</label>
                 <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
                     <Lock className="h-5 w-5" />
                   </div>
                   <Input
-                    className="pl-12 h-13 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all"
+                    className="pl-12 h-13 bg-slate-50 !text-slate-900 border-none focus:ring-primary/20 rounded-2xl transition-all"
                     placeholder="••••••••"
                     type="password"
                     value={password}
@@ -249,13 +249,13 @@ const Signup: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 ml-1">Confirm Password</label>
+                <label className="text-sm font-semibold text-muted-foreground ml-1">Confirm Password</label>
                 <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
                     <Lock className="h-5 w-5" />
                   </div>
                   <Input
-                    className="pl-12 h-13 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all"
+                    className="pl-12 h-13 bg-slate-50 !text-slate-900 border-none focus:ring-primary/20 rounded-2xl transition-all"
                     placeholder="••••••••"
                     type="password"
                     value={passwordConfirm}
@@ -266,14 +266,14 @@ const Signup: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 ml-1">Your Primary Role</label>
+              <label className="text-sm font-semibold text-muted-foreground ml-1">Your Primary Role</label>
               <Select value={role} onValueChange={(val: Role) => setRole(val)}>
-                <SelectTrigger className="h-13 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all">
+                <SelectTrigger className="h-13 bg-slate-50 !text-slate-900 border-none focus:ring-primary/20 rounded-2xl transition-all">
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
                   {roles.map((r) => (
-                    <SelectItem key={r} value={r} className="rounded-xl my-1 focus:bg-blue-50 focus:text-blue-600 font-medium cursor-pointer">
+                    <SelectItem key={r} value={r} className="rounded-xl my-1 focus:bg-orange-50 focus:text-primary font-medium cursor-pointer">
                       {r.replace(/_/g, ' ')}
                     </SelectItem>
                   ))}
@@ -283,9 +283,9 @@ const Signup: React.FC = () => {
 
 
             <div className="pt-4">
-              <Button 
-                className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-lg font-bold shadow-lg shadow-blue-600/20 group transition-all" 
-                type="submit" 
+              <Button
+                className="w-full h-14 bg-primary hover:opacity-90 text-white rounded-2xl text-lg font-bold shadow-lg shadow-primary/20 group transition-all"
+                type="submit"
                 disabled={isLoading}
               >
                 {isLoading ? (

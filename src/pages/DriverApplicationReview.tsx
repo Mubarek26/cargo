@@ -73,7 +73,7 @@ const DriverApplicationReview: React.FC = () => {
           </div>
         </div>
 
-        <Card className="border-primary/5 shadow-2xl shadow-primary/5 rounded-[2.5rem] overflow-hidden bg-background/80 backdrop-blur-xl">
+        <Card className="border-primary/5 shadow-2xl shadow-primary/5 rounded-[2.5rem] overflow-hidden bg-white/80 backdrop-blur-xl">
           <CardContent className="p-10 lg:p-16 text-center">
             <div className="relative mb-10 inline-block">
               <div className="h-24 w-24 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 relative z-10 mx-auto">

@@ -7,6 +7,8 @@ import { API_BASE_URL } from "@/lib/api";
 import { getCompanies, approveCompany } from "@/services/companyService";
 import { getVendors, updateVendorStatus } from "@/services/vendorService";
 import { getPrivateTransporters, updatePrivateTransporterStatus } from "@/services/driverService";
+import { ExternalLink } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type RecordMap = Record<string, unknown> & {
   id?: string | number;
@@ -63,11 +65,11 @@ const renderDetailValue = (key: string, value: unknown) => {
 
     if (isImageUrl(resolved)) {
       return (
-        <a href={resolved} target="_blank" rel="noreferrer">
+        <a href={resolved} target="_blank" rel="noreferrer" className="block mt-2">
           <img
             src={resolved}
             alt="Attachment"
-            className="h-28 w-28 rounded-md border border-border object-cover transition hover:opacity-90"
+            className="h-32 w-full max-w-[240px] rounded-2xl border border-slate-200 object-cover shadow-sm transition hover:scale-[1.02] hover:shadow-md"
             title="Open full size"
           />
         </a>
@@ -80,9 +82,9 @@ const renderDetailValue = (key: string, value: unknown) => {
           href={resolved}
           target="_blank"
           rel="noreferrer"
-          className="text-primary underline"
+          className="inline-flex items-center gap-2 text-primary hover:underline font-bold text-xs bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 mt-1"
         >
-          View file
+          <ExternalLink className="h-3 w-3" /> View Attachment
         </a>
       );
     }
@@ -110,16 +112,31 @@ const renderDetailValue = (key: string, value: unknown) => {
   if (typeof value === "object") {
     const entries = Object.entries(value as Record<string, unknown>);
     if (entries.length === 0) return "-";
+
+    // If it's a user/owner object, filter to only show name, email, phone
+    const lowerKey = key.toLowerCase();
+    const isUserObject = lowerKey.includes("user") || lowerKey.includes("owner");
+    
     return (
       <div className="space-y-2">
-        {entries.map(([childKey, childValue]) => (
-          <div key={`${key}.${childKey}`}>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">{childKey}</p>
-            <div className="mt-1">
-              {renderDetailValue(`${key}.${childKey}`, childValue)}
+        {entries.map(([childKey, childValue]) => {
+          if (isUserObject) {
+            const lowChild = childKey.toLowerCase();
+            const allowed = lowChild.includes("name") || lowChild.includes("email") || lowChild.includes("phone") || lowChild.includes("contact");
+            if (!allowed) return null;
+          }
+          
+          if (childKey === "_id" || childKey === "__v" || childKey === "id") return null;
+
+          return (
+            <div key={`${key}.${childKey}`}>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold">{childKey}</p>
+              <div className="mt-0.5 text-xs font-medium">
+                {renderDetailValue(`${key}.${childKey}`, childValue)}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
@@ -264,28 +281,62 @@ export default function ApplicationsReview() {
   };
 
   const renderDetailsRow = (record: RecordMap, key: UpdateKey, id: string) => {
-      const entries = Object.entries(record || {})
-        .filter(([entryKey, value]) => entryKey !== "nationalIdOrPassport" && value !== null && value !== undefined && value !== "")
-      .sort(([a], [b]) => a.localeCompare(b));
-
     if (expanded?.key !== key || expanded?.id !== id) return null;
 
+    const technicalFields = ['_id', '__v', 'user', 'id', 'createdAt', 'updatedAt', 'nationalIdOrPassport'];
+    
+    const formatKey = (str: string) => {
+      return str
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, (s) => s.toUpperCase())
+        .replace(/Id/g, 'ID')
+        .trim();
+    };
+
+    const entries = Object.entries(record || {})
+      .filter(([entryKey, value]) => !technicalFields.includes(entryKey) && value !== null && value !== undefined && value !== "")
+      .sort(([a], [b]) => a.localeCompare(b));
+
     return (
-      <tr className="bg-secondary/10">
-        <td colSpan={4} className="px-5 py-4 text-sm">
-          <div className="grid gap-4 md:grid-cols-2">
-            {entries.length === 0 ? (
-              <div className="text-muted-foreground">No additional details available.</div>
-            ) : (
-              entries.map(([entryKey, value]) => (
-                <div key={entryKey}>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{entryKey}</p>
-                  <div className="mt-1 text-sm text-card-foreground whitespace-pre-wrap">
-                    {renderDetailValue(entryKey, value)}
-                  </div>
-                </div>
-              ))
-            )}
+      <tr className="bg-muted/30">
+        <td colSpan={5} className="px-8 py-8">
+          <div className="max-w-4xl">
+            <div className="grid gap-x-12 gap-y-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              {entries.length === 0 ? (
+                <div className="col-span-full text-muted-foreground italic py-4">No additional details available.</div>
+              ) : (
+                entries.map(([entryKey, value]) => {
+                  const isLarge = entryKey === 'description' || entryKey === 'notes' || entryKey === 'address';
+                  return (
+                    <div key={entryKey} className={cn("space-y-1.5", isLarge && "md:col-span-2 lg:col-span-3")}>
+                      <p className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">
+                        {formatKey(entryKey)}
+                      </p>
+                      <div className="text-sm font-semibold text-foreground bg-card p-3 rounded-xl border border-border shadow-sm whitespace-pre-wrap">
+                        {renderDetailValue(entryKey, value)}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            
+            <div className="mt-10 pt-6 border-t border-border flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Awaiting Decision</p>
+              </div>
+              <div className="flex gap-3">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="rounded-xl border-border text-foreground hover:bg-card px-4"
+                  onClick={() => toggleExpanded(key, id)}
+                >
+                  Close Details
+                </Button>
+              </div>
+            </div>
           </div>
         </td>
       </tr>
@@ -321,9 +372,10 @@ export default function ApplicationsReview() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border bg-secondary/50">
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contact</th>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company Name</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Phone</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
                     <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Action</th>
                   </tr>
@@ -334,11 +386,14 @@ export default function ApplicationsReview() {
                     return (
                       <React.Fragment key={id}>
                         <tr className="hover:bg-secondary/30 transition-colors">
-                          <td className="px-5 py-4 text-sm text-card-foreground">
+                          <td className="px-5 py-4 text-sm font-semibold text-foreground">
                             {String((company as any)?.companyName || (company as any)?.name || "-")}
                           </td>
                           <td className="px-5 py-4 text-sm text-muted-foreground">
-                            {String((company as any)?.email || (company as any)?.phoneNumber || "-")}
+                            {String((company as any)?.email || "-")}
+                          </td>
+                          <td className="px-5 py-4 text-sm text-muted-foreground">
+                            {String((company as any)?.phoneNumber || "-")}
                           </td>
                           <td className="px-5 py-4">
                             <StatusBadge status={normalizeStatus((company as any)?.status)} />
@@ -378,9 +433,10 @@ export default function ApplicationsReview() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border bg-secondary/50">
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contact</th>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company Name</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Phone</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
                     <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Action</th>
                   </tr>
@@ -391,11 +447,14 @@ export default function ApplicationsReview() {
                     return (
                       <React.Fragment key={id}>
                         <tr className="hover:bg-secondary/30 transition-colors">
-                          <td className="px-5 py-4 text-sm text-card-foreground">
+                          <td className="px-5 py-4 text-sm font-semibold text-foreground">
                             {String((vendor as any)?.companyName || (vendor as any)?.name || "-")}
                           </td>
                           <td className="px-5 py-4 text-sm text-muted-foreground">
-                            {String((vendor as any)?.email || (vendor as any)?.contactNumber || "-")}
+                            {String((vendor as any)?.email || "-")}
+                          </td>
+                          <td className="px-5 py-4 text-sm text-muted-foreground">
+                            {String((vendor as any)?.contactNumber || (vendor as any)?.phoneNumber || "-")}
                           </td>
                           <td className="px-5 py-4">
                             <StatusBadge status={normalizeStatus((vendor as any)?.status)} />
@@ -443,9 +502,10 @@ export default function ApplicationsReview() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border bg-secondary/50">
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Driver</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contact</th>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Full Name</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Phone</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
                     <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Action</th>
                   </tr>
@@ -456,11 +516,14 @@ export default function ApplicationsReview() {
                     return (
                       <React.Fragment key={id}>
                         <tr className="hover:bg-secondary/30 transition-colors">
-                          <td className="px-5 py-4 text-sm text-card-foreground">
+                          <td className="px-5 py-4 text-sm font-semibold text-foreground">
                             {String((driver as any)?.fullName || (driver as any)?.name || "-")}
                           </td>
                           <td className="px-5 py-4 text-sm text-muted-foreground">
-                            {String((driver as any)?.email || (driver as any)?.contactNumber || "-")}
+                            {String((driver as any)?.email || "-")}
+                          </td>
+                          <td className="px-5 py-4 text-sm text-muted-foreground">
+                            {String((driver as any)?.contactNumber || (driver as any)?.phoneNumber || "-")}
                           </td>
                           <td className="px-5 py-4">
                             <StatusBadge status={normalizeStatus((driver as any)?.status)} />

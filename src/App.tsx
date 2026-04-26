@@ -18,6 +18,7 @@ import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import VerifyEmail from "./pages/VerifyEmail";
 import VerifyEmailNotice from "./pages/VerifyEmailNotice";
+import { ThemeProvider } from "./components/theme-provider";
 
 // Dashboard
 import LiveShipmentMap from "./pages/dashboard/LiveShipmentMap";
@@ -64,7 +65,8 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+    <ThemeProvider defaultTheme="light" storageKey="cargo-theme">
+      <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
@@ -184,6 +186,7 @@ const App = () => (
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

@@ -111,7 +111,7 @@ const Login: React.FC = () => {
       navigate(getLandingPage(user?.role));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to reach the server. Please try again.";
-      
+
       if (message.toLowerCase().includes("not verified")) {
         setIsVerificationModalOpen(true);
       } else {
@@ -123,29 +123,29 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col md:flex-row">
       <div className="w-full flex flex-col md:flex-row min-h-screen overflow-hidden">
-        
+
         {/* Left Side: Illustration & Branding */}
-        <div className="relative hidden lg:flex lg:w-1/2 bg-slate-900 overflow-hidden group">
-          <img 
-            src="/images/auth_login_bg.png" 
-            alt="Logistics Dashboard" 
+        <div className="relative hidden lg:flex lg:w-1/2 bg-secondary overflow-hidden group">
+          <img
+            src="/images/auth_login_bg.png"
+            alt="Logistics Dashboard"
             className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700 ease-out"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
-          
+          <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/40 to-transparent" />
+
           <div className="relative z-10 p-16 flex flex-col justify-end h-full w-full text-white">
             <div className="flex items-center gap-3 mb-8 bg-white/10 backdrop-blur-md w-fit px-4 py-2 rounded-full border border-white/10">
-              <ShieldCheck className="h-5 w-5 text-blue-400" />
+              <ShieldCheck className="h-5 w-5 text-primary" />
               <span className="text-sm font-medium">Enterprise Grade Security</span>
             </div>
             <h2 className="text-5xl font-bold leading-tight mb-6">
               Empowering Global <br />
-              <span className="text-blue-400">Logistics Networks</span>
+              <span className="text-primary">Logistics Networks</span>
             </h2>
             <p className="text-slate-300 text-lg max-w-md leading-relaxed mb-12">
               The all-in-one platform for fleet management, real-time tracking, and marketplace collaboration.
             </p>
-            
+
             <div className="grid grid-cols-2 gap-8 border-t border-white/10 pt-8">
               <div>
                 <p className="text-2xl font-bold text-white">2.5k+</p>
@@ -163,12 +163,12 @@ const Login: React.FC = () => {
         <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-20 flex flex-col justify-center bg-white">
           <div className="mb-12 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="bg-blue-600 p-2 rounded-xl">
+              <div className="bg-primary p-2 rounded-xl">
                 <Truck className="h-6 w-6 text-white" />
               </div>
-              <span className="text-2xl font-bold tracking-tight text-slate-900">Cargo<span className="text-blue-600">Dash</span></span>
+              <span className="text-2xl font-bold tracking-tight text-slate-900">Cargo<span className="text-primary">Dash</span></span>
             </div>
-            <Link to="/signup" className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+            <Link to="/signup" className="text-sm font-semibold text-primary hover:opacity-80 transition-opacity">
               Create an account
             </Link>
           </div>
@@ -182,11 +182,11 @@ const Login: React.FC = () => {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700 ml-1">Email or Phone</label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
                   <Mail className="h-5 w-5" />
                 </div>
                 <Input
-                  className="pl-12 h-14 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all text-lg"
+                  className="pl-12 h-14 bg-muted border-input focus:ring-primary/20 rounded-2xl transition-all text-lg"
                   placeholder="name@company.com"
                   type="text"
                   value={emailOrPhone}
@@ -199,14 +199,14 @@ const Login: React.FC = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between ml-1">
                 <label className="text-sm font-semibold text-slate-700">Password</label>
-                <Link to="/forgot-password" name="forgot-password-link" className="text-xs font-semibold text-blue-600 hover:underline">Forgot Password?</Link>
+                <Link to="/forgot-password" name="forgot-password-link" className="text-xs font-semibold text-primary hover:underline">Forgot Password?</Link>
               </div>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
                   <Lock className="h-5 w-5" />
                 </div>
                 <Input
-                  className="pl-12 pr-12 h-14 bg-slate-50 border-slate-100 focus:bg-white focus:ring-blue-600/20 rounded-2xl transition-all text-lg"
+                  className="pl-12 pr-12 h-14 bg-muted border-input focus:ring-primary/20 rounded-2xl transition-all text-lg"
                   placeholder="••••••••"
                   type={showPassword ? "text" : "password"}
                   value={password}
@@ -224,9 +224,9 @@ const Login: React.FC = () => {
             </div>
 
             <div className="pt-4">
-              <Button 
-                className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-lg font-bold shadow-lg shadow-blue-600/20 group transition-all" 
-                type="submit" 
+              <Button
+                className="w-full h-14 bg-primary hover:opacity-90 text-white rounded-2xl text-lg font-bold shadow-lg shadow-primary/20 group transition-all"
+                type="submit"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -258,7 +258,7 @@ const Login: React.FC = () => {
       <Dialog open={isVerificationModalOpen} onOpenChange={setIsVerificationModalOpen}>
         <DialogContent className="sm:max-w-md rounded-[2rem] p-8 border-none shadow-2xl">
           <DialogHeader className="flex flex-col items-center justify-center pt-4">
-            <div className="bg-blue-50 text-blue-600 p-5 rounded-[1.5rem] mb-6 border border-blue-100 shadow-inner">
+            <div className="bg-orange-50 text-primary p-5 rounded-[1.5rem] mb-6 border border-orange-100 shadow-inner">
               <Mail className="h-12 w-12" />
             </div>
             <DialogTitle className="text-3xl font-black text-center text-slate-900 tracking-tight">Verify Your Email</DialogTitle>
@@ -268,16 +268,16 @@ const Login: React.FC = () => {
           </DialogHeader>
           <div className="flex flex-col gap-6 py-6">
             <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex gap-4">
-              <div className="bg-blue-600/10 p-1.5 rounded-full shrink-0 h-fit">
-                <ShieldCheck className="h-5 w-5 text-blue-600" />
+              <div className="bg-primary/10 p-1.5 rounded-full shrink-0 h-fit">
+                <ShieldCheck className="h-5 w-5 text-primary" />
               </div>
               <p className="text-sm text-slate-600 font-medium leading-relaxed">
                 Please click the link in the message to activate your account. Check your spam folder if you don't see it.
               </p>
             </div>
-            <Button 
+            <Button
               onClick={() => setIsVerificationModalOpen(false)}
-              className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-lg font-bold transition-all shadow-xl shadow-blue-600/20 group"
+              className="w-full h-14 bg-primary hover:opacity-90 text-white rounded-2xl text-lg font-bold transition-all shadow-xl shadow-primary/20 group"
             >
               Check My Inbox
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />

@@ -142,7 +142,7 @@ const VendorApplication: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50/50 flex items-center justify-center px-4 py-12 lg:py-20">
-      <div className="w-full max-w-[1200px] bg-background rounded-[2rem] shadow-2xl shadow-primary/10 overflow-hidden grid grid-cols-1 lg:grid-cols-5 min-h-[850px] border border-primary/5">
+      <div className="w-full max-w-[1200px] bg-white rounded-[2rem] shadow-2xl shadow-primary/10 overflow-hidden grid grid-cols-1 lg:grid-cols-5 min-h-[850px] border border-primary/5">
         
         {/* Left Side: Hero & Info */}
         <div className="hidden lg:flex lg:col-span-2 relative overflow-hidden bg-primary p-12 text-primary-foreground flex-col justify-between">
@@ -200,8 +200,8 @@ const VendorApplication: React.FC = () => {
         <div className="lg:col-span-3 p-8 lg:p-16 h-full overflow-y-auto max-h-[850px] scrollbar-thin scrollbar-thumb-primary/10">
           <div className="flex justify-between items-start mb-10">
             <div>
-              <h2 className="text-3xl font-black tracking-tight">Vendor Application</h2>
-              <p className="text-muted-foreground mt-2 font-medium">Join our ecosystem of logistical excellence.</p>
+              <h2 className="text-3xl font-black tracking-tight text-slate-900">Vendor Application</h2>
+              <p className="text-slate-500 mt-2 font-medium">Join our ecosystem of logistical excellence.</p>
             </div>
             <Link to="/login">
               <Button variant="outline" className="rounded-full gap-2 border-primary/10 hover:bg-primary/5 text-primary font-bold px-6">
@@ -227,7 +227,7 @@ const VendorApplication: React.FC = () => {
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
                       placeholder="e.g. Acme Supplies Ltd."
-                      className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                      className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                     />
                   </div>
                 </div>
@@ -241,7 +241,7 @@ const VendorApplication: React.FC = () => {
                         value={contactName}
                         onChange={(e) => setContactName(e.target.value)}
                         placeholder="Authorized representative"
-                        className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                        className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -253,7 +253,7 @@ const VendorApplication: React.FC = () => {
                         value={contactNumber}
                         onChange={(e) => setContactNumber(e.target.value)}
                         placeholder="+251 912 345 678"
-                        className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                        className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -269,7 +269,7 @@ const VendorApplication: React.FC = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="vendor@company.com"
-                        className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                        className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -281,7 +281,7 @@ const VendorApplication: React.FC = () => {
                         value={website}
                         onChange={(e) => setWebsite(e.target.value)}
                         placeholder="https://company.com"
-                        className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                        className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -295,7 +295,7 @@ const VendorApplication: React.FC = () => {
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="Street, City, Country"
-                      className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                      className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                     />
                   </div>
                 </div>
@@ -316,7 +316,7 @@ const VendorApplication: React.FC = () => {
                     value={businessType}
                     onChange={(e) => setBusinessType(e.target.value)}
                     placeholder="e.g. Wholesale, Manufacturer"
-                    className="h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                    className="h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                   />
                 </div>
                 <div className="space-y-2 group">
@@ -325,7 +325,7 @@ const VendorApplication: React.FC = () => {
                     value={businessRegistrationNumber}
                     onChange={(e) => setBusinessRegistrationNumber(e.target.value)}
                     placeholder="e.g. REG-123456"
-                    className="h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all uppercase"
+                    className="h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all uppercase"
                   />
                 </div>
                 <div className="space-y-2 group">
@@ -334,7 +334,7 @@ const VendorApplication: React.FC = () => {
                     value={taxIdNumber}
                     onChange={(e) => setTaxIdNumber(e.target.value)}
                     placeholder="e.g. TIN-998877"
-                    className="h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all uppercase"
+                    className="h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all uppercase"
                   />
                 </div>
                 <div className="space-y-2 group">
@@ -345,7 +345,7 @@ const VendorApplication: React.FC = () => {
                     value={yearsInBusiness}
                     onChange={(e) => setYearsInBusiness(e.target.value)}
                     placeholder="3"
-                    className="h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                    className="h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                   />
                 </div>
                 <div className="space-y-2 group md:col-span-2">
@@ -358,7 +358,7 @@ const VendorApplication: React.FC = () => {
                       value={expectedMonthlyOrders}
                       onChange={(e) => setExpectedMonthlyOrders(e.target.value)}
                       placeholder="Estimated monthly shipping volume"
-                      className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                      className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                     />
                   </div>
                 </div>
@@ -465,7 +465,7 @@ const VendorApplication: React.FC = () => {
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Share any specific logistics needs or company background..."
                 rows={4}
-                className="bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                className="bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
               />
             </div>
 

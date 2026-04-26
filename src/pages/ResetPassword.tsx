@@ -73,13 +73,13 @@ const ResetPassword: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900/80 to-blue-900/40" />
         
         <div className="relative z-10 p-16 flex flex-col justify-end h-full w-full text-white">
-          <div className="flex items-center gap-3 mb-8 bg-blue-500/20 backdrop-blur-md w-fit px-4 py-2 rounded-full border border-blue-400/20">
-            <ShieldAlert className="h-5 w-5 text-blue-400" />
-            <span className="text-sm font-bold uppercase tracking-widest text-blue-100">Security Vault</span>
+          <div className="flex items-center gap-3 mb-8 bg-primary/20 backdrop-blur-md w-fit px-4 py-2 rounded-full border border-primary/20">
+            <ShieldAlert className="h-5 w-5 text-primary" />
+            <span className="text-sm font-bold uppercase tracking-widest text-orange-100">Security Vault</span>
           </div>
           <h2 className="text-5xl font-extrabold leading-tight mb-6">
             Redefine Your <br />
-            <span className="text-blue-400 text-6xl">Credentials</span>
+            <span className="text-primary text-6xl">Credentials</span>
           </h2>
           <p className="text-slate-300 text-lg max-w-md leading-relaxed mb-12">
             Update your password to maintain the highest level of security for your logistics operations and data.
@@ -106,10 +106,10 @@ const ResetPassword: React.FC = () => {
         <div className="w-full max-w-md mx-auto relative z-10">
           <div className="mb-12 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="bg-blue-600 p-2.5 rounded-2xl shadow-xl shadow-blue-600/20">
+              <div className="bg-primary p-2.5 rounded-2xl shadow-xl shadow-primary/20">
                 <Truck className="h-6 w-6 text-white" />
               </div>
-              <span className="text-2xl font-black tracking-tighter text-slate-900">Cargo<span className="text-blue-600">Dash</span></span>
+              <span className="text-2xl font-black tracking-tighter text-slate-900">Cargo<span className="text-primary">Dash</span></span>
             </div>
           </div>
 
@@ -122,11 +122,11 @@ const ResetPassword: React.FC = () => {
             <div className="space-y-3">
               <label className="text-sm font-bold text-slate-700 uppercase tracking-wider ml-1">New Password</label>
               <div className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
                   <Lock className="h-6 w-6" />
                 </div>
                 <Input
-                  className="pl-14 pr-14 h-16 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-600/10 rounded-2xl transition-all text-lg font-medium border-2"
+                  className="pl-14 pr-14 h-16 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary/10 rounded-2xl transition-all text-lg font-medium border-2"
                   placeholder="••••••••"
                   type={showPassword ? "text" : "password"}
                   value={password}
@@ -147,11 +147,11 @@ const ResetPassword: React.FC = () => {
             <div className="space-y-3">
               <label className="text-sm font-bold text-slate-700 uppercase tracking-wider ml-1">Confirm Identity</label>
               <div className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
                   <ShieldCheck className="h-6 w-6" />
                 </div>
                 <Input
-                  className="pl-14 h-16 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-600/10 rounded-2xl transition-all text-lg font-medium border-2"
+                  className="pl-14 h-16 bg-slate-50 border-slate-200 focus:bg-white focus:ring-4 focus:ring-primary/10 rounded-2xl transition-all text-lg font-medium border-2"
                   placeholder="Re-enter password"
                   type={showPassword ? "text" : "password"}
                   value={passwordConfirm}
@@ -162,7 +162,7 @@ const ResetPassword: React.FC = () => {
             </div>
 
             <Button 
-              className="w-full h-16 bg-slate-900 hover:bg-blue-600 text-white rounded-2xl text-lg font-black shadow-2xl shadow-slate-900/20 group transition-all duration-300" 
+              className="w-full h-16 bg-slate-900 hover:bg-primary text-white rounded-2xl text-lg font-black shadow-2xl shadow-slate-900/20 group transition-all duration-300" 
               type="submit" 
               disabled={isLoading}
             >
@@ -181,7 +181,7 @@ const ResetPassword: React.FC = () => {
           </form>
 
           <div className="mt-12 pt-8 border-t border-slate-100 text-center">
-            <Link to="/login" className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors uppercase tracking-widest">
+            <Link to="/login" className="text-sm font-bold text-primary hover:text-orange-700 transition-colors uppercase tracking-widest">
               Return to Login Portal
             </Link>
           </div>

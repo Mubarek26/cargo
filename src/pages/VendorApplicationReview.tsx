@@ -44,13 +44,13 @@ const VendorApplicationReview: React.FC = () => {
           </div>
         </div>
 
-        <Card className="border-primary/5 shadow-2xl shadow-primary/5 rounded-[2.5rem] overflow-hidden bg-background/80 backdrop-blur-xl">
+        <Card className="border-primary/5 shadow-2xl shadow-primary/5 rounded-[2.5rem] overflow-hidden bg-white/80 backdrop-blur-xl">
           <CardContent className="p-10 lg:p-16 text-center">
             <div className="relative mb-10 inline-block">
-              <div className="h-24 w-24 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 relative z-10 mx-auto">
+              <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center text-primary relative z-10 mx-auto">
                 <Building2 className="h-12 w-12 animate-[pulse_3s_ease-in-out_infinite]" />
               </div>
-              <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-2xl animate-pulse -z-0" />
+              <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse -z-0" />
               <div className="absolute -right-2 -bottom-2 h-8 w-8 rounded-full bg-background border-4 border-slate-50 flex items-center justify-center z-20">
                 <ShieldCheck className="h-4 w-4 text-primary" />
               </div>
@@ -64,7 +64,7 @@ const VendorApplicationReview: React.FC = () => {
             <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
               {[
                 { icon: CheckCircle2, title: "Submitted", status: "Verified", color: "text-green-500" },
-                { icon: Building2, title: "Company Vetting", status: "Processing", color: "text-blue-500" },
+                { icon: Building2, title: "Company Vetting", status: "Processing", color: "text-primary" },
                 { icon: ShieldCheck, title: "Network Access", status: "Pending", color: "text-slate-300" }
               ].map((item, i) => (
                 <div key={i} className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 flex flex-col gap-2">
@@ -77,8 +77,8 @@ const VendorApplicationReview: React.FC = () => {
               ))}
             </div>
 
-            <div className="mt-12 p-6 bg-blue-500/5 rounded-3xl border border-blue-500/10 flex items-start gap-4 text-left">
-              <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
+            <div className="mt-12 p-6 bg-primary/5 rounded-3xl border border-primary/10 flex items-start gap-4 text-left">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
                 <Mail className="h-5 w-5" />
               </div>
               <div>
@@ -92,7 +92,7 @@ const VendorApplicationReview: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4 mt-12">
               <Button 
                 onClick={() => window.location.reload()} 
-                className="flex-1 h-14 rounded-2xl font-black text-lg gap-2 shadow-xl shadow-blue-500/10 bg-blue-600 hover:bg-blue-700"
+                className="flex-1 h-14 rounded-2xl font-black text-lg gap-2 shadow-xl shadow-primary/10 bg-primary hover:opacity-90"
               >
                 <RefreshCw className="h-5 w-5" /> Sync Status
               </Button>

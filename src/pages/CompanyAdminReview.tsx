@@ -78,13 +78,13 @@ const CompanyAdminReview: React.FC = () => {
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-2">
             <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-              <Building2 className="h-6 w-6 text-primary-foreground" />
+              <Package className="h-6 w-6 text-white" />
             </div>
-            <span className="text-2xl font-black tracking-tighter uppercase italic text-slate-900">CargoMax</span>
+            <span className="text-2xl font-black tracking-tighter uppercase italic text-slate-900">Cargo<span className="text-primary">Dash</span></span>
           </div>
         </div>
 
-        <Card className="border-primary/5 shadow-2xl shadow-primary/5 rounded-[2.5rem] overflow-hidden bg-background/80 backdrop-blur-xl">
+        <Card className="border-primary/5 shadow-2xl shadow-primary/5 rounded-[2.5rem] overflow-hidden bg-white/80 backdrop-blur-xl">
           <CardContent className="p-10 lg:p-16 text-center">
             <div className="relative mb-10 inline-block">
               <div className={cn(
@@ -141,7 +141,7 @@ const CompanyAdminReview: React.FC = () => {
               <div>
                 <h4 className="font-bold text-sm text-slate-900">Communication</h4>
                 <p className="text-xs text-slate-600 leading-relaxed mt-1">
-                  We'll notify you at the registered email address. Please allow <span className="font-bold">48-72 hours</span> for the full background check.
+                  We'll notify you at the registered email address. Please allow <span className="font-bold text-primary">48-72 hours</span> for the full background check.
                 </p>
               </div>
             </div>
@@ -149,14 +149,14 @@ const CompanyAdminReview: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4 mt-12">
               <Button 
                 onClick={() => window.location.reload()} 
-                className="flex-1 h-14 rounded-2xl font-black text-lg gap-2 shadow-xl shadow-primary/10"
+                className="flex-1 h-14 rounded-2xl font-black text-lg gap-2 shadow-xl shadow-primary/10 bg-primary hover:opacity-90"
               >
                 <RefreshCw className="h-5 w-5" /> Refresh Review
               </Button>
               <Button 
                 onClick={() => navigate("/login")} 
                 variant="outline"
-                className="flex-1 h-14 rounded-2xl font-black text-lg gap-2 border-slate-200"
+                className="flex-1 h-14 rounded-2xl font-black text-lg gap-2 border-slate-200 text-slate-600 hover:bg-slate-50"
               >
                 <ArrowLeft className="h-5 w-5" /> Back to Login
               </Button>

@@ -101,7 +101,7 @@ const CompanyAdminRequest: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50/50 flex items-center justify-center px-4 py-12 lg:py-20">
-      <div className="w-full max-w-[1200px] bg-background rounded-[2rem] shadow-2xl shadow-primary/10 overflow-hidden grid grid-cols-1 lg:grid-cols-5 min-h-[850px] border border-primary/5">
+      <div className="w-full max-w-[1200px] bg-white rounded-[2rem] shadow-2xl shadow-primary/10 overflow-hidden grid grid-cols-1 lg:grid-cols-5 min-h-[850px] border border-primary/5">
         
         {/* Left Side: Hero & Info */}
         <div className="hidden lg:flex lg:col-span-2 relative overflow-hidden bg-primary p-12 text-primary-foreground flex-col justify-between">
@@ -159,8 +159,8 @@ const CompanyAdminRequest: React.FC = () => {
         <div className="lg:col-span-3 p-8 lg:p-16 h-full overflow-y-auto max-h-[850px] scrollbar-thin scrollbar-thumb-primary/10">
           <div className="flex justify-between items-start mb-10">
             <div>
-              <h2 className="text-3xl font-black tracking-tight">Dashboard Request</h2>
-              <p className="text-muted-foreground mt-2 font-medium">Empower your logistics company with enterprise tools.</p>
+              <h2 className="text-3xl font-black tracking-tight text-slate-900">Dashboard Request</h2>
+              <p className="text-slate-500 mt-2 font-medium">Empower your logistics company with enterprise tools.</p>
             </div>
             <Link to="/login">
               <Button variant="outline" className="rounded-full gap-2 border-primary/10 hover:bg-primary/5 text-primary font-bold px-6">
@@ -186,7 +186,7 @@ const CompanyAdminRequest: React.FC = () => {
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
                       placeholder="e.g. BlueSky Logistics"
-                      className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                      className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                     />
                   </div>
                 </div>
@@ -200,7 +200,7 @@ const CompanyAdminRequest: React.FC = () => {
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
                         placeholder="+251 900 000 000"
-                        className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                        className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -213,7 +213,7 @@ const CompanyAdminRequest: React.FC = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="admin@bluesky.com"
-                        className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                        className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -223,12 +223,11 @@ const CompanyAdminRequest: React.FC = () => {
                   <div className="space-y-2 group">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground group-focus-within:text-primary transition-colors">Official Website</Label>
                     <div className="relative">
-                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         value={website}
                         onChange={(e) => setWebsite(e.target.value)}
                         placeholder="https://bluesky.com"
-                        className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                        className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -238,7 +237,7 @@ const CompanyAdminRequest: React.FC = () => {
                       value={businessLicense}
                       onChange={(e) => setBusinessLicense(e.target.value)}
                       placeholder="e.g. BL-998877"
-                      className="h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all uppercase"
+                      className="h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all uppercase"
                     />
                   </div>
                 </div>
@@ -263,7 +262,7 @@ const CompanyAdminRequest: React.FC = () => {
                       value={numberOfCars}
                       onChange={(e) => setNumberOfCars(e.target.value)}
                       placeholder="e.g. 50"
-                      className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                      className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                     />
                   </div>
                 </div>
@@ -275,7 +274,7 @@ const CompanyAdminRequest: React.FC = () => {
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="Street, City, Country"
-                      className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                      className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                     />
                   </div>
                 </div>
@@ -330,7 +329,7 @@ const CompanyAdminRequest: React.FC = () => {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Tell us about your company's specialty and operational regions..."
                 rows={4}
-                className="bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                className="bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
               />
             </div>
 

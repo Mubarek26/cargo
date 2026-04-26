@@ -129,7 +129,7 @@ const DriverApplication: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50/50 flex items-center justify-center px-4 py-12 lg:py-20">
-      <div className="w-full max-w-[1200px] bg-background rounded-[2rem] shadow-2xl shadow-primary/10 overflow-hidden grid grid-cols-1 lg:grid-cols-5 min-h-[850px] border border-primary/5">
+      <div className="w-full max-w-[1200px] bg-white rounded-[2rem] shadow-2xl shadow-primary/10 overflow-hidden grid grid-cols-1 lg:grid-cols-5 min-h-[850px] border border-primary/5">
         
         {/* Left Side: Hero & Info */}
         <div className="hidden lg:flex lg:col-span-2 relative overflow-hidden bg-primary p-12 text-primary-foreground flex-col justify-between">
@@ -187,8 +187,8 @@ const DriverApplication: React.FC = () => {
         <div className="lg:col-span-3 p-8 lg:p-16 h-full overflow-y-auto max-h-[850px] scrollbar-thin scrollbar-thumb-primary/10">
           <div className="flex justify-between items-start mb-10">
             <div>
-              <h2 className="text-3xl font-black tracking-tight">Driver Application</h2>
-              <p className="text-muted-foreground mt-2 font-medium">Complete your profile to start your journey.</p>
+              <h2 className="text-3xl font-black tracking-tight text-slate-900">Driver Application</h2>
+              <p className="text-slate-500 mt-2 font-medium">Complete your profile to start your journey.</p>
             </div>
             <Link to="/login">
               <Button variant="outline" className="rounded-full gap-2 border-primary/10 hover:bg-primary/5 text-primary font-bold px-6">
@@ -214,7 +214,7 @@ const DriverApplication: React.FC = () => {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="e.g. John Doe"
-                      className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                      className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                     />
                   </div>
                 </div>
@@ -228,7 +228,7 @@ const DriverApplication: React.FC = () => {
                         value={contactNumber}
                         onChange={(e) => setContactNumber(e.target.value)}
                         placeholder="+251 900 000 000"
-                        className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                        className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -241,7 +241,7 @@ const DriverApplication: React.FC = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="john@example.com"
-                        className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                        className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -255,7 +255,7 @@ const DriverApplication: React.FC = () => {
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="Addis Ababa, Ethiopia"
-                      className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                      className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                     />
                   </div>
                 </div>
@@ -276,7 +276,7 @@ const DriverApplication: React.FC = () => {
                     value={vehicleType}
                     onChange={(e) => setVehicleType(e.target.value)}
                     placeholder="e.g. Heavy Truck, Delivery Van"
-                    className="h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                    className="h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                   />
                 </div>
                 <div className="space-y-2 group">
@@ -285,7 +285,7 @@ const DriverApplication: React.FC = () => {
                     value={vehicleRegistrationNumber}
                     onChange={(e) => setVehicleRegistrationNumber(e.target.value)}
                     placeholder="e.g. AA-12345"
-                    className="h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all uppercase"
+                    className="h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all uppercase"
                   />
                 </div>
                 <div className="space-y-2 group">
@@ -294,7 +294,7 @@ const DriverApplication: React.FC = () => {
                     value={driversLicenseNumber}
                     onChange={(e) => setDriversLicenseNumber(e.target.value)}
                     placeholder="e.g. DL-2026-99"
-                    className="h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all uppercase"
+                    className="h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all uppercase"
                   />
                 </div>
                 <div className="space-y-2 group">
@@ -305,7 +305,7 @@ const DriverApplication: React.FC = () => {
                       type="date"
                       value={licenseExpiryDate}
                       onChange={(e) => setLicenseExpiryDate(e.target.value)}
-                      className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                      className="pl-10 h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                     />
                   </div>
                 </div>
@@ -317,13 +317,13 @@ const DriverApplication: React.FC = () => {
                     value={yearsOfExperience}
                     onChange={(e) => setYearsOfExperience(e.target.value)}
                     placeholder="5"
-                    className="h-12 bg-slate-50/50 border-slate-200 focus:bg-background transition-all"
+                    className="h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all"
                   />
                 </div>
                 <div className="space-y-2 group">
                   <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground group-focus-within:text-primary transition-colors">Availability *</Label>
                   <Select value={availability} onValueChange={setAvailability}>
-                    <SelectTrigger className="h-12 bg-slate-50/50 border-slate-200">
+                    <SelectTrigger className="h-12 bg-slate-50 !text-slate-900 border-none focus:bg-white transition-all">
                       <SelectValue placeholder="Select availability" />
                     </SelectTrigger>
                     <SelectContent>

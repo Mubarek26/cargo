@@ -34,7 +34,7 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col md:flex-row overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row overflow-hidden">
       {/* Left Side: Branding & Visuals (Matching Login) */}
       <div className="relative hidden lg:flex lg:w-1/2 bg-slate-900 overflow-hidden group">
         <img 
@@ -46,20 +46,20 @@ const ForgotPassword: React.FC = () => {
         
         <div className="relative z-10 p-16 flex flex-col justify-end h-full w-full text-white">
           <div className="flex items-center gap-3 mb-8 bg-white/10 backdrop-blur-md w-fit px-4 py-2 rounded-full border border-white/10 animate-pulse">
-            <ShieldCheck className="h-5 w-5 text-blue-400" />
+            <ShieldCheck className="h-5 w-5 text-primary" />
             <span className="text-sm font-medium uppercase tracking-wider">Account Recovery</span>
           </div>
           <h2 className="text-5xl font-bold leading-tight mb-6">
             Secure Your <br />
-            <span className="text-blue-400 text-6xl">Access</span>
+            <span className="text-primary text-6xl">Access</span>
           </h2>
           <p className="text-slate-300 text-lg max-w-md leading-relaxed mb-12">
             Restoring your connection to the world's most advanced logistics network is just a step away.
           </p>
           
           <div className="flex items-center gap-4 border-t border-white/10 pt-8">
-            <div className="h-12 w-12 rounded-2xl bg-blue-600/20 flex items-center justify-center border border-blue-500/30">
-              <Lock className="h-6 w-6 text-blue-400" />
+            <div className="h-12 w-12 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30">
+              <Lock className="h-6 w-6 text-primary" />
             </div>
             <div>
               <p className="font-semibold">End-to-End Encryption</p>
@@ -70,40 +70,40 @@ const ForgotPassword: React.FC = () => {
       </div>
 
       {/* Right Side: Form Area */}
-      <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-24 flex flex-col justify-center bg-white relative">
+      <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-24 flex flex-col justify-center bg-background text-foreground relative">
         {/* Abstract Background Elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-60" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-orange-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-60" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-slate-50 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 opacity-60" />
 
         <div className="relative z-10 w-full max-w-md mx-auto">
           {/* Logo Section */}
           <div className="mb-16 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="bg-blue-600 p-2.5 rounded-2xl shadow-lg shadow-blue-600/20">
+              <div className="bg-primary p-2.5 rounded-2xl shadow-lg shadow-primary/20">
                 <Truck className="h-6 w-6 text-white" />
               </div>
-              <span className="text-2xl font-black tracking-tight text-slate-900 italic">Cargo<span className="text-blue-600">Dash</span></span>
+              <span className="text-2xl font-black tracking-tight italic">Cargo<span className="text-primary">Dash</span></span>
             </div>
           </div>
 
           {!isSubmitted ? (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="mb-10">
-                <h1 className="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">Forgot Password?</h1>
-                <p className="text-slate-500 text-lg leading-relaxed">
+                <h1 className="text-4xl font-extrabold mb-4 tracking-tight">Forgot Password?</h1>
+                <p className="text-muted-foreground text-lg leading-relaxed">
                   No worries. Enter your registered email address and we'll send you instructions to reset your password.
                 </p>
               </div>
 
               <form className="space-y-8" onSubmit={handleSubmit}>
                 <div className="space-y-3">
-                  <label className="text-sm font-bold text-slate-700 uppercase tracking-wide ml-1">Work Email</label>
+                  <label className="text-sm font-bold text-muted-foreground uppercase tracking-wide ml-1">Work Email</label>
                   <div className="relative group">
-                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-all duration-300">
+                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-all duration-300">
                       <Mail className="h-6 w-6" />
                     </div>
                     <Input
-                      className="pl-14 h-16 bg-slate-50 border-slate-100 focus:bg-white focus:ring-4 focus:ring-blue-600/10 rounded-2xl transition-all text-lg shadow-sm border-2"
+                      className="pl-14 h-16 bg-muted border-input focus:ring-4 focus:ring-primary/10 rounded-2xl transition-all text-lg"
                       placeholder="alex@company.com"
                       type="email"
                       value={email}
@@ -114,7 +114,7 @@ const ForgotPassword: React.FC = () => {
                 </div>
 
                 <Button 
-                  className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-lg font-black shadow-xl shadow-blue-600/30 group transition-all duration-300 relative overflow-hidden" 
+                  className="w-full h-16 bg-primary hover:opacity-90 text-white rounded-2xl text-lg font-black shadow-xl shadow-primary/30 group transition-all duration-300 relative overflow-hidden" 
                   type="submit" 
                   disabled={isLoading}
                 >
@@ -141,9 +141,9 @@ const ForgotPassword: React.FC = () => {
                 </div>
               </div>
               
-              <h2 className="text-3xl font-black text-slate-900 mb-4">Email Dispatched</h2>
-              <p className="text-slate-500 text-lg mb-10 leading-relaxed px-4">
-                We've sent a secure reset link to <span className="font-bold text-blue-600 underline decoration-blue-600/30 underline-offset-4">{email}</span>. 
+              <h2 className="text-3xl font-black mb-4">Email Dispatched</h2>
+              <p className="text-muted-foreground text-lg mb-10 leading-relaxed px-4">
+                We've sent a secure reset link to <span className="font-bold text-primary underline decoration-primary/30 underline-offset-4">{email}</span>. 
                 The link will expire in 10 minutes.
               </p>
               
@@ -157,9 +157,9 @@ const ForgotPassword: React.FC = () => {
             </div>
           )}
 
-          <div className="mt-12 pt-10 border-t border-slate-100">
-            <Link to="/login" className="flex items-center justify-center gap-3 text-slate-500 hover:text-blue-600 font-bold transition-all group">
-              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+          <div className="mt-12 pt-10 border-t border-border">
+            <Link to="/login" className="flex items-center justify-center gap-3 text-muted-foreground hover:text-primary font-bold transition-all group">
+              <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
                 <ArrowLeft className="h-5 w-5" />
               </div>
               Return to Login
