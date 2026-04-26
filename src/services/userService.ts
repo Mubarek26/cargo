@@ -55,4 +55,28 @@ export const userService = {
     }
     return response.json();
   },
+
+  async updateMe(payload: { fullName?: string; phoneNumber?: string; photoFile?: File }) {
+    const token = localStorage.getItem("authToken");
+    if (!token) throw new Error("No authentication token found");
+
+    const formData = new FormData();
+    if (payload.fullName) formData.append("fullName", payload.fullName);
+    if (payload.phoneNumber) formData.append("phoneNumber", payload.phoneNumber);
+    if (payload.photoFile) formData.append("photo", payload.photoFile);
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/users/updateMe`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to update profile");
+    }
+    return response.json();
+  },
 };

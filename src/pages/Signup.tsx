@@ -28,29 +28,10 @@ const Signup: React.FC = () => {
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [role, setRole] = useState<Role>(roles[0]);
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const validateEmail = (e: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
-  const handlePhoto = (file?: File) => {
-    if (!file) return;
-
-    if (photoPreview) {
-      URL.revokeObjectURL(photoPreview);
-    }
-
-    const url = URL.createObjectURL(file);
-    setPhoto(file);
-    setPhotoPreview(url);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (photoPreview) URL.revokeObjectURL(photoPreview);
-    };
-  }, [photoPreview]);
 
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault();
@@ -96,7 +77,6 @@ const Signup: React.FC = () => {
         password,
         passwordConfirm,
         role,
-        photo,
       });
 
       const token =
@@ -116,19 +96,11 @@ const Signup: React.FC = () => {
       }
 
       toast({
-        title: "Success",
-        description: "Account created — redirecting...",
+        title: "Account Created",
+        description: "Please check your email to verify your account.",
       });
       
-      if (resolvedRole === "COMPANY_ADMIN") {
-        navigate("/company-admin-request");
-      } else if (resolvedRole === "DRIVER") {
-        navigate("/driver-application");
-      } else if (resolvedRole === "VENDOR") {
-        navigate("/vendor-application");
-      } else {
-        navigate("/home");
-      }
+      navigate("/verify-email-notice", { state: { email: email.trim() } });
     } catch (error) {
       const message =
         error instanceof Error
@@ -309,37 +281,6 @@ const Signup: React.FC = () => {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 ml-1">Profile Photo (Recommended)</label>
-              <div 
-                className="group relative flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-[1.5rem] p-6 bg-slate-50 hover:bg-slate-100/50 hover:border-blue-300 transition-all cursor-pointer overflow-hidden"
-                onClick={() => document.getElementById('photo-upload')?.click()}
-              >
-                {photoPreview ? (
-                  <div className="relative">
-                    <img src={photoPreview} alt="Preview" className="h-20 w-20 rounded-2xl object-cover ring-4 ring-white" />
-                    <div className="absolute -bottom-1 -right-1 bg-blue-600 rounded-full p-1.5 border-2 border-white">
-                      <Camera className="h-3 w-3 text-white" />
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="bg-white p-3 rounded-2xl shadow-sm mb-2 text-slate-400 group-hover:text-blue-600 transition-colors">
-                      <Camera className="h-6 w-6" />
-                    </div>
-                    <p className="text-sm text-slate-500 font-medium">Click to upload photo</p>
-                    <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">PNG, JPG up to 5MB</p>
-                  </>
-                )}
-                <input
-                  id="photo-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handlePhoto(e.target.files?.[0])}
-                  className="hidden"
-                />
-              </div>
-            </div>
 
             <div className="pt-4">
               <Button 

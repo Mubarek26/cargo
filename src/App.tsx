@@ -16,6 +16,8 @@ import VendorApplicationReview from "./pages/VendorApplicationReview";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
+import VerifyEmail from "./pages/VerifyEmail";
+import VerifyEmailNotice from "./pages/VerifyEmailNotice";
 
 // Dashboard
 import LiveShipmentMap from "./pages/dashboard/LiveShipmentMap";
@@ -36,10 +38,6 @@ import MaintenanceLogs from "./pages/fleet/MaintenanceLogs";
 import DriverList from "./pages/fleet/DriverList";
 import Geofences from "./pages/fleet/Geofences";
 
-// Warehouses
-import WarehouseLocations from "./pages/warehouses/WarehouseLocations";
-import InventoryLevels from "./pages/warehouses/InventoryLevels";
-import RestockRequests from "./pages/warehouses/RestockRequests";
 
 // Vendors & Clients
 import VendorDirectory from "./pages/vendors/VendorDirectory";
@@ -82,6 +80,8 @@ const App = () => (
           <Route path="/vendor-application-review" element={<VendorApplicationReview />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/resetPassword/:token" element={<ResetPassword />} />
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
+          <Route path="/verify-email-notice" element={<VerifyEmailNotice />} />
 
           <Route element={<ProtectedRoute />}>
             <Route
@@ -127,14 +127,6 @@ const App = () => (
               <Route path="/fleet/geofences" element={<Geofences />} />
             </Route>
 
-            {/* Warehouses */}
-            <Route
-              element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN"]} />}
-            >
-              <Route path="/warehouses" element={<WarehouseLocations />} />
-              <Route path="/warehouses/inventory" element={<InventoryLevels />} />
-              <Route path="/warehouses/restock" element={<RestockRequests />} />
-            </Route>
 
             {/* Vendors & Clients */}
             <Route

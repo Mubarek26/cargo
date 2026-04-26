@@ -13,31 +13,13 @@ export type SignupPayload = {
   password: string;
   passwordConfirm?: string;
   role?: string;
-  photo?: File | null;
 };
 
 export type AuthResponse = Record<string, unknown> | null;
 
 const buildSignupRequest = (payload: SignupPayload) => {
-  if (payload.photo) {
-    const form = new FormData();
-    form.append("fullName", payload.fullName);
-    form.append("phoneNumber", payload.phoneNumber);
-    form.append("email", payload.email);
-    form.append("password", payload.password);
-    if (payload.passwordConfirm) {
-      form.append("passwordConfirm", payload.passwordConfirm);
-    }
-    if (payload.role) {
-      form.append("role", payload.role);
-    }
-    form.append("photo", payload.photo);
-    return { body: form } as const;
-  }
-
-  const { photo, ...rest } = payload;
   return {
-    body: JSON.stringify(rest),
+    body: JSON.stringify(payload),
     headers: { "Content-Type": "application/json" },
   } as const;
 };

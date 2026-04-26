@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { getCompanies } from "@/services/companyService";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { User } from "lucide-react";
 
 type CompanyRecord = Record<string, unknown> & {
   id?: string | number;
@@ -64,6 +66,7 @@ const KNOWN_FIELDS = new Set([
   "companyStatus",
   "createdAt",
   "numberOfCars",
+  "ownerId",
 ]);
 
 const getExtraDetails = (company: CompanyRecord) =>
@@ -281,6 +284,36 @@ export default function CompanyDirectory() {
                                 <p className="text-card-foreground">
                                   {company.website ? String(company.website) : "-"}
                                 </p>
+                              </div>
+                              <div className="md:col-span-2">
+                                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Company Owner</p>
+                                {company.ownerId && typeof company.ownerId === "object" ? (
+                                  <div className="flex items-center gap-4 p-3 rounded-lg border border-border/50 bg-background/50">
+                                    <Avatar className="h-12 w-12 border-2 border-primary/20">
+                                      <AvatarImage src={(company.ownerId as any).photo} alt={(company.ownerId as any).fullName} />
+                                      <AvatarFallback className="bg-primary/10 text-primary">
+                                        <User className="h-6 w-6" />
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-semibold text-foreground truncate">{(company.ownerId as any).fullName}</p>
+                                      <div className="flex flex-col sm:flex-row sm:gap-4 mt-0.5">
+                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                          <Mail className="h-3 w-3" />
+                                          <span className="truncate">{(company.ownerId as any).email}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                          <Phone className="h-3 w-3" />
+                                          <span>{(company.ownerId as any).phoneNumber || "-"}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="text-card-foreground text-sm italic text-muted-foreground">
+                                    {company.ownerId ? String(company.ownerId) : "Owner information not available"}
+                                  </p>
+                                )}
                               </div>
                               {extraDetails.length > 0 ? (
                                 extraDetails.map((detail) => (

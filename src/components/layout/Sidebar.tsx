@@ -11,9 +11,6 @@ import {
   Car,
   Wrench,
   Users,
-  Warehouse,
-  Boxes,
-  RefreshCw,
   Building2,
   UserPlus,
   Contact,
@@ -76,14 +73,6 @@ const navigation: NavSection[] = [
     ],
   },
   {
-    title: "Warehouses",
-    items: [
-      { label: "Warehouse Locations", href: "/warehouses", icon: Warehouse },
-      { label: "Inventory Levels", href: "/warehouses/inventory", icon: Boxes },
-      { label: "Restock Requests", href: "/warehouses/restock", icon: RefreshCw },
-    ],
-  },
-  {
     title: "Vendors & Clients",
     items: [
       { label: "Vendor Directory", href: "/vendors", icon: Building2 },
@@ -129,6 +118,7 @@ const navigation: NavSection[] = [
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  isCollapsed: boolean;
 }
 
 const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
@@ -162,10 +152,6 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   },
   {
     prefixes: ["/fleet"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN"],
-  },
-  {
-    prefixes: ["/warehouses"],
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN"],
   },
   {
@@ -206,7 +192,7 @@ const isRouteAllowed = (role: string | null, href: string) => {
   return rule.roles.includes(role);
 };
 
-export function Sidebar({ isOpen, onToggle }: SidebarProps) {
+export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
   const navigate = useNavigate();
   const [expandedSections, setExpandedSections] = useState<string[]>(
     navigation.map((s) => s.title)
@@ -240,19 +226,22 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-full w-64 bg-sidebar text-sidebar-foreground transition-transform duration-300 lg:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed left-0 top-0 z-50 h-full bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out lg:translate-x-0",
+          isOpen ? "translate-x-0" : "-translate-x-full",
+          isCollapsed ? "w-20" : "w-64"
         )}
       >
         {/* Logo */}
         <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Package className="h-5 w-5 text-primary-foreground" />
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20 transition-all duration-300">
+              <Truck className="h-6 w-6 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold text-sidebar-accent-foreground">
-              CargoMax
-            </span>
+            {!isCollapsed && (
+              <span className="text-xl font-black tracking-tight text-white animate-in fade-in slide-in-from-left-2 duration-300">
+                Cargo<span className="text-primary">Dash</span>
+              </span>
+            )}
           </div>
           <button
             onClick={onToggle}
@@ -274,17 +263,19 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
             .filter((section) => section.items.length > 0)
             .map((section) => (
               <div key={section.title} className="mb-4">
-                <button
-                  onClick={() => toggleSection(section.title)}
-                  className="mb-2 flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-sidebar-muted"
-                >
-                  {section.title}
-                  {expandedSections.includes(section.title) ? (
-                    <ChevronDown className="h-3 w-3" />
-                  ) : (
-                    <ChevronRight className="h-3 w-3" />
-                  )}
-                </button>
+                {!isCollapsed && (
+                  <button
+                    onClick={() => toggleSection(section.title)}
+                    className="mb-2 flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-sidebar-muted px-2"
+                  >
+                    {section.title}
+                    {expandedSections.includes(section.title) ? (
+                      <ChevronDown className="h-3 w-3" />
+                    ) : (
+                      <ChevronRight className="h-3 w-3" />
+                    )}
+                  </button>
+                )}
 
                 {expandedSections.includes(section.title) && (
                   <ul className="space-y-1">
@@ -294,15 +285,21 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                           to={item.href}
                           className={({ isActive }) =>
                             cn(
-                              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm sidebar-transition",
+                              "flex items-center rounded-xl text-sm transition-all duration-200 group",
+                              isCollapsed ? "justify-center h-12 w-12 mx-auto mb-2" : "gap-3 px-4 py-2.5 mb-1",
                               isActive
-                                ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                ? "bg-primary text-white shadow-lg shadow-primary/25 font-bold"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                             )
                           }
+                          title={isCollapsed ? item.label : undefined}
                         >
-                          <item.icon className="h-4 w-4" />
-                          {item.label}
+                          <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-110")} />
+                          {!isCollapsed && (
+                            <span className="truncate animate-in fade-in slide-in-from-left-2 duration-300">
+                              {item.label}
+                            </span>
+                          )}
                         </NavLink>
                       </li>
                     ))}
@@ -310,14 +307,18 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                 )}
               </div>
             ))}
-          <div className="mt-6 border-t border-sidebar-border pt-4">
+          <div className={cn("mt-auto py-6 border-t border-white/5", isCollapsed ? "px-0 flex justify-center" : "px-4")}>
             <button
               type="button"
               onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              className={cn(
+                "flex items-center font-semibold text-slate-400 hover:bg-red-500/10 hover:text-red-500 transition-all duration-200 group",
+                isCollapsed ? "h-12 w-12 justify-center rounded-xl" : "w-full gap-3 rounded-xl px-4 py-2.5 text-sm"
+              )}
+              title={isCollapsed ? "Logout Session" : undefined}
             >
-              <X className="h-4 w-4" />
-              Logout
+              <X className="h-5 w-5 shrink-0 group-hover:rotate-90 transition-transform duration-300" />
+              {!isCollapsed && <span>Logout Session</span>}
             </button>
           </div>
         </nav>

@@ -9,8 +9,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { getCompanies } from "@/services/companyService";
-import { createVehicle, getAllVehicles, getCompanyVehicles } from "@/services/vehicleService";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { updateVehicle, deleteVehicle, createVehicle, getAllVehicles, getCompanyVehicles } from "@/services/vehicleService";
+import { Trash2, Edit, ExternalLink } from "lucide-react";
 
 type CompanyRecord = Record<string, unknown> & {
   id?: string | number;
@@ -121,6 +130,8 @@ export default function VehicleList() {
   const [vehicleType, setVehicleType] = React.useState("");
   const [model, setModel] = React.useState("");
   const [capacityKg, setCapacityKg] = React.useState("");
+  const [editingVehicle, setEditingVehicle] = React.useState<VehicleRecord | null>(null);
+  const [isEditOpen, setIsEditOpen] = React.useState(false);
 
   const loadVehicles = React.useCallback(() => {
     const token = localStorage.getItem("authToken");
@@ -195,10 +206,87 @@ export default function VehicleList() {
         setIsAddOpen(false);
         setPlateNumber(""); setVehicleType(""); setModel(""); setCapacityKg("");
         loadVehicles();
+        toast({ title: "Vehicle Registered", description: "The vehicle has been added to your fleet." });
+      } else {
+        toast({ title: "Error", description: (result.data as any)?.message || "Failed to add vehicle", variant: "destructive" });
       }
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleUpdateVehicle = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!editingVehicle) return;
+    
+    const token = localStorage.getItem("authToken");
+    const id = (editingVehicle as any)._id || (editingVehicle as any).id;
+    if (!token || !id) return;
+
+    setIsSubmitting(true);
+    try {
+      const result = await updateVehicle(token, String(id), {
+        plateNumber: plateNumber.toUpperCase(),
+        vehicleType: vehicleType.toUpperCase(),
+        model,
+        capacityKg: Number(capacityKg),
+      });
+
+      if (result.ok) {
+        setIsEditOpen(false);
+        setEditingVehicle(null);
+        setPlateNumber(""); setVehicleType(""); setModel(""); setCapacityKg("");
+        loadVehicles();
+        toast({ title: "Vehicle Updated", description: "Changes have been saved successfully." });
+      } else {
+        toast({ title: "Error", description: (result.data as any)?.message || "Failed to update vehicle", variant: "destructive" });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleStatusChange = async (vehicle: VehicleRecord, newStatus: string) => {
+    const token = localStorage.getItem("authToken");
+    const id = (vehicle as any)._id || (vehicle as any).id;
+    if (!token || !id) return;
+
+    try {
+      const result = await updateVehicle(token, String(id), { status: newStatus });
+      if (result.ok) {
+        loadVehicles();
+        toast({ title: "Status Updated", description: `Vehicle is now ${newStatus.toLowerCase()}.` });
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteVehicle = async (vehicle: VehicleRecord) => {
+    if (!confirm("Are you sure you want to delete this vehicle? This action cannot be undone.")) return;
+    
+    const token = localStorage.getItem("authToken");
+    const id = (vehicle as any)._id || (vehicle as any).id;
+    if (!token || !id) return;
+
+    try {
+      const result = await deleteVehicle(token, String(id));
+      if (result.ok) {
+        loadVehicles();
+        toast({ title: "Vehicle Deleted", description: "The vehicle has been removed from your fleet." });
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to delete vehicle", variant: "destructive" });
+    }
+  };
+
+  const openEditDialog = (vehicle: VehicleRecord) => {
+    setEditingVehicle(vehicle);
+    setPlateNumber(vehicle.plateNumber || "");
+    setVehicleType(vehicle.vehicleType || "");
+    setModel(vehicle.model || "");
+    setCapacityKg(String(vehicle.capacityKg || ""));
+    setIsEditOpen(true);
   };
 
   return (
@@ -254,6 +342,41 @@ export default function VehicleList() {
               </DialogContent>
             </Dialog>
           )}
+
+          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle className="text-2xl">Edit Vehicle</DialogTitle>
+                <p className="text-sm text-muted-foreground">Update the details for vehicle {editingVehicle?.plateNumber}.</p>
+              </DialogHeader>
+              <form className="grid gap-6 py-4" onSubmit={handleUpdateVehicle}>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Plate Number</label>
+                    <Input value={plateNumber} onChange={(e) => setPlateNumber(e.target.value)} placeholder="ABC-123" required />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Vehicle Type</label>
+                    <Input value={vehicleType} onChange={(e) => setVehicleType(e.target.value)} placeholder="VAN / TRUCK" required />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Model / Make</label>
+                  <Input value={model} onChange={(e) => setModel(e.target.value)} placeholder="Toyota Hiace 2024" required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Payload Capacity (kg)</label>
+                  <Input type="number" value={capacityKg} onChange={(e) => setCapacityKg(e.target.value)} placeholder="1500" required />
+                </div>
+                <DialogFooter className="pt-4">
+                  <Button type="button" variant="ghost" onClick={() => setIsEditOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={isSubmitting} className="min-w-[120px]">
+                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -337,10 +460,46 @@ export default function VehicleList() {
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 group-hover:scale-110 transition-transform">
                       <Truck className="h-6 w-6 text-primary" />
                     </div>
-                    <Badge variant="outline" className={cn("px-2.5 py-1 text-[10px] font-bold border", status.className)}>
-                      <StatusIcon className="mr-1 h-3 w-3" />
-                      {status.label.toUpperCase()}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-2">
+                      <Badge variant="outline" className={cn("px-2.5 py-1 text-[10px] font-bold border", status.className)}>
+                        <StatusIcon className="mr-1 h-3 w-3" />
+                        {status.label.toUpperCase()}
+                      </Badge>
+                      
+                      {isCompanyAdmin && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-secondary">
+                              <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => openEditDialog(vehicle)}>
+                              <Edit className="mr-2 h-4 w-4" /> Edit Details
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground font-bold">Update Status</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleStatusChange(vehicle, "ACTIVE")}>
+                              <CheckCircle className="mr-2 h-4 w-4 text-emerald-500" /> Mark Active
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(vehicle, "MAINTENANCE")}>
+                              <Wrench className="mr-2 h-4 w-4 text-amber-500" /> Set Maintenance
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(vehicle, "INACTIVE")}>
+                              <XCircle className="mr-2 h-4 w-4 text-slate-400" /> Deactivate
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => handleDeleteVehicle(vehicle)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete Vehicle
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
                   </div>
 
                   <div className="mb-6">

@@ -1,84 +1,79 @@
-import { Package, Clock, CheckCircle, Truck, AlertTriangle } from "lucide-react";
+import { Package, Clock, CheckCircle, Truck, AlertTriangle, XCircle, MapPin, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
-type ShipmentStatus = "in_transit" | "delivered" | "pending" | "delayed";
+type ShipmentStatus = 
+  | "pending" | "accepted" | "rejected" | "open" | "matched" | "assigned" 
+  | "in_transit" | "arrived" | "delivered" | "completed" | "cancelled" | "delayed";
 
 interface Shipment {
   id: string;
-  trackingNumber: string;
+  orderNumber: string;
   origin: string;
   destination: string;
-  status: ShipmentStatus;
-  eta: string;
+  status: string;
+  createdAt: string;
   customer: string;
 }
 
-const shipments: Shipment[] = [
-  {
-    id: "1",
-    trackingNumber: "SHP-2024-00142",
-    origin: "New York, NY",
-    destination: "Los Angeles, CA",
-    status: "in_transit",
-    eta: "Dec 15, 2024",
-    customer: "Acme Corp",
-  },
-  {
-    id: "2",
-    trackingNumber: "SHP-2024-00143",
-    origin: "Chicago, IL",
-    destination: "Miami, FL",
-    status: "delivered",
-    eta: "Dec 12, 2024",
-    customer: "Tech Solutions",
-  },
-  {
-    id: "3",
-    trackingNumber: "SHP-2024-00144",
-    origin: "Seattle, WA",
-    destination: "Denver, CO",
-    status: "pending",
-    eta: "Dec 18, 2024",
-    customer: "Global Retail",
-  },
-  {
-    id: "4",
-    trackingNumber: "SHP-2024-00145",
-    origin: "Boston, MA",
-    destination: "Atlanta, GA",
-    status: "delayed",
-    eta: "Dec 17, 2024",
-    customer: "Fast Logistics",
-  },
-  {
-    id: "5",
-    trackingNumber: "SHP-2024-00146",
-    origin: "Dallas, TX",
-    destination: "Phoenix, AZ",
-    status: "in_transit",
-    eta: "Dec 16, 2024",
-    customer: "Prime Shipping",
-  },
-];
-
 const statusConfig: Record<
-  ShipmentStatus,
-  { label: string; icon: typeof Package; className: string }
+  string,
+  { label: string; icon: any; className: string }
 > = {
+  pending: {
+    label: "Pending",
+    icon: Clock,
+    className: "text-warning bg-warning/10",
+  },
+  accepted: {
+    label: "Accepted",
+    icon: CheckCircle,
+    className: "text-info bg-info/10",
+  },
+  rejected: {
+    label: "Rejected",
+    icon: XCircle,
+    className: "text-destructive bg-destructive/10",
+  },
+  open: {
+    label: "Open",
+    icon: Package,
+    className: "text-primary bg-primary/10",
+  },
+  matched: {
+    label: "Matched",
+    icon: Users,
+    className: "text-chart-2 bg-chart-2/10",
+  },
+  assigned: {
+    label: "Assigned",
+    icon: Truck,
+    className: "text-primary bg-primary/10",
+  },
   in_transit: {
     label: "In Transit",
     icon: Truck,
     className: "text-primary bg-primary/10",
+  },
+  arrived: {
+    label: "Arrived",
+    icon: MapPin,
+    className: "text-success bg-success/10",
   },
   delivered: {
     label: "Delivered",
     icon: CheckCircle,
     className: "text-success bg-success/10",
   },
-  pending: {
-    label: "Pending",
-    icon: Clock,
-    className: "text-warning bg-warning/10",
+  completed: {
+    label: "Completed",
+    icon: CheckCircle,
+    className: "text-success bg-success/10",
+  },
+  cancelled: {
+    label: "Cancelled",
+    icon: XCircle,
+    className: "text-muted-foreground bg-muted",
   },
   delayed: {
     label: "Delayed",
@@ -87,7 +82,9 @@ const statusConfig: Record<
   },
 };
 
-export function RecentShipments() {
+export function RecentShipments({ data }: { data?: Shipment[] }) {
+  const displayShipments = data || [];
+
   return (
     <div className="rounded-xl border border-border bg-card">
       <div className="flex items-center justify-between border-b border-border p-5">
@@ -109,7 +106,7 @@ export function RecentShipments() {
           <thead>
             <tr className="border-b border-border bg-secondary/50">
               <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Tracking #
+                Order #
               </th>
               <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Route
@@ -121,51 +118,64 @@ export function RecentShipments() {
                 Status
               </th>
               <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                ETA
+                Created At
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {shipments.map((shipment) => {
-              const status = statusConfig[shipment.status];
-              const StatusIcon = status.icon;
+            {displayShipments.length > 0 ? (
+              displayShipments.map((shipment) => {
+                const statusKey = shipment.status.toLowerCase();
+                const status = statusConfig[statusKey] || statusConfig.pending;
+                const StatusIcon = status.icon;
 
-              return (
-                <tr
-                  key={shipment.id}
-                  className="hover:bg-secondary/30 transition-colors"
-                >
-                  <td className="whitespace-nowrap px-5 py-4">
-                    <span className="font-medium text-card-foreground">
-                      {shipment.trackingNumber}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-4">
-                    <div className="text-sm">
-                      <p className="text-card-foreground">{shipment.origin}</p>
-                      <p className="text-muted-foreground">→ {shipment.destination}</p>
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-4 text-sm text-card-foreground">
-                    {shipment.customer}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-4">
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
-                        status.className
-                      )}
-                    >
-                      <StatusIcon className="h-3 w-3" />
-                      {status.label}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
-                    {shipment.eta}
-                  </td>
-                </tr>
-              );
-            })}
+                return (
+                  <tr
+                    key={shipment.id}
+                    className="hover:bg-secondary/30 transition-colors"
+                  >
+                    <td className="whitespace-nowrap px-5 py-4">
+                      <span className="font-medium text-card-foreground">
+                        {shipment.orderNumber}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4">
+                      <div className="text-sm">
+                        <p className="text-card-foreground truncate max-w-[200px]" title={shipment.origin}>
+                          {shipment.origin}
+                        </p>
+                        <p className="text-muted-foreground truncate max-w-[200px]" title={shipment.destination}>
+                          → {shipment.destination}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4 text-sm text-card-foreground">
+                      {shipment.customer}
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4">
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+                          status.className
+                        )}
+                      >
+                        <StatusIcon className="h-3 w-3" />
+                        {status.label}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
+                      {format(new Date(shipment.createdAt), "MMM dd, yyyy")}
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan={5} className="px-5 py-10 text-center text-muted-foreground">
+                  No recent shipments found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -258,3 +258,47 @@ const handleResponse = async (response: Response) => {
   }
   return data;
 };
+
+export const updateDriver = async (token: string, id: string, payload: any) => {
+  const formData = new FormData();
+  if (payload.fullName) formData.append("fullName", payload.fullName);
+  if (payload.phoneNumber) formData.append("phoneNumber", payload.phoneNumber);
+  if (payload.email) formData.append("email", payload.email);
+  if (payload.licenseNumber) formData.append("licenseNumber", payload.licenseNumber);
+  if (payload.status) formData.append("status", payload.status);
+  if (payload.driverPhotoFile) formData.append("driverPhoto", payload.driverPhotoFile);
+  if (payload.licensePhotoFile) formData.append("licensePhoto", payload.licensePhotoFile);
+
+  const response = await fetch(`${API_BASE_URL}/api/v1/company/drivers/${id}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    credentials: "include",
+    body: formData,
+  });
+
+  const data = await response.json().catch(() => null);
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data,
+  } as const;
+};
+
+export const deleteDriver = async (token: string, id: string) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/company/drivers/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    credentials: "include",
+  });
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data: null,
+  } as const;
+};

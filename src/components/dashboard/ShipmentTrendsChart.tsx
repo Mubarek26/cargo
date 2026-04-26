@@ -24,7 +24,11 @@ const data = [
   { month: "Dec", shipments: 950, deliveries: 900 },
 ];
 
-export function ShipmentTrendsChart() {
+export function ShipmentTrendsChart({ data }: { data?: any[] }) {
+  const chartData = data || [
+    { date: "Jan", shipments: 0, revenue: 0 },
+  ];
+
   return (
     <div className="rounded-xl border border-border bg-card p-5">
       <div className="mb-4">
@@ -32,16 +36,16 @@ export function ShipmentTrendsChart() {
           Shipment Trends
         </h3>
         <p className="text-sm text-muted-foreground">
-          Monthly shipment and delivery performance over the past year
+          Shipment volume and revenue performance over the selected period
         </p>
       </div>
 
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+          <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
             <XAxis
-              dataKey="month"
+              dataKey="date"
               tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
               axisLine={{ stroke: "hsl(var(--border))" }}
               tickLine={false}
@@ -72,8 +76,8 @@ export function ShipmentTrendsChart() {
               radius={[4, 4, 0, 0]}
             />
             <Bar
-              dataKey="deliveries"
-              name="Deliveries"
+              dataKey="revenue"
+              name="Revenue"
               fill="hsl(var(--chart-2))"
               radius={[4, 4, 0, 0]}
             />

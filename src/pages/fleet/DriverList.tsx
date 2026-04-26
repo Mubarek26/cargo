@@ -1,14 +1,34 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Users, Search, CheckCircle, AlertTriangle, MoreVertical } from "lucide-react";
+import { 
+  Users, 
+  Search, 
+  CheckCircle, 
+  AlertTriangle, 
+  MoreVertical, 
+  Edit, 
+  Trash2, 
+  XCircle, 
+  Loader2 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { getCompanies, getCompanyMe } from "@/services/companyService";
-import { getAllDrivers, getCompanyDrivers } from "@/services/driverService";
+import { getAllDrivers, getCompanyDrivers, updateDriver, deleteDriver } from "@/services/driverService";
+import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type CompanyRecord = Record<string, unknown> & {
   id?: string | number;
@@ -33,9 +53,10 @@ type DriverRecord = Record<string, unknown> & {
 };
 
 const statusConfig = {
-  active: { label: "Active", className: "text-success bg-success/10" },
-  inactive: { label: "Inactive", className: "text-muted-foreground bg-secondary" },
-  pending: { label: "Pending", className: "text-warning bg-warning/10" },
+  ACTIVE: { label: "Active", className: "text-success bg-success/10" },
+  OFFLINE: { label: "Offline", className: "text-muted-foreground bg-secondary" },
+  SUSPENDED: { label: "Suspended", className: "text-destructive bg-destructive/10" },
+  PENDING: { label: "Pending", className: "text-warning bg-warning/10" },
   unknown: { label: "Unknown", className: "text-muted-foreground bg-secondary" },
 };
 
@@ -69,7 +90,7 @@ const getDriverId = (driver: DriverRecord, index: number) => {
 };
 
 const getDriverStatus = (driver: DriverRecord) =>
-  String(driver.status || "unknown").toLowerCase();
+  String(driver.status || "unknown").toUpperCase();
 
 const getStatusLabel = (status: string) =>
   statusConfig[status as keyof typeof statusConfig]?.label ||
@@ -123,6 +144,16 @@ export default function DriverList() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [expandedDriverId, setExpandedDriverId] = React.useState<string | null>(null);
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [editingDriver, setEditingDriver] = React.useState<DriverRecord | null>(null);
+  const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const [editForm, setEditForm] = React.useState({
+    fullName: "",
+    phoneNumber: "",
+    email: "",
+    licenseNumber: "",
+  });
 
   const getCompanyIdFromMe = (payload: Record<string, unknown> | null) => {
     if (!payload) return null;
@@ -236,6 +267,75 @@ export default function DriverList() {
     setExpandedDriverId((current) => (current === driverId ? null : driverId));
   };
 
+  const handleUpdateDriver = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!editingDriver) return;
+    
+    const token = localStorage.getItem("authToken");
+    const id = (editingDriver as any)._id || (editingDriver as any).id;
+    if (!token || !id) return;
+
+    setIsSubmitting(true);
+    try {
+      const result = await updateDriver(token, String(id), editForm);
+      if (result.ok) {
+        setIsEditOpen(false);
+        setEditingDriver(null);
+        loadDrivers();
+        toast({ title: "Driver Updated", description: "Driver details have been updated successfully." });
+      } else {
+        toast({ title: "Error", description: (result.data as any)?.message || "Failed to update driver", variant: "destructive" });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteDriver = async (driver: DriverRecord) => {
+    if (!confirm("Are you sure you want to delete this driver? This will also delete their associated user account.")) return;
+    
+    const token = localStorage.getItem("authToken");
+    const id = (driver as any)._id || (driver as any).id;
+    if (!token || !id) return;
+
+    try {
+      const result = await deleteDriver(token, String(id));
+      if (result.ok) {
+        loadDrivers();
+        toast({ title: "Driver Deleted", description: "The driver has been removed from the system." });
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to delete driver", variant: "destructive" });
+    }
+  };
+
+  const handleStatusChange = async (driver: DriverRecord, newStatus: string) => {
+    const token = localStorage.getItem("authToken");
+    const id = (driver as any)._id || (driver as any).id;
+    if (!token || !id) return;
+
+    try {
+      const result = await updateDriver(token, String(id), { status: newStatus });
+      if (result.ok) {
+        loadDrivers();
+        toast({ title: "Status Updated", description: `Driver is now ${newStatus.toLowerCase()}.` });
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
+    }
+  };
+
+  const openEditDialog = (driver: DriverRecord) => {
+    setEditingDriver(driver);
+    setEditForm({
+      fullName: driver.fullName || "",
+      phoneNumber: driver.phoneNumber || "",
+      email: driver.email || "",
+      licenseNumber: driver.licenseNumber || "",
+    });
+    setIsEditOpen(true);
+  };
+
   return (
     <DashboardLayout>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -247,6 +347,62 @@ export default function DriverList() {
           Refresh
         </Button>
       </div>
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Edit Driver</DialogTitle>
+            <p className="text-sm text-muted-foreground">Update the profile details for {editingDriver?.fullName}.</p>
+          </DialogHeader>
+          <form className="grid gap-6 py-4" onSubmit={handleUpdateDriver}>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Full Name</label>
+              <Input 
+                value={editForm.fullName} 
+                onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })} 
+                placeholder="John Doe" 
+                required 
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Phone Number</label>
+                <Input 
+                  value={editForm.phoneNumber} 
+                  onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })} 
+                  placeholder="+251..." 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">License Number</label>
+                <Input 
+                  value={editForm.licenseNumber} 
+                  onChange={(e) => setEditForm({ ...editForm, licenseNumber: e.target.value })} 
+                  placeholder="ABC12345" 
+                  required 
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Email Address</label>
+              <Input 
+                type="email"
+                value={editForm.email} 
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} 
+                placeholder="john@example.com" 
+                required 
+              />
+            </div>
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="ghost" onClick={() => setIsEditOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={isSubmitting} className="min-w-[120px]">
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="mb-6 flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center">
         <div className="relative flex-1">
@@ -367,13 +523,41 @@ export default function DriverList() {
                           </Badge>
                         </td>
                         <td className="whitespace-nowrap px-5 py-4">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => openEditDialog(driver)}>
+                                <Edit className="mr-2 h-4 w-4" /> Edit Profile
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground font-bold">Update Status</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => handleStatusChange(driver, "ACTIVE")}>
+                                <CheckCircle className="mr-2 h-4 w-4 text-success" /> Mark Active
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleStatusChange(driver, "SUSPENDED")}>
+                                <AlertTriangle className="mr-2 h-4 w-4 text-destructive" /> Suspend
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleStatusChange(driver, "OFFLINE")}>
+                                <XCircle className="mr-2 h-4 w-4 text-muted-foreground" /> Mark Offline
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => handleDeleteDriver(driver)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete Driver
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </td>
                       </tr>
                       {isExpanded && (

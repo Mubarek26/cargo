@@ -7,6 +7,9 @@ import { useCheckAuth } from "@/hooks/use-check-auth";
 import { getCompanyMe } from "@/services/companyService";
 import { getVendorApplication } from "@/services/vendorService";
 import { getDriverApplication, updateMyStatus } from "@/services/driverService";
+import { userService } from "@/services/userService";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Camera, Loader2, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 
 type RecordMap = Record<string, unknown> | null;
@@ -60,6 +63,8 @@ export default function Profile() {
   const [company, setCompany] = React.useState<RecordMap>(null);
   const [vendorApplication, setVendorApplication] = React.useState<RecordMap>(null);
   const [driverApplication, setDriverApplication] = React.useState<RecordMap>(null);
+  const [isPhotoUploading, setIsPhotoUploading] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleStatusChange = async (newStatus: string) => {
     const token = localStorage.getItem("authToken");
@@ -74,6 +79,37 @@ export default function Profile() {
       toast.error(err.message || "Failed to update status");
       setIsLoading(false);
     }
+  };
+
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Basic validation
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB.");
+      return;
+    }
+
+    try {
+      setIsPhotoUploading(true);
+      await userService.updateMe({ photoFile: file });
+      toast.success("Profile photo updated successfully");
+      await loadProfile();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload photo");
+    } finally {
+      setIsPhotoUploading(false);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   const loadProfile = React.useCallback(async () => {
@@ -187,22 +223,55 @@ export default function Profile() {
       ) : (
         <div className="space-y-6">
           <section className="rounded-xl border border-border bg-card p-6">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">Account</h2>
-                <p className="text-sm text-muted-foreground">Your primary login details</p>
+            <div className="flex flex-col gap-6 md:flex-row md:items-start">
+              <div className="relative shrink-0">
+                <Avatar className="h-24 w-24 border-2 border-primary/20">
+                  <AvatarImage src={(user as any)?.photo} alt={(user as any)?.fullName} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    <UserIcon className="h-10 w-10" />
+                  </AvatarFallback>
+                </Avatar>
+                <button
+                  type="button"
+                  onClick={triggerFileInput}
+                  disabled={isPhotoUploading}
+                  className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 disabled:opacity-50"
+                  title="Update profile photo"
+                >
+                  {isPhotoUploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                />
               </div>
-              {(user as any)?.role ? (
-                <Badge className="bg-primary/10 text-primary">{String((user as any)?.role)}</Badge>
-              ) : null}
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {userItems.map((item) => (
-                <div key={item.label}>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{item.label}</p>
-                  <p className="text-sm text-card-foreground">{item.value}</p>
+
+              <div className="flex-1 space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Account</h2>
+                    <p className="text-sm text-muted-foreground">Your primary login details</p>
+                  </div>
+                  {(user as any)?.role ? (
+                    <Badge className="bg-primary/10 text-primary">{String((user as any)?.role)}</Badge>
+                  ) : null}
                 </div>
-              ))}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {userItems.map((item) => (
+                    <div key={item.label}>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">{item.label}</p>
+                      <p className="text-sm text-card-foreground">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </section>
 

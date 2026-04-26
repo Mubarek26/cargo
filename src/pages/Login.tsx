@@ -5,8 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLogin } from "@/hooks/use-login";
 import { useLoginApplicationGate } from "@/hooks/use-login-application-gate";
-import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Truck } from "lucide-react";
+import { ShieldCheck, Truck, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +22,7 @@ const Login: React.FC = () => {
   const [emailOrPhone, setEmailOrPhone] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = React.useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -103,7 +111,12 @@ const Login: React.FC = () => {
       navigate(getLandingPage(user?.role));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to reach the server. Please try again.";
-      toast.error(message);
+      
+      if (message.toLowerCase().includes("not verified")) {
+        setIsVerificationModalOpen(true);
+      } else {
+        toast.error(message);
+      }
     }
   };
 
@@ -241,6 +254,37 @@ const Login: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={isVerificationModalOpen} onOpenChange={setIsVerificationModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-[2rem] p-8 border-none shadow-2xl">
+          <DialogHeader className="flex flex-col items-center justify-center pt-4">
+            <div className="bg-blue-50 text-blue-600 p-5 rounded-[1.5rem] mb-6 border border-blue-100 shadow-inner">
+              <Mail className="h-12 w-12" />
+            </div>
+            <DialogTitle className="text-3xl font-black text-center text-slate-900 tracking-tight">Verify Your Email</DialogTitle>
+            <DialogDescription className="text-center text-slate-500 text-lg mt-4 leading-relaxed">
+              Your account is almost ready! A new verification link has just been sent to your email and phone number.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-6 py-6">
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex gap-4">
+              <div className="bg-blue-600/10 p-1.5 rounded-full shrink-0 h-fit">
+                <ShieldCheck className="h-5 w-5 text-blue-600" />
+              </div>
+              <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                Please click the link in the message to activate your account. Check your spam folder if you don't see it.
+              </p>
+            </div>
+            <Button 
+              onClick={() => setIsVerificationModalOpen(false)}
+              className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-lg font-bold transition-all shadow-xl shadow-blue-600/20 group"
+            >
+              Check My Inbox
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
