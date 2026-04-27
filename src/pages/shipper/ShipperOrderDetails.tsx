@@ -29,12 +29,15 @@ import { orderService } from "@/services/orderService";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { paymentService } from "@/services/paymentService";
+import { Loader2, CreditCard } from "lucide-react";
 
 export default function ShipperOrderDetails() {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPaying, setIsPaying] = useState(false);
 
   useEffect(() => {
     if (orderId) fetchOrderDetails();
@@ -52,6 +55,41 @@ export default function ShipperOrderDetails() {
       navigate("/shipper/orders");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!order) return;
+
+    setIsPaying(true);
+    try {
+      // Get user from localStorage to get their phone number
+      const userStr = localStorage.getItem("user");
+      const user = userStr ? JSON.parse(userStr) : null;
+      
+      if (!user?.phoneNumber) {
+        toast.error("Please update your phone number in profile before payment");
+        navigate("/profile");
+        return;
+      }
+
+      const res = await paymentService.initializePayment(
+        order._id,
+        user.phoneNumber,
+        order.pricing?.currency || "ETB"
+      );
+
+      if (res.status === "success" && res.data.data.checkout_url) {
+        toast.success("Redirecting to secure payment...");
+        window.location.href = res.data.data.checkout_url;
+      } else {
+        throw new Error("Failed to get checkout URL");
+      }
+    } catch (error: any) {
+      console.error("Payment error:", error);
+      toast.error(error.message || "Payment initialization failed");
+    } finally {
+      setIsPaying(false);
     }
   };
 
@@ -203,12 +241,39 @@ export default function ShipperOrderDetails() {
                     <Badge variant="secondary">{order.pricing?.paymentMethod?.replace('_', ' ') || "BANK TRANSFER"}</Badge>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-border/50">
-                    <span className="text-muted-foreground text-sm">Negotiable</span>
-                    <span className="font-medium">{order.pricing?.negotiable ? "Yes" : "Fixed Price"}</span>
+                    <span className="text-muted-foreground text-sm">Payment Status</span>
+                    <Badge className={cn("text-[10px] uppercase font-bold", 
+                      order.paymentStatus === "paid" ? "bg-green-500/10 text-green-500 border-green-500/20" :
+                      order.paymentStatus === "failed" ? "bg-red-500/10 text-red-500 border-red-500/20" :
+                      "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                    )}>
+                      {order.paymentStatus || "PENDING"}
+                    </Badge>
                   </div>
-                  <div className="pt-4 flex items-center gap-2 text-[10px] text-muted-foreground">
-                    <ShieldCheck className="h-3 w-3 text-green-500" />
-                    Secure payment handled by CargoMax
+                  <div className="pt-4 space-y-4">
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                      <ShieldCheck className="h-3 w-3 text-green-500" />
+                      Secure payment handled by Chapa
+                    </div>
+                    {order.paymentStatus !== "paid" && (
+                      <Button 
+                        className="w-full gap-2 shadow-lg shadow-primary/20" 
+                        onClick={handlePayment}
+                        disabled={isPaying}
+                      >
+                        {isPaying ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard className="h-4 w-4" />
+                            Pay Now ({order.pricing?.proposedBudget?.toLocaleString()} {order.pricing?.currency || "ETB"})
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

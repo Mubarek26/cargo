@@ -25,6 +25,9 @@ import {
   X,
   Handshake,
   Briefcase,
+  DollarSign,
+  TrendingUp,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -91,6 +94,7 @@ const navigation: NavSection[] = [
     title: "Account",
     items: [
       { label: "Profile", href: "/profile", icon: User },
+      { label: "Transactions", href: "/transactions", icon: DollarSign },
     ],
   },
   {
@@ -98,6 +102,8 @@ const navigation: NavSection[] = [
     items: [
       { label: "User Management", href: "/admin/users", icon: Users },
       { label: "Review Applications", href: "/applications", icon: ClipboardCheck },
+      { label: "Pricing Config", href: "/admin/pricing-config", icon: DollarSign },
+      { label: "Commission Settings", href: "/admin/commission-config", icon: TrendingUp },
     ],
   },
   {
@@ -111,6 +117,7 @@ const navigation: NavSection[] = [
     title: "Driver Portal",
     items: [
       { label: "My Trips", href: "/driver/trips", icon: Truck },
+      { label: "My Wallet", href: "/driver/wallet", icon: Wallet },
     ],
   },
 ];
@@ -126,6 +133,7 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
     prefixes: ["/home"],
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"],
   },
+
   {
     prefixes: ["/marketplace"],
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR", "DRIVER"],
@@ -177,6 +185,10 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   {
     prefixes: ["/driver"],
     roles: ["DRIVER", "SUPER_ADMIN", "COMPANY_ADMIN"],
+  },
+  {
+    prefixes: ["/transactions"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"],
   },
 ];
 

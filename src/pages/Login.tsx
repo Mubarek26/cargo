@@ -57,6 +57,10 @@ const Login: React.FC = () => {
         localStorage.setItem("userRole", user.role);
       }
 
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      }
+
       const getLandingPage = (role: string) => {
         switch (role) {
           case "SHIPPER":

@@ -19,6 +19,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import VerifyEmail from "./pages/VerifyEmail";
 import VerifyEmailNotice from "./pages/VerifyEmailNotice";
 import { ThemeProvider } from "./components/theme-provider";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 // Dashboard
 import LiveShipmentMap from "./pages/dashboard/LiveShipmentMap";
@@ -49,6 +50,8 @@ import CompanyDirectory from "./pages/companies/CompanyDirectory";
 import Profile from "./pages/Profile";
 import ApplicationsReview from "./pages/admin/ApplicationsReview";
 import UserManagement from "./pages/admin/UserManagement";
+import PricingConfig from "./pages/admin/PricingConfig";
+import CommissionConfig from "./pages/admin/CommissionConfig";
 import VendorContracts from "./pages/vendors/VendorContracts";
 import CompanyContracts from "./pages/companies/CompanyContracts";
 import OpenMarketplace from "./pages/marketplace/OpenMarketplace";
@@ -60,6 +63,8 @@ import OrderDetails from "./pages/orders/OrderDetails";
 import ScheduledDeliveries from "./pages/orders/ScheduledDeliveries";
 import DriverTrips from "./pages/driver/DriverTrips";
 import DriverTripDetails from "./pages/driver/DriverTripDetails";
+import DriverWallet from "./pages/driver/DriverWallet";
+import Transactions from "./pages/transactions/Transactions";
 
 const queryClient = new QueryClient();
 
@@ -155,6 +160,8 @@ const App = () => (
               >
                 <Route path="/applications" element={<ApplicationsReview />} />
                 <Route path="/admin/users" element={<UserManagement />} />
+                <Route path="/admin/pricing-config" element={<PricingConfig />} />
+                <Route path="/admin/commission-config" element={<CommissionConfig />} />
               </Route>
 
               {/* Marketplace */}
@@ -179,7 +186,18 @@ const App = () => (
               >
                 <Route path="/driver/trips" element={<DriverTrips />} />
                 <Route path="/driver/trips/:tripId" element={<DriverTripDetails />} />
+                <Route path="/driver/wallet" element={<DriverWallet />} />
               </Route>
+
+              {/* Transactions */}
+              <Route
+                element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"]} />}
+              >
+                <Route path="/transactions" element={<Transactions />} />
+              </Route>
+
+              {/* Payments */}
+              <Route path="/payment/success" element={<PaymentSuccess />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
