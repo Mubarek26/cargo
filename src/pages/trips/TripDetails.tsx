@@ -371,37 +371,54 @@ export default function TripDetails() {
           </Section>
 
           <Section title="Shipment Info">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Cargo</p>
-                <p className="text-sm text-foreground">{toText(cargo?.type)}</p>
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Cargo Type</p>
+                  <p className="text-sm font-medium text-foreground">{toText(cargo?.type)}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Description</p>
+                  <p className="text-sm text-foreground">{toText(cargo?.description)}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Description</p>
-                <p className="text-sm text-foreground">{toText(cargo?.description)}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Quantity</p>
-                <p className="text-sm text-foreground">{toText(cargo?.quantity)} {toText(cargo?.unit)}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Weight (kg)</p>
-                <p className="text-sm text-foreground">{toText(cargo?.weightKg)}</p>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Quantity & Weight</p>
+                  <p className="text-sm font-medium text-foreground">{toText(cargo?.quantity)} {toText(cargo?.unit)} • {toText(cargo?.weightKg)} kg</p>
+                </div>
+                {order.targetCompanyId && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Transport Company</p>
+                    <p className="text-sm font-bold text-primary">{toText(order.targetCompanyId?.companyName)}</p>
+                    <p className="text-xs text-muted-foreground">{toText(order.targetCompanyId?.phoneNumber)}</p>
+                  </div>
+                )}
               </div>
             </div>
           </Section>
 
-          <Section title="Locations">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Pickup</p>
-                <p className="text-sm text-foreground">{toText(pickup?.address)}</p>
-                <p className="text-xs text-muted-foreground">{toText(pickup?.contactName)} • {toText(pickup?.contactPhone)}</p>
+          <Section title="Client & Locations">
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Posted By</p>
+                  <p className="text-sm font-medium text-foreground">{toText(order.createdBy?.fullName)}</p>
+                  <p className="text-xs text-muted-foreground">{toText(order.createdBy?.role)} • {toText(order.createdBy?.phoneNumber)}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Pickup Point</p>
+                  <p className="text-sm text-foreground font-medium">{toText(pickup?.address)}</p>
+                  <p className="text-xs text-muted-foreground">{toText(pickup?.contactName)} • {toText(pickup?.contactPhone)}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Delivery</p>
-                <p className="text-sm text-foreground">{toText(delivery?.address)}</p>
-                <p className="text-xs text-muted-foreground">{toText(delivery?.contactName)} • {toText(delivery?.contactPhone)}</p>
+              <div className="space-y-4">
+                <div className="invisible h-[44px] hidden sm:block" />
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Delivery Point</p>
+                  <p className="text-sm text-foreground font-medium">{toText(delivery?.address)}</p>
+                  <p className="text-xs text-muted-foreground">{toText(delivery?.contactName)} • {toText(delivery?.contactPhone)}</p>
+                </div>
               </div>
             </div>
           </Section>
@@ -423,6 +440,29 @@ export default function TripDetails() {
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Capacity (kg)</p>
                 <p className="text-sm text-foreground">{toText(vehicle?.capacityKg)}</p>
+              </div>
+            </div>
+          </Section>
+
+          <Section title="Driver">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Full Name</p>
+                <p className="text-sm text-foreground">{toText(((trip as any)?.driverId)?.fullName)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Phone Number</p>
+                <p className="text-sm text-foreground">{toText(((trip as any)?.driverId)?.phoneNumber)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Email</p>
+                <p className="text-sm text-foreground">{toText(((trip as any)?.driverId)?.email)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Status</p>
+                <Badge variant={((trip as any)?.driverId)?.status === 'ACTIVE' ? 'secondary' : 'outline'}>
+                  {toText(((trip as any)?.driverId)?.status)}
+                </Badge>
               </div>
             </div>
           </Section>

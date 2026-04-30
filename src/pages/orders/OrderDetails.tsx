@@ -4,7 +4,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { 
   ArrowLeft, ShoppingCart, Calendar, MapPin, Package, User, 
   Truck, Scale, Clock, CheckCircle, XCircle, Loader2, Check, X,
-  ExternalLink, Phone, Mail, DollarSign
+  ExternalLink, Phone, Mail, DollarSign, Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ import { orderService } from "@/services/orderService";
 import { getCompanyDrivers } from "@/services/driverService";
 import { getCompanyVehicles } from "@/services/vehicleService";
 import { useCheckAuth } from "@/hooks/use-check-auth";
-import { toast } from "sonner";
+import { paymentService } from "@/services/paymentService";
 import { cn } from "@/lib/utils";
 import { RouteMap } from "@/components/RouteMap";
 import { calculateDistance, formatDistance } from "@/utils/distance";
@@ -45,6 +45,7 @@ export default function OrderDetails() {
   const [selectedDriver, setSelectedDriver] = useState<string>("");
   const [selectedVehicle, setSelectedVehicle] = useState<string>("");
   const [roadData, setRoadData] = useState<{ distanceKm: number; durationMin: number } | null>(null);
+  const [isPaying, setIsPaying] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -139,6 +140,29 @@ export default function OrderDetails() {
     }
   };
 
+  const handlePayment = async () => {
+    if (!orderId) return;
+    setIsPaying(true);
+    try {
+      // Use user's phone or order contact phone
+      const phone = currentUser?.phoneNumber || order.pickupLocation?.contactPhone || "0911111111";
+      const res = await paymentService.initializePayment(orderId, phone, order.pricing?.currency || "ETB");
+      
+      if (res.status === "success" && res.data?.data?.checkout_url) {
+        window.location.href = res.data.data.checkout_url;
+      } else if (res.status === "success" && res.data?.checkout_url) {
+        // Fallback in case of different nesting
+        window.location.href = res.data.checkout_url;
+      } else {
+        toast.error("Failed to get checkout URL");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Payment initialization failed");
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -168,6 +192,12 @@ export default function OrderDetails() {
     currentUser?.role === 'COMPANY_ADMIN' && 
     order.assignmentMode === 'DIRECT_COMPANY' && 
     (order.targetCompanyId?._id === currentUser.companyId || order.targetCompanyId === currentUser.companyId);
+
+  const isCreator = order && currentUser && (
+    (order.createdBy?._id || order.createdBy) === (currentUser._id || currentUser.id)
+  );
+
+  const canPay = isCreator && order.paymentStatus !== 'paid';
 
   return (
     <DashboardLayout>
@@ -264,6 +294,30 @@ export default function OrderDetails() {
                   <span className="font-medium">Order has been assigned. Trip is in progress.</span>
                 </div>
               )}
+            </div>
+          )}
+
+          {canPay && (
+            <div className="rounded-xl border-2 border-emerald-500/20 bg-emerald-500/5 p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="rounded-full bg-emerald-500/10 p-3">
+                    <DollarSign className="h-6 w-6 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-emerald-900 dark:text-emerald-400">Secure Payment Required</h3>
+                    <p className="text-sm text-emerald-700/80 dark:text-emerald-500/80">Complete the payment to finalize the shipping process.</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={handlePayment} 
+                  disabled={isPaying}
+                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-8 h-12 rounded-xl shadow-lg shadow-emerald-500/20 gap-2"
+                >
+                  {isPaying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-5 w-5" />}
+                  Pay {order.pricing?.proposedBudget || order.proposedBudget} {order.pricing?.currency || order.currency} Now
+                </Button>
+              </div>
             </div>
           )}
 
@@ -420,33 +474,52 @@ export default function OrderDetails() {
             </div>
           </div>
 
-          {order.status === 'ASSIGNED' && (
+          {(order.targetCompanyId || order.targetTransporterId || order.assignedVehicleId) && (
             <div className="rounded-xl border border-border bg-card p-6">
               <h3 className="mb-4 font-semibold text-card-foreground flex items-center gap-2">
-                <Truck className="h-5 w-5 text-primary" />
-                Assigned Resources
+                <Building2 className="h-5 w-5 text-primary" />
+                Assigned Transporter
               </h3>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-full bg-primary/10 p-2">
-                    <User className="h-4 w-4 text-primary" />
+              <div className="space-y-6">
+                {order.targetCompanyId && (
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-full bg-primary/10 p-2">
+                      <Building2 className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Transport Company</p>
+                      <p className="font-bold text-sm text-foreground">{order.targetCompanyId?.companyName}</p>
+                      <p className="text-xs text-muted-foreground">{order.targetCompanyId?.email}</p>
+                      <p className="text-xs text-muted-foreground">{order.targetCompanyId?.phoneNumber}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase">Driver</p>
-                    <p className="font-medium text-sm">{order.targetTransporterId?.fullName || "Assigned Driver"}</p>
-                    <p className="text-xs text-muted-foreground">{order.targetTransporterId?.phoneNumber}</p>
+                )}
+
+                {order.targetTransporterId && (
+                  <div className="flex items-start gap-3 pt-4 border-t border-border/50">
+                    <div className="rounded-full bg-primary/10 p-2">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Assigned Driver</p>
+                      <p className="font-bold text-sm text-foreground">{order.targetTransporterId?.fullName}</p>
+                      <p className="text-xs text-muted-foreground">{order.targetTransporterId?.phoneNumber}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="rounded-full bg-primary/10 p-2">
-                    <Truck className="h-4 w-4 text-primary" />
+                )}
+
+                {order.assignedVehicleId && (
+                  <div className="flex items-start gap-3 pt-4 border-t border-border/50">
+                    <div className="rounded-full bg-primary/10 p-2">
+                      <Truck className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Vehicle Details</p>
+                      <p className="font-bold text-sm text-foreground">{order.assignedVehicleId?.plateNumber}</p>
+                      <p className="text-xs text-muted-foreground">{order.assignedVehicleId?.vehicleType} • {order.assignedVehicleId?.model}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase">Vehicle</p>
-                    <p className="font-medium text-sm">{order.assignedVehicleId?.plateNumber || "Assigned Vehicle"}</p>
-                    <p className="text-xs text-muted-foreground">{order.assignedVehicleId?.vehicleType}</p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           )}

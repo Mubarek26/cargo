@@ -28,6 +28,7 @@ type TripRecord = Record<string, unknown> & {
   orderId?: any;
   updatedAt?: string;
   createdAt?: string;
+  isIdle?: boolean;
 };
 
 const extractTrips = (payload: unknown): TripRecord[] => {
@@ -272,7 +273,7 @@ export default function AllShipments() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border bg-secondary/50">
+                <tr className="border-b border-border bg-primary/10">
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Shipment Details</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Route</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Drivers</th>
@@ -322,10 +323,18 @@ export default function AllShipments() {
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
-                        <Badge className={cn("gap-1 text-[11px] px-2.5 py-0.5 h-6 w-fit font-medium", status.className)}>
-                          <StatusIcon className="h-3.5 w-3.5" />
-                          {status.label}
-                        </Badge>
+                        <div className="flex flex-col gap-1.5">
+                          <Badge className={cn("gap-1 text-[11px] px-2.5 py-0.5 h-6 w-fit font-medium", status.className)}>
+                            <StatusIcon className="h-3.5 w-3.5" />
+                            {status.label}
+                          </Badge>
+                          {trip.isIdle && (
+                            <Badge className="bg-destructive text-white border-none gap-1 text-[10px] px-2 py-0 h-5 animate-pulse">
+                              <AlertTriangle className="h-3 w-3" />
+                              IDLE DETECTED
+                            </Badge>
+                          )}
+                        </div>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
                         {trip.updatedAt ? new Date(trip.updatedAt).toLocaleDateString() : (trip.createdAt ? new Date(trip.createdAt).toLocaleDateString() : "-")}

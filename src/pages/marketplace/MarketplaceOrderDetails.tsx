@@ -253,8 +253,8 @@ export default function MarketplaceOrderDetails() {
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Route Information</h3>
                 <div className="space-y-4">
                   <div className="flex gap-3">
-                    <div className="mt-1 h-6 w-6 rounded-full bg-success/10 flex items-center justify-center">
-                      <div className="h-2 w-2 rounded-full bg-success" />
+                    <div className="mt-1 h-6 w-6 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                      <div className="h-2 w-2 rounded-full bg-emerald-500" />
                     </div>
                     <div>
                       <p className="text-sm font-bold">{order.pickupLocation?.city}</p>
@@ -262,7 +262,7 @@ export default function MarketplaceOrderDetails() {
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <div className="mt-1 h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="mt-1 h-6 w-6 rounded-full bg-primary/5 flex items-center justify-center border border-primary/20">
                       <MapPin className="h-4 w-4 text-primary" />
                     </div>
                     <div>
@@ -329,8 +329,8 @@ export default function MarketplaceOrderDetails() {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex gap-4">
-                        <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center">
-                          <UserIcon className="h-6 w-6 text-muted-foreground" />
+                        <div className="h-12 w-12 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10">
+                          <UserIcon className="h-6 w-6 text-primary" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">

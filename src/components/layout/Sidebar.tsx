@@ -73,6 +73,7 @@ const navigation: NavSection[] = [
       { label: "Vehicle List", href: "/fleet/vehicles", icon: Car },
       { label: "Maintenance Logs", href: "/fleet/maintenance", icon: Wrench },
       { label: "Driver List", href: "/fleet/drivers", icon: Users },
+      { label: "Idle Detection", href: "/fleet/idle", icon: Clock },
     ],
   },
   {

@@ -39,6 +39,7 @@ import VehicleList from "./pages/fleet/VehicleList";
 import MaintenanceLogs from "./pages/fleet/MaintenanceLogs";
 import DriverList from "./pages/fleet/DriverList";
 import Geofences from "./pages/fleet/Geofences";
+import IdleDetection from "./pages/fleet/IdleDetection";
 
 
 // Vendors & Clients
@@ -132,6 +133,7 @@ const App = () => (
                 <Route path="/fleet/maintenance" element={<MaintenanceLogs />} />
                 <Route path="/fleet/drivers" element={<DriverList />} />
                 <Route path="/fleet/geofences" element={<Geofences />} />
+                <Route path="/fleet/idle" element={<IdleDetection />} />
               </Route>
 
 

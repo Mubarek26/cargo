@@ -123,18 +123,29 @@ export default function OpenMarketplace() {
 
       <Tabs defaultValue="marketplace" className="w-full" onValueChange={setActiveTab}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <TabsList className="bg-secondary/50 p-1 rounded-2xl h-12">
-            <TabsTrigger value="marketplace" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          <TabsList className="bg-primary/5 border border-primary/10 p-1 rounded-2xl h-14 w-full sm:w-auto overflow-x-auto justify-start sm:justify-center">
+            <TabsTrigger 
+              value="marketplace" 
+              className="rounded-xl px-8 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300"
+            >
               Explore Orders
             </TabsTrigger>
             {(currentUser?.role === "DRIVER" || currentUser?.role === "COMPANY_ADMIN" || currentUser?.role === "PRIVATE_TRANSPORTER" || currentUser?.role === "SUPER_ADMIN") && (
-              <TabsTrigger value="proposals" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                {currentUser?.role === "SUPER_ADMIN" ? "All Proposals" : "My Proposals"} <Badge variant="secondary" className="ml-2 h-5 px-1.5">{myProposals.length}</Badge>
+              <TabsTrigger 
+                value="proposals" 
+                className="rounded-xl px-8 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300"
+              >
+                {currentUser?.role === "SUPER_ADMIN" ? "All Proposals" : "My Proposals"} 
+                <Badge variant="secondary" className="ml-2 h-5 px-1.5 opacity-80">{myProposals.length}</Badge>
               </TabsTrigger>
             )}
             {(currentUser?.role === "VENDOR" || currentUser?.role === "SHIPPER" || currentUser?.role === "SUPER_ADMIN") && (
-              <TabsTrigger value="postings" className="rounded-xl px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                {currentUser?.role === "SUPER_ADMIN" ? "All Postings" : "My Postings"} <Badge variant="secondary" className="ml-2 h-5 px-1.5">{myPostings.length}</Badge>
+              <TabsTrigger 
+                value="postings" 
+                className="rounded-xl px-8 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300"
+              >
+                {currentUser?.role === "SUPER_ADMIN" ? "All Postings" : "My Postings"} 
+                <Badge variant="secondary" className="ml-2 h-5 px-1.5 opacity-80">{myPostings.length}</Badge>
               </TabsTrigger>
             )}
           </TabsList>
@@ -253,8 +264,8 @@ export default function OpenMarketplace() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                           <div className="space-y-3">
                             <div className="flex items-center gap-3 text-sm text-card-foreground/80">
-                              <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
-                                <MapPin className="h-4 w-4 text-muted-foreground" />
+                              <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10">
+                                <MapPin className="h-4 w-4 text-primary" />
                               </div>
                               <div>
                                 <p className="font-semibold flex items-center gap-2">
@@ -266,8 +277,8 @@ export default function OpenMarketplace() {
                               </div>
                             </div>
                             <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                              <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10">
+                                <Calendar className="h-4 w-4 text-primary" />
                               </div>
                               <span>Pickup: {new Date(order.pickupDate).toLocaleDateString()}</span>
                             </div>
@@ -275,16 +286,16 @@ export default function OpenMarketplace() {
 
                           <div className="space-y-3">
                             <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                              <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
-                                <Truck className="h-4 w-4 text-muted-foreground" />
+                              <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10">
+                                <Truck className="h-4 w-4 text-primary" />
                               </div>
                               <span>{order.cargo?.type || order.cargoType} • {order.cargo?.weightKg || order.weightKg} Kg</span>
                             </div>
                             <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                              <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
-                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                              <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10">
+                                <Building2 className="h-4 w-4 text-primary" />
                               </div>
-                              <span className="flex items-center gap-1">
+                              <span className="flex items-center gap-1 text-card-foreground">
                                 Posted by {order.createdBy?.fullName || "Verified Vendor"}
                                 <CheckCircle2 className="h-3 w-3 text-success fill-success/20" />
                               </span>
@@ -329,7 +340,7 @@ export default function OpenMarketplace() {
               myProposals.map((proposal) => (
                 <div
                   key={proposal._id}
-                  className="rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                  className="rounded-2xl border border-border bg-secondary/10 dark:bg-secondary/20 p-6 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer group"
                   onClick={() => {
                     const orderId = proposal.orderId?._id || proposal.orderId;
                     if (proposal.status === 'ACCEPTED') {
@@ -343,10 +354,10 @@ export default function OpenMarketplace() {
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <Badge className={cn(
-                          "uppercase text-[10px]",
-                          proposal.status === 'ACCEPTED' ? "bg-success/10 text-success" :
-                            proposal.status === 'REJECTED' ? "bg-destructive/10 text-destructive" :
-                              "bg-warning/10 text-warning"
+                          "uppercase text-[10px] font-bold border-none",
+                          proposal.status === 'ACCEPTED' ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 dark:bg-emerald-500/20" :
+                            proposal.status === 'REJECTED' ? "bg-destructive/10 text-destructive dark:bg-destructive/20" :
+                              "bg-amber-500/10 text-amber-600 dark:text-amber-400 dark:bg-amber-500/20"
                         )}>
                           {proposal.status}
                         </Badge>
