@@ -39,4 +39,28 @@ export const walletService = {
     const data = await response.json();
     return data.data;
   },
+
+  requestWithdraw: async (payload: { amount: number; note?: string }) => {
+    const token = localStorage.getItem("authToken");
+    const response = await fetch(`${API_BASE_URL}/api/v1/driver/withdrawals`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    return response.json();
+  },
+  getWithdrawals: async (): Promise<any[]> => {
+    const token = localStorage.getItem("authToken");
+    const response = await fetch(`${API_BASE_URL}/api/v1/driver/withdrawals`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) throw new Error("Failed to fetch withdrawals");
+    const data = await response.json();
+    return data.data;
+  },
 };

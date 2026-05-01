@@ -89,6 +89,7 @@ const navigation: NavSection[] = [
     title: "Companies",
     items: [
       { label: "Company Directory", href: "/companies", icon: Building2 },
+      { label: "Drivers Wallets", href: "/company/drivers/wallets", icon: Wallet },
     ],
   },
   {
@@ -174,6 +175,10 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   {
     prefixes: ["/companies"],
     roles: ["SUPER_ADMIN"],
+  },
+  {
+    prefixes: ["/company/drivers"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN"],
   },
   {
     prefixes: ["/profile"],

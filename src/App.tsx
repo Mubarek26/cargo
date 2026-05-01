@@ -55,6 +55,7 @@ import PricingConfig from "./pages/admin/PricingConfig";
 import CommissionConfig from "./pages/admin/CommissionConfig";
 import VendorContracts from "./pages/vendors/VendorContracts";
 import CompanyContracts from "./pages/companies/CompanyContracts";
+import CompanyDriverWallets from "./pages/admin/CompanyDriverWallets";
 import OpenMarketplace from "./pages/marketplace/OpenMarketplace";
 import MarketplaceOrderDetails from "./pages/marketplace/MarketplaceOrderDetails";
 
@@ -65,6 +66,7 @@ import ScheduledDeliveries from "./pages/orders/ScheduledDeliveries";
 import DriverTrips from "./pages/driver/DriverTrips";
 import DriverTripDetails from "./pages/driver/DriverTripDetails";
 import DriverWallet from "./pages/driver/DriverWallet";
+import DriverReports from "./pages/driver/DriverReports";
 import Transactions from "./pages/transactions/Transactions";
 
 const queryClient = new QueryClient();
@@ -154,6 +156,7 @@ const App = () => (
               >
                 <Route path="/companies" element={<CompanyDirectory />} />
                 <Route path="/companies/contracts" element={<CompanyContracts />} />
+                <Route path="/company/drivers/wallets" element={<CompanyDriverWallets />} />
               </Route>
 
               {/* Applications */}
@@ -189,6 +192,7 @@ const App = () => (
                 <Route path="/driver/trips" element={<DriverTrips />} />
                 <Route path="/driver/trips/:tripId" element={<DriverTripDetails />} />
                 <Route path="/driver/wallet" element={<DriverWallet />} />
+                <Route path="/driver/reports" element={<DriverReports />} />
               </Route>
 
               {/* Transactions */}
