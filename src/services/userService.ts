@@ -3,12 +3,17 @@ import { API_BASE_URL } from "@/lib/api";
 const USERS_API_URL = `${API_BASE_URL}/api/v1/users`;
 
 export const userService = {
-  async getAllUsers() {
+  async getAllUsers(params?: { page?: number; limit?: number; role?: string }) {
     const token = localStorage.getItem("authToken");
     if (!token) throw new Error("No authentication token found");
 
-    console.log(`Fetching users from: ${USERS_API_URL}`);
-    const response = await fetch(`${USERS_API_URL}`, {
+    const qs = new URLSearchParams();
+    if (params?.page) qs.set('page', String(params.page));
+    if (params?.limit) qs.set('limit', String(params.limit));
+    if (params?.role) qs.set('role', params.role);
+
+    const url = qs.toString() ? `${USERS_API_URL}?${qs.toString()}` : USERS_API_URL;
+    const response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

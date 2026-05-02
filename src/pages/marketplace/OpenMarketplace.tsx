@@ -102,6 +102,31 @@ export default function OpenMarketplace() {
     return `${Math.floor(diffInHours / 24)}d ago`;
   };
 
+  const getOrderStatusBadge = (order: any) => {
+    const s = String(order.status || '').toUpperCase();
+    const common = "uppercase text-[10px] font-bold border-none";
+    switch (s) {
+      case 'OPEN':
+        return <Badge className={cn(common, 'bg-blue-500/10 text-blue-600')}>OPEN</Badge>;
+      case 'PENDING':
+        return <Badge className={cn(common, 'bg-amber-500/10 text-amber-600')}>PENDING</Badge>;
+      case 'ACCEPTED':
+        return <Badge className={cn(common, 'bg-emerald-500/10 text-emerald-600')}>ACCEPTED</Badge>;
+      case 'ASSIGNED':
+        return <Badge className={cn(common, 'bg-primary/10 text-primary')}>ASSIGNED</Badge>;
+      case 'IN_TRANSIT':
+        return <Badge className={cn(common, 'bg-primary/10 text-primary')}>IN TRANSIT</Badge>;
+      case 'DELIVERED':
+        return <Badge className={cn(common, 'bg-emerald-500/10 text-emerald-600')}>DELIVERED</Badge>;
+      case 'REJECTED':
+        return <Badge className={cn(common, 'bg-destructive/10 text-destructive')}>REJECTED</Badge>;
+      case 'CANCELLED':
+        return <Badge className={cn(common, 'bg-destructive/10 text-destructive')}>CANCELLED</Badge>;
+      default:
+        return <Badge className={cn(common, 'bg-muted text-muted-foreground')}>{s || order.assignmentMode?.replace(/_/g, ' ') || 'UNKNOWN'}</Badge>;
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -239,12 +264,7 @@ export default function OpenMarketplace() {
                         <div className="flex items-start justify-between mb-3">
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline" className={cn(
-                                "border-primary/20",
-                                order.status === 'REJECTED' ? "bg-destructive/10 text-destructive border-destructive/20" : "bg-primary/5 text-primary"
-                              )}>
-                                {order.status === 'REJECTED' ? "NOT AVAILABLE" : order.assignmentMode.replace(/_/g, ' ')}
-                              </Badge>
+                              {getOrderStatusBadge(order)}
                               <span className="text-xs text-muted-foreground flex items-center gap-1">
                                 <Clock className="h-3 w-3" /> {getRelativeTime(order.createdAt)}
                               </span>

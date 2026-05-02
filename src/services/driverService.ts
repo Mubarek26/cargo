@@ -330,3 +330,35 @@ export const deleteDriver = async (token: string, id: string) => {
     data: null,
   } as const;
 };
+
+export const setPrivateTransporterByUser = async (token: string, userId: string, isPrivate: boolean) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/driver/by-user/${userId}/private-transporter`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ isPrivateTransporter: !!isPrivate }),
+  });
+
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error((data && data.message) || 'Failed to update driver');
+  return data as any;
+};
+
+export const assignDriverToCompanyByUser = async (token: string, userId: string, companyId: string) => {
+  const response = await fetch(`${API_BASE_URL}/api/v1/driver/by-user/${userId}/assign-company`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ companyId }),
+  });
+
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error((data && data.message) || 'Failed to assign driver to company');
+  return data as any;
+};

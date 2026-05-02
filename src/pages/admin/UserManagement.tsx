@@ -15,6 +15,9 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { userService } from "@/services/userService";
+import { setPrivateTransporterByUser, assignDriverToCompanyByUser } from "@/services/driverService";
+import { getCompanies } from "@/services/companyService";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -23,17 +26,34 @@ export default function UserManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(27);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalResults, setTotalResults] = useState<number>(0);
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [assignTargetUser, setAssignTargetUser] = useState<any | null>(null);
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [companiesLoading, setCompaniesLoading] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit, roleFilter]);
 
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const res = await userService.getAllUsers();
+      const roleParam = roleFilter === 'ALL' || roleFilter === 'PRIVATE_TRANSPORTER' ? undefined : roleFilter;
+      const res = await userService.getAllUsers({ page, limit, role: roleParam });
       if (res.status === "success") {
         setUsers(res.data.data || res.data || []);
+        if (res.meta) {
+          setTotalResults(res.meta.totalResults || 0);
+          setTotalPages(res.meta.totalPages || 1);
+          setPage(res.meta.page || page);
+          setLimit(res.meta.limit || limit);
+        }
       }
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -68,11 +88,57 @@ export default function UserManagement() {
     }
   };
 
+  const openAssignModal = async (user: any) => {
+    setAssignTargetUser(user);
+    setAssignModalOpen(true);
+    setCompaniesLoading(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) throw new Error("Not authenticated");
+      const res = await getCompanies(token);
+      if (res.ok) {
+        // Normalize response shapes: { data: { companies: [] } } or { companies: [] } or []
+        const payload = res.data;
+        let list: any[] = [];
+        if (payload) {
+          if (Array.isArray(payload)) list = payload as any[];
+          else if (payload.data && Array.isArray(payload.data.companies)) list = payload.data.companies;
+          else if (Array.isArray((payload as any).companies)) list = (payload as any).companies;
+        }
+        setCompanies(list);
+      } else {
+        toast.error("Failed to load companies");
+      }
+    } catch (err) {
+      toast.error("Failed to load companies");
+    } finally {
+      setCompaniesLoading(false);
+    }
+  };
+
+  const handleAssignCompany = async () => {
+    if (!assignTargetUser || !selectedCompanyId) return toast.error('Select a company first');
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) return void toast.error('Not authenticated');
+      await assignDriverToCompanyByUser(token, assignTargetUser._id, selectedCompanyId);
+      toast.success('Driver assigned to company');
+      setAssignModalOpen(false);
+      setAssignTargetUser(null);
+      setSelectedCompanyId(null);
+      fetchUsers();
+    } catch (err) {
+      toast.error('Failed to assign driver to company');
+    }
+  };
+
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
       (user.fullName || user.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = roleFilter === "ALL" || user.role === roleFilter;
+    const matchesRole =
+      roleFilter === "ALL" ||
+      (roleFilter === "PRIVATE_TRANSPORTER" ? Boolean(user.isPrivateTransporter) : user.role === roleFilter);
     return matchesSearch && matchesRole;
   });
 
@@ -152,6 +218,13 @@ export default function UserManagement() {
           >
             Drivers
           </Button>
+          <Button
+            variant={roleFilter === "PRIVATE_TRANSPORTER" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setRoleFilter("PRIVATE_TRANSPORTER")}
+          >
+            Private Transporters
+          </Button>
           <Button 
             variant={roleFilter === "VENDOR" ? "default" : "outline"} 
             size="sm"
@@ -207,7 +280,12 @@ export default function UserManagement() {
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-5 py-4">
-                      {getRoleBadge(user.role)}
+                      <div className="flex items-center gap-2">
+                        {getRoleBadge(user.role)}
+                        {user.isPrivateTransporter && user.role === 'DRIVER' && (
+                          <Badge className="bg-primary/10 text-primary border-primary/20 gap-1">Private Transporter</Badge>
+                        )}
+                      </div>
                     </td>
                     <td className="whitespace-nowrap px-5 py-4">
                       {getStatusBadge(user.status)}
@@ -254,6 +332,51 @@ export default function UserManagement() {
                           >
                             <Trash2 className="h-4 w-4" /> Delete User
                           </DropdownMenuItem>
+                          {user.role === 'DRIVER' && (
+                            <>
+                              <DropdownMenuItem
+                                className="gap-2"
+                                onClick={async () => {
+                                  try {
+                                    const token = localStorage.getItem('authToken');
+                                    if (!token) return void toast.error('Not authenticated');
+                                    await setPrivateTransporterByUser(token, user._id, true);
+                                    toast.success('Marked as private transporter');
+                                    fetchUsers();
+                                  } catch (err) {
+                                    toast.error('Failed to mark as private transporter');
+                                  }
+                                }}
+                              >
+                                <UserCheck className="h-4 w-4" /> Mark as Private Transporter
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem
+                                className="gap-2"
+                                onClick={async () => {
+                                  try {
+                                    const token = localStorage.getItem('authToken');
+                                    if (!token) return void toast.error('Not authenticated');
+                                    await setPrivateTransporterByUser(token, user._id, false);
+                                    toast.success('Unmarked as private transporter');
+                                    fetchUsers();
+                                  } catch (err) {
+                                    toast.error('Failed to unmark private transporter');
+                                  }
+                                }}
+                              >
+                                <UserX className="h-4 w-4" /> Unmark Private Transporter
+                              </DropdownMenuItem>
+                              { (localStorage.getItem('userRole') === 'SUPER_ADMIN' || localStorage.getItem('userRole') === 'superadmin') && (
+                                <DropdownMenuItem
+                                  className="gap-2"
+                                  onClick={async () => openAssignModal(user)}
+                                >
+                                  <Shield className="h-4 w-4" /> Assign To Company
+                                </DropdownMenuItem>
+                              )}
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
@@ -263,7 +386,55 @@ export default function UserManagement() {
             </table>
           </div>
         )}
+        <div className="p-4 flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">Showing {users.length} of {totalResults} users</div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+              Previous
+            </Button>
+            <div className="text-sm">
+              Page {page} / {totalPages}
+            </div>
+            <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
+      <Dialog open={assignModalOpen} onOpenChange={(open) => { if(!open) { setAssignModalOpen(false); setAssignTargetUser(null); setSelectedCompanyId(null); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Driver to Company</DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-2">
+            {companiesLoading ? (
+              <div className="py-6 text-center">Loading companies...</div>
+            ) : companies.length === 0 ? (
+              <div className="py-6 text-center">No companies available</div>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-auto">
+                {companies.map((c: any) => (
+                  <label key={c._id} className={cn("flex items-center justify-between gap-3 p-3 rounded border", selectedCompanyId === c._id ? "border-primary bg-primary/5" : "border-border")}>
+                    <div className="flex-1">
+                      <div className="font-medium">{c.companyName || c.name}</div>
+                      <div className="text-xs text-muted-foreground">{c.email} • {c.phoneNumber}</div>
+                    </div>
+                    <input type="radio" name="company" value={c._id} checked={selectedCompanyId === c._id} onChange={() => setSelectedCompanyId(c._id)} />
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => { setAssignModalOpen(false); setAssignTargetUser(null); setSelectedCompanyId(null); }}>Cancel</Button>
+              <Button onClick={handleAssignCompany} disabled={!selectedCompanyId}>Assign</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
