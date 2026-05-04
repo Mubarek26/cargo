@@ -4,19 +4,19 @@ import { Search, Package, MapPin, Truck, CheckCircle, Clock, Box } from "lucide-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { API_BASE_URL } from "@/lib/api";
 
-const trackingSteps = [
-  { id: 1, title: "Order Placed", location: "New York, NY", date: "Dec 10, 2024 - 09:00 AM", completed: true },
-  { id: 2, title: "Package Picked Up", location: "New York Distribution Center", date: "Dec 10, 2024 - 02:30 PM", completed: true },
-  { id: 3, title: "In Transit", location: "Chicago Hub", date: "Dec 12, 2024 - 11:45 AM", completed: true },
-  { id: 4, title: "In Transit", location: "Denver Distribution Center", date: "Dec 13, 2024 - 08:20 AM", completed: true, current: true },
-  { id: 5, title: "Out for Delivery", location: "Los Angeles, CA", date: "Expected: Dec 15, 2024", completed: false },
-  { id: 6, title: "Delivered", location: "Los Angeles, CA", date: "Expected: Dec 15, 2024", completed: false },
+const defaultMockSteps = [
+  { id: 1, title: "Order Placed", location: "Unknown", date: "", completed: true }
 ];
 
 export default function TrackShipment() {
   const [trackingNumber, setTrackingNumber] = useState("SHP-2024-00142");
   const [isTracking, setIsTracking] = useState(true);
+  const [trackingSteps, setTrackingSteps] = useState(defaultMockSteps);
+  const [shipmentDetails, setShipmentDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <DashboardLayout>
@@ -37,7 +37,43 @@ export default function TrackShipment() {
               onChange={(e) => setTrackingNumber(e.target.value)}
             />
           </div>
-          <Button onClick={() => setIsTracking(true)}>
+          <Button onClick={async () => {
+            setIsTracking(true);
+            setError(null);
+            setLoading(true);
+            try {
+              const q = encodeURIComponent(trackingNumber.trim());
+              const token = localStorage.getItem('authToken');
+              const headers: Record<string, string> = {};
+              if (token) headers.Authorization = `Bearer ${token}`;
+              const res = await fetch(`${API_BASE_URL}/api/v1/trips/lookup?q=${q}`, { headers, credentials: 'include' });
+              if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                throw new Error(body.message || res.statusText || 'Lookup failed');
+              }
+              const json = await res.json();
+              const { order, trip } = json.data || {};
+              setShipmentDetails({ order, trip });
+
+              if (trip && Array.isArray(trip.locationHistory) && trip.locationHistory.length) {
+                const steps = trip.locationHistory.map((p: any, i: number) => ({
+                  id: i + 1,
+                  title: `Location update ${i + 1}`,
+                  location: p.coordinates ? `${p.coordinates[1].toFixed(5)}, ${p.coordinates[0].toFixed(5)}` : 'Unknown',
+                  date: p.timestamp ? new Date(p.timestamp).toLocaleString() : '',
+                  completed: true,
+                  current: i === trip.locationHistory.length - 1
+                }));
+                setTrackingSteps(steps);
+              } else {
+                setTrackingSteps(defaultMockSteps);
+              }
+            } catch (err: any) {
+              setError(err.message || 'Lookup failed');
+            } finally {
+              setLoading(false);
+            }
+          }}>
             <Package className="mr-2 h-4 w-4" />
             Track Shipment
           </Button>
@@ -52,27 +88,52 @@ export default function TrackShipment() {
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-muted-foreground">Tracking Number</p>
-                <p className="font-medium text-card-foreground">{trackingNumber}</p>
+                <p className="font-medium text-card-foreground">{shipmentDetails?.order?.orderNumber || trackingNumber}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Origin</p>
-                <p className="font-medium text-card-foreground">New York, NY</p>
+                <p className="font-medium text-card-foreground">{shipmentDetails?.order?.pickupLocation?.address || '—'}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Destination</p>
-                <p className="font-medium text-card-foreground">Los Angeles, CA</p>
+                <p className="font-medium text-card-foreground">{shipmentDetails?.order?.deliveryLocation?.address || '—'}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Customer</p>
-                <p className="font-medium text-card-foreground">Acme Corp</p>
+                <p className="font-medium text-card-foreground">{shipmentDetails?.order?.createdBy?.fullName || '—'}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Weight</p>
-                <p className="font-medium text-card-foreground">2,450 lbs</p>
+                <p className="font-medium text-card-foreground">{shipmentDetails?.order?.cargo?.weightKg ? `${shipmentDetails.order.cargo.weightKg} kg` : '—'}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Estimated Delivery</p>
-                <p className="font-medium text-primary">Dec 15, 2024</p>
+                <p className="font-medium text-primary">{shipmentDetails?.order?.deliveryDeadline ? new Date(shipmentDetails.order.deliveryDeadline).toLocaleDateString() : '—'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Trip & Driver Details */}
+          <div className="rounded-xl border border-border bg-card p-6">
+            <h3 className="mb-4 font-semibold text-card-foreground">Trip & Driver</h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Milestone</p>
+                <p className="font-medium text-card-foreground">{shipmentDetails?.trip?.milestone || '—'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Driver</p>
+                <p className="font-medium text-card-foreground">{shipmentDetails?.trip?.driver?.fullName || shipmentDetails?.trip?.driver?.name || '—'}</p>
+                <p className="text-sm text-muted-foreground">{shipmentDetails?.trip?.driver?.phoneNumber || shipmentDetails?.trip?.driver?.phone || ''}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Vehicle</p>
+                <p className="font-medium text-card-foreground">{shipmentDetails?.trip?.vehicle?.plateNumber || shipmentDetails?.trip?.vehicle?.registration || '—'}</p>
+                <p className="text-sm text-muted-foreground">{shipmentDetails?.trip?.vehicle?.vehicleType || ''}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Last Note</p>
+                <p className="font-medium text-card-foreground">{shipmentDetails?.trip?.lastNote || '—'}</p>
               </div>
             </div>
           </div>

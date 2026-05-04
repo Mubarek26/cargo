@@ -51,6 +51,12 @@ const navigation: NavSection[] = [
     ],
   },
   {
+    title: "Analytics",
+    items: [
+      { label: "Analytics & Reporting", href: "/analytics", icon: TrendingUp },
+    ],
+  },
+  {
     title: "Partnerships",
     items: [
       { label: "My Contracts", href: "/vendors/contracts", icon: Handshake },
@@ -195,6 +201,10 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   {
     prefixes: ["/transactions"],
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"],
+  },
+  {
+    prefixes: ["/analytics"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"],
   },
 ];
 

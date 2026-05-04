@@ -56,6 +56,7 @@ import CommissionConfig from "./pages/admin/CommissionConfig";
 import VendorContracts from "./pages/vendors/VendorContracts";
 import CompanyContracts from "./pages/companies/CompanyContracts";
 import CompanyDriverWallets from "./pages/admin/CompanyDriverWallets";
+import AnalyticsDashboard from "./pages/analytics/AnalyticsDashboard";
 import OpenMarketplace from "./pages/marketplace/OpenMarketplace";
 import MarketplaceOrderDetails from "./pages/marketplace/MarketplaceOrderDetails";
 
@@ -148,6 +149,7 @@ const App = () => (
                 <Route path="/vendors/contracts" element={<VendorContracts />} />
                 <Route path="/clients" element={<ClientsList />} />
                 <Route path="/clients/feedback" element={<ClientFeedback />} />
+                <Route path="/analytics" element={<AnalyticsDashboard />} />
               </Route>
 
               {/* Companies */}
