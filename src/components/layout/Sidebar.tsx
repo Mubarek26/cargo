@@ -109,6 +109,8 @@ const navigation: NavSection[] = [
     title: "Administration",
     items: [
       { label: "User Management", href: "/admin/users", icon: Users },
+      { label: "Roles & Permissions", href: "/admin/roles", icon: Users },
+      { label: "Permissions", href: "/admin/permissions", icon: ClipboardCheck },
       { label: "Review Applications", href: "/applications", icon: ClipboardCheck },
       { label: "Pricing Config", href: "/admin/pricing-config", icon: DollarSign },
       { label: "Commission Settings", href: "/admin/commission-config", icon: TrendingUp },

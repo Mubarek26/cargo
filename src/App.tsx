@@ -53,6 +53,8 @@ import ApplicationsReview from "./pages/admin/ApplicationsReview";
 import UserManagement from "./pages/admin/UserManagement";
 import PricingConfig from "./pages/admin/PricingConfig";
 import CommissionConfig from "./pages/admin/CommissionConfig";
+import RolesPage from "./pages/admin/Roles";
+import PermissionsPage from "./pages/admin/Permissions";
 import VendorContracts from "./pages/vendors/VendorContracts";
 import CompanyContracts from "./pages/companies/CompanyContracts";
 import CompanyDriverWallets from "./pages/admin/CompanyDriverWallets";
@@ -167,6 +169,8 @@ const App = () => (
               >
                 <Route path="/applications" element={<ApplicationsReview />} />
                 <Route path="/admin/users" element={<UserManagement />} />
+                <Route path="/admin/roles" element={<RolesPage />} />
+                <Route path="/admin/permissions" element={<PermissionsPage />} />
                 <Route path="/admin/pricing-config" element={<PricingConfig />} />
                 <Route path="/admin/commission-config" element={<CommissionConfig />} />
               </Route>
