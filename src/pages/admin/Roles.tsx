@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { roleService } from "@/services/roleService";
 import { toast } from "sonner";
+import { userService } from "@/services/userService";
 import { Loader2, Plus, Edit, Trash, Users } from "lucide-react";
 
 export default function RolesPage() {
@@ -21,6 +22,9 @@ export default function RolesPage() {
   const [assignOpen, setAssignOpen] = React.useState(false);
   const [assignRoleId, setAssignRoleId] = React.useState<string | null>(null);
   const [assignUserId, setAssignUserId] = React.useState<string | null>(null);
+  const [assignUserQuery, setAssignUserQuery] = React.useState<string>('');
+  const [assignUsers, setAssignUsers] = React.useState<any[]>([]);
+  const [assignUsersLoading, setAssignUsersLoading] = React.useState(false);
 
   React.useEffect(() => { fetchData(); fetchPerms(); }, []);
 
@@ -102,6 +106,24 @@ export default function RolesPage() {
 
   const openAssign = (roleId: string) => {
     setAssignRoleId(roleId); setAssignOpen(true);
+  };
+
+  const fetchAssignUsers = async () => {
+    setAssignUsersLoading(true);
+    try {
+      // fetch a reasonably large page so admin can search locally
+      const res = await userService.getAllUsers({ page: 1, limit: 200 });
+      let list: any[] = [];
+      if (res && res.status === 'success') {
+        list = res.data?.data || res.data || [];
+      }
+      setAssignUsers(Array.isArray(list) ? list : []);
+    } catch (err) {
+      console.warn('Failed to load users for assign', err);
+      setAssignUsers([]);
+    } finally {
+      setAssignUsersLoading(false);
+    }
   };
 
   const handleAssign = async () => {
@@ -214,20 +236,48 @@ export default function RolesPage() {
 
       <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Assign Role to User</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <Input placeholder="User ID to assign (paste user id)" value={assignUserId||''} onChange={(e)=>setAssignUserId(e.target.value)} />
-            <div className="text-sm text-muted-foreground">You can get user id from User Management page.</div>
-          </div>
-          <DialogFooter>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={()=>setAssignOpen(false)}>Cancel</Button>
-              <Button onClick={handleAssign}>Assign</Button>
+            <DialogHeader>
+              <DialogTitle>Assign Role to User</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Input
+                placeholder="Search users by name or email..."
+                value={assignUserQuery}
+                onChange={(e) => setAssignUserQuery(e.target.value)}
+                onFocus={() => { if (assignUsers.length === 0) fetchAssignUsers(); }}
+              />
+              <div className="max-h-48 overflow-auto border rounded">
+                {assignUsersLoading ? (
+                  <div className="p-4 text-center">Loading users...</div>
+                ) : (
+                  (assignUsers || []).filter(u => {
+                    if (!assignUserQuery) return true;
+                    const q = assignUserQuery.toLowerCase();
+                    return (u.fullName || u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q);
+                  }).map(u => (
+                    <div
+                      key={u._id}
+                      className={`p-2 cursor-pointer hover:bg-secondary/10 flex items-center justify-between ${assignUserId === String(u._id) ? 'bg-primary/10' : ''}`}
+                      onClick={() => setAssignUserId(String(u._id))}
+                    >
+                      <div>
+                        <div className="font-medium">{u.fullName || u.name || u.email}</div>
+                        <div className="text-sm text-muted-foreground">{u.email}</div>
+                      </div>
+                      <div className="text-xs text-muted-foreground">{u.role || ''}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="text-sm text-muted-foreground">You can also paste a user id if you prefer.</div>
             </div>
-          </DialogFooter>
-        </DialogContent>
+            <DialogFooter>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={()=>{ setAssignOpen(false); setAssignUserQuery(''); setAssignUsers([]); setAssignUserId(null); }}>Cancel</Button>
+                <Button onClick={handleAssign}>Assign</Button>
+              </div>
+            </DialogFooter>
+          </DialogContent>
       </Dialog>
     </DashboardLayout>
   );

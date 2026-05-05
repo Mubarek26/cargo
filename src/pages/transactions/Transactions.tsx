@@ -68,6 +68,57 @@ export default function Transactions() {
     tx.companyId?.companyName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleExportCSV = () => {
+    if (!filteredTransactions || filteredTransactions.length === 0) {
+      toast.error("No transactions to export");
+      return;
+    }
+
+    const escape = (val: any) => {
+      if (val === null || val === undefined) return '""';
+      return '"' + String(val).replace(/"/g, '""') + '"';
+    };
+
+    const headers = [
+      'DateTime',
+      'Reference',
+      'Company',
+      'Shipper',
+      'Amount',
+      'Commission',
+      'CompanyShare',
+      'DriverCommission',
+      'Status'
+    ];
+
+    const rows = filteredTransactions.map((tx) => {
+      const dateStr = tx.createdAt ? format(new Date(tx.createdAt), "yyyy-MM-dd HH:mm:ss") : '';
+      return [
+        escape(dateStr),
+        escape(tx.trx_ref),
+        escape(tx.companyId?.companyName || ''),
+        escape(tx.shipperId?.fullName || ''),
+        escape(tx.amount ?? ''),
+        escape(tx.commission ?? ''),
+        escape(tx.companyShare ?? ''),
+        escape(tx.driverCommission ?? ''),
+        escape(tx.status || ''),
+      ].join(',');
+    });
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const now = format(new Date(), 'yyyyMMdd_HHmm');
+    link.setAttribute('download', `transactions_${now}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const stats = {
     totalRevenue: transactions.reduce((acc, tx) => acc + tx.amount, 0),
     totalCommission: transactions.reduce((acc, tx) => acc + (tx.commission || 0), 0),
@@ -98,7 +149,7 @@ export default function Transactions() {
             <p className="text-muted-foreground mt-1">Review and manage all financial movements across the platform.</p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" onClick={() => handleExportCSV()}>
               <Download className="h-4 w-4" /> Export CSV
             </Button>
             {userRole === "SUPER_ADMIN" && (

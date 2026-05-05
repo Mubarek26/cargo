@@ -120,7 +120,6 @@ const navigation: NavSection[] = [
     title: "Orders",
     items: [
       { label: "All Orders", href: "/orders", icon: ShoppingCart },
-      { label: "Scheduled Deliveries", href: "/orders/scheduled", icon: Calendar },
     ],
   },
   {
@@ -202,8 +201,9 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   },
   {
     prefixes: ["/transactions"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", ],
   },
+  
   {
     prefixes: ["/analytics"],
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"],

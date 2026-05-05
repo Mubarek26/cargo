@@ -65,7 +65,6 @@ import MarketplaceOrderDetails from "./pages/marketplace/MarketplaceOrderDetails
 // Orders
 import AllOrders from "./pages/orders/AllOrders";
 import OrderDetails from "./pages/orders/OrderDetails";
-import ScheduledDeliveries from "./pages/orders/ScheduledDeliveries";
 import DriverTrips from "./pages/driver/DriverTrips";
 import DriverTripDetails from "./pages/driver/DriverTripDetails";
 import DriverWallet from "./pages/driver/DriverWallet";
@@ -189,7 +188,6 @@ const App = () => (
               >
                 <Route path="/orders" element={<AllOrders />} />
                 <Route path="/orders/:orderId" element={<OrderDetails />} />
-                <Route path="/orders/scheduled" element={<ScheduledDeliveries />} />
               </Route>
 
               <Route
@@ -203,7 +201,7 @@ const App = () => (
 
               {/* Transactions */}
               <Route
-                element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"]} />}
+                element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR"]} />}
               >
                 <Route path="/transactions" element={<Transactions />} />
               </Route>
