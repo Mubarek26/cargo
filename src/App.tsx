@@ -70,6 +70,7 @@ import DriverTripDetails from "./pages/driver/DriverTripDetails";
 import DriverWallet from "./pages/driver/DriverWallet";
 import DriverReports from "./pages/driver/DriverReports";
 import Transactions from "./pages/transactions/Transactions";
+import ChatPage from "./pages/chat/ChatPage";
 
 const queryClient = new QueryClient();
 
@@ -106,6 +107,8 @@ const App = () => (
                 element={<ProtectedRoute allowedRoles={["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER", "VENDOR"]} />}
               >
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/chat" element={<ChatPage />} />
+                <Route path="/chat/:conversationId" element={<ChatPage />} />
               </Route>
 
               {/* Dashboard */}

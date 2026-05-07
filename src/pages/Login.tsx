@@ -59,6 +59,8 @@ const Login: React.FC = () => {
 
       if (user) {
         localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("userId", user._id || user.id);
+        localStorage.setItem("fullName", user.fullName || "User");
       }
 
       const getLandingPage = (role: string) => {

@@ -102,6 +102,7 @@ const navigation: NavSection[] = [
     title: "Account",
     items: [
       { label: "Profile", href: "/profile", icon: User },
+      { label: "Messages", href: "/chat", icon: MessageSquare },
       { label: "Transactions", href: "/transactions", icon: DollarSign },
     ],
   },
@@ -188,7 +189,7 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN"],
   },
   {
-    prefixes: ["/profile"],
+    prefixes: ["/profile", "/chat"],
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER", "VENDOR"],
   },
   {

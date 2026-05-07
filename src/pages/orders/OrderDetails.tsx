@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { RouteMap } from "@/components/RouteMap";
 import { calculateDistance, formatDistance } from "@/utils/distance";
 import { toast } from "sonner";
+import { ChatPanel } from "@/components/chat/ChatPanel";
 const statusConfig: any = {
   PENDING: { label: "Pending", icon: Clock, className: "text-warning bg-warning/10" },
   OPEN: { label: "Open", icon: Package, className: "text-blue-500 bg-blue-500/10" },
@@ -209,7 +210,13 @@ export default function OrderDetails() {
           <h1 className="text-2xl font-bold text-foreground">Order {order.orderNumber}</h1>
           <p className="text-muted-foreground">Detailed view and management of shipment</p>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-3">
+          <ChatPanel 
+            orderId={order._id}
+            orderNumber={order.orderNumber}
+            recipientName={isCreator ? (order.targetCompanyId?.companyName || order.targetTransporterId?.fullName || "Transporter") : order.createdBy?.fullName}
+            recipientId={isCreator ? (order.targetCompanyId?.ownerId || order.targetTransporterId?._id || order.targetTransporterId) : (order.createdBy?._id || order.createdBy)}
+          />
           <Badge className={cn("gap-1 py-1.5 px-3 text-sm", status.className)}>
             <StatusIcon className="h-4 w-4" />
             {status.label}

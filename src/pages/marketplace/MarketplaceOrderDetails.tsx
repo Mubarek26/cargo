@@ -21,6 +21,7 @@ import { proposalService } from "@/services/proposalService";
 import { useCheckAuth } from "@/hooks/use-check-auth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ChatPanel } from "@/components/chat/ChatPanel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -376,6 +377,17 @@ export default function MarketplaceOrderDetails() {
                             {isProcessingProposal === proposal._id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
                             Accept Bid
                           </Button>
+                          <ChatPanel 
+                             orderId={order._id}
+                             orderNumber={order.orderNumber}
+                             recipientName={proposal.proposalType === "COMPANY" ? proposal.companyId?.companyName : proposal.submittedByUserId?.fullName}
+                             recipientId={proposal.submittedByUserId?._id || proposal.submittedByUserId}
+                             trigger={
+                               <Button variant="outline" size="sm" className="h-8 gap-1 border-primary/20 text-primary hover:bg-primary/5">
+                                 <MessageSquare className="h-3.5 w-3.5" /> Chat
+                               </Button>
+                             }
+                          />
                           <Button 
                             variant="outline" 
                             size="sm" 
@@ -457,6 +469,18 @@ export default function MarketplaceOrderDetails() {
                     {isSubmittingProposal ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     Submit Bid
                   </Button>
+
+                  <ChatPanel 
+                    orderId={order._id}
+                    orderNumber={order.orderNumber}
+                    recipientName={order.createdBy?.fullName || "Vendor"}
+                    recipientId={order.createdBy?._id || order.createdBy}
+                    trigger={
+                      <Button type="button" variant="ghost" className="w-full h-10 gap-2 mt-2 text-muted-foreground hover:text-primary">
+                        <MessageSquare className="h-4 w-4" /> Chat with Vendor
+                      </Button>
+                    }
+                  />
                 </form>
               </CardContent>
             </Card>
@@ -471,8 +495,12 @@ export default function MarketplaceOrderDetails() {
                 <div className="space-y-3">
                   {isCreator && (
                     <>
-                      <Button variant="outline" className="w-full justify-start gap-2 bg-background border-border h-11">
-                        <MessageSquare className="h-4 w-4" /> Message Bidders
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start gap-2 bg-background border-border h-11"
+                        onClick={() => navigate('/chat')}
+                      >
+                        <MessageSquare className="h-4 w-4" /> Go to Messages
                       </Button>
                       <Button variant="outline" className="w-full justify-start gap-2 bg-background border-border h-11">
                         <Info className="h-4 w-4" /> Edit Post
