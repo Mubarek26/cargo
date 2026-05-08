@@ -24,7 +24,7 @@ export function useDriverApplicationStatus() {
       const resultData = result.data as Record<string, unknown> | null;
       setData(resultData);
 
-      if (result.status === 404) {
+      if (result.status === 404 || result.status === 403) {
         setStatus(null);
         return { status: null, notFound: true, data: resultData };
       }

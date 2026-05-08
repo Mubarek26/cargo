@@ -215,6 +215,12 @@ const isRouteAllowed = (role: string | null, href: string) => {
   if (!role) return false;
   if (role === "SUPER_ADMIN") return true;
 
+  // Special check for Marketplace and Drivers
+  if (href.startsWith("/marketplace") && role === "DRIVER") {
+    const isPrivate = localStorage.getItem("isPrivateTransporter") === "true";
+    if (!isPrivate) return false;
+  }
+
   const rule = ROLE_RULES.find((entry) =>
     entry.prefixes.some((prefix) => href.startsWith(prefix))
   );
@@ -222,6 +228,7 @@ const isRouteAllowed = (role: string | null, href: string) => {
   if (!rule) return false;
   return rule.roles.includes(role);
 };
+
 
 export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
   const navigate = useNavigate();
@@ -264,13 +271,13 @@ export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
       >
         {/* Logo */}
         <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20 transition-all duration-300">
-              <Truck className="h-6 w-6 text-primary-foreground" />
+          <div className="flex items-center gap-3 group">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-lg shadow-primary/20 transition-all duration-300 group-hover:rotate-6 overflow-hidden">
+              <img src="/favicon.png" alt="CargoMax Logo" className="h-full w-full object-contain p-1.5" />
             </div>
             {!isCollapsed && (
               <span className="text-xl font-black tracking-tight text-white animate-in fade-in slide-in-from-left-2 duration-300">
-                Cargo<span className="text-primary">Dash</span>
+                Cargo<span className="text-primary">Max</span>
               </span>
             )}
           </div>

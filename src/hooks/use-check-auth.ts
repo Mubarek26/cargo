@@ -37,12 +37,17 @@ export function useCheckAuth() {
         return { isAuthenticated: false, data: result.data };
       }
 
-      const role =
-        (result.data as any)?.data?.user?.role ||
-        (result.data as any)?.user?.role;
+      const userData = (result.data as any)?.data?.user || (result.data as any)?.user;
+      const role = userData?.role;
       if (role) {
         localStorage.setItem("userRole", role);
       }
+      if (userData?.isPrivateTransporter !== undefined) {
+        localStorage.setItem("isPrivateTransporter", String(userData.isPrivateTransporter));
+      } else {
+        localStorage.removeItem("isPrivateTransporter");
+      }
+
 
       setIsAuthenticated(true);
       return { isAuthenticated: true, data: result.data };

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
 import { useSignup } from "@/hooks/use-signup";
-import { User, Phone, Mail, Lock, Camera, ArrowRight, Truck, ShieldCheck, Briefcase } from "lucide-react";
+import { User, Phone, Mail, Lock, Camera, ArrowRight, Truck, ShieldCheck, Briefcase, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const roles = ["SHIPPER", "VENDOR", "DRIVER", "COMPANY_ADMIN"] as const;
@@ -121,42 +121,42 @@ const Signup: React.FC = () => {
         {/* Left Side: Illustration & Branding (Hidden on small screens) */}
         <div className="relative hidden lg:flex lg:w-1/2 bg-secondary overflow-hidden group">
           <img
-            src="/images/auth_signup_bg.png"
-            alt="Logistics Terminal"
-            className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700 ease-out"
+            src="/og-image.png"
+            alt="CargoMax Logistics"
+            className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700 ease-out"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/20 to-transparent" />
 
-          <div className="relative z-10 p-16 flex flex-col justify-end h-full w-full text-white">
-            <div className="flex items-center gap-3 mb-8 bg-white/10 backdrop-blur-md w-fit px-4 py-2 rounded-full border border-white/10">
+          <div className="relative z-10 p-16 flex flex-col justify-end h-full w-full">
+            <div className="flex items-center gap-3 mb-8 bg-white/10 backdrop-blur-md w-fit px-4 py-2 rounded-full border border-white/10 shadow-sm">
               <ShieldCheck className="h-5 w-5 text-primary" />
-              <span className="text-sm font-medium">Join the Global Network</span>
+              <span className="text-sm font-medium text-white">Join the Global Network</span>
             </div>
-            <h2 className="text-5xl font-bold leading-tight mb-6">
+            <h2 className="text-5xl font-black leading-tight mb-6 text-white">
               Connect to <br />
               <span className="text-primary">Unlimited Growth</span>
             </h2>
-            <p className="text-slate-300 text-lg max-w-md leading-relaxed mb-12">
+            <p className="text-white/80 text-lg max-w-md leading-relaxed mb-12">
               The world's most intuitive platform for transporters, vendors, and shippers to collaborate seamlessly.
             </p>
 
             <div className="space-y-6">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center">
+                <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
                   <Truck className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <p className="font-bold text-white">Optimized Routing</p>
-                  <p className="text-slate-400 text-sm">Save up to 30% on fuel costs.</p>
+                  <p className="text-white/60 text-sm">Save up to 30% on fuel costs.</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center">
+                <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
                   <Briefcase className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <p className="font-bold text-white">Marketplace Access</p>
-                  <p className="text-slate-400 text-sm">Find new loads and partners daily.</p>
+                  <p className="text-white/60 text-sm">Find new loads and partners daily.</p>
                 </div>
               </div>
             </div>
@@ -166,11 +166,11 @@ const Signup: React.FC = () => {
         {/* Right Side: Signup Form */}
         <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center bg-white overflow-y-auto">
           <div className="mb-10 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="bg-primary p-2 rounded-xl">
-                <Truck className="h-6 w-6 text-white" />
+            <div className="flex items-center gap-2 group">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-lg shadow-primary/20 transition-all duration-300 group-hover:rotate-6 overflow-hidden border border-slate-100">
+                <img src="/favicon.png" alt="CargoMax Logo" className="h-full w-full object-contain p-1.5" />
               </div>
-              <span className="text-2xl font-bold tracking-tight text-slate-900">Cargo<span className="text-primary">Dash</span></span>
+              <span className="text-2xl font-black tracking-tight text-slate-900">Cargo<span className="text-primary">Max</span></span>
             </div>
             <Link to="/login" className="text-sm font-semibold text-primary hover:opacity-80 transition-opacity">
               Already have an account?
@@ -302,6 +302,16 @@ const Signup: React.FC = () => {
               </Button>
             </div>
           </form>
+
+          <div className="mt-8 text-center">
+            <Link 
+              to="/manual" 
+              className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-primary transition-colors bg-slate-50 px-4 py-2 rounded-full border border-slate-100"
+            >
+              <FileText className="h-4 w-4" />
+              View CargoMax Operational Manual
+            </Link>
+          </div>
         </div>
       </div>
     </div>

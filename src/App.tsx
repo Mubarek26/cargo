@@ -20,6 +20,8 @@ import VerifyEmail from "./pages/VerifyEmail";
 import VerifyEmailNotice from "./pages/VerifyEmailNotice";
 import { ThemeProvider } from "./components/theme-provider";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import Manual from "./pages/Manual";
+
 
 // Dashboard
 import LiveShipmentMap from "./pages/dashboard/LiveShipmentMap";
@@ -95,6 +97,8 @@ const App = () => (
             <Route path="/resetPassword/:token" element={<ResetPassword />} />
             <Route path="/verify-email/:token" element={<VerifyEmail />} />
             <Route path="/verify-email-notice" element={<VerifyEmailNotice />} />
+            <Route path="/manual" element={<Manual />} />
+
 
             <Route element={<ProtectedRoute />}>
               <Route

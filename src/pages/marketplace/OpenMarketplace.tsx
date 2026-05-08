@@ -83,6 +83,15 @@ export default function OpenMarketplace() {
   };
 
   const filteredOrders = orders.filter(order => {
+    // Check if the user is a driver and if they are allowed to see marketplace orders
+    const isDriver = currentUser?.role === 'DRIVER';
+    const isPrivateTransporter = currentUser?.isPrivateTransporter === true || currentUser?.role === 'PRIVATE_TRANSPORTER';
+    
+    // If user is a driver but not a private transporter, they shouldn't see marketplace orders
+    if (isDriver && !isPrivateTransporter) {
+      return false;
+    }
+
     const matchesSearch =
       order.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.pickupLocation?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -91,6 +100,7 @@ export default function OpenMarketplace() {
     if (filterMode === "ALL") return matchesSearch;
     return matchesSearch && order.assignmentMode === filterMode;
   });
+
 
   const getRelativeTime = (date: string) => {
     const now = new Date();

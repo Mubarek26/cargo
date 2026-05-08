@@ -36,7 +36,11 @@ const CompanyAdminReview: React.FC = () => {
       credentials: "include",
     })
       .then(async (res) => {
-        if (!res.ok) throw new Error("Not found");
+        if (res.status === 404) {
+          navigate("/company-admin-request");
+          return;
+        }
+        if (!res.ok) throw new Error("Error loading status");
         const data = await res.json();
         const s = data?.status || data?.company?.status || "PENDING";
         setStatus(s);
@@ -83,7 +87,6 @@ const CompanyAdminReview: React.FC = () => {
             <span className="text-2xl font-black tracking-tighter uppercase italic text-slate-900">Cargo<span className="text-primary">Dash</span></span>
           </div>
         </div>
-
         <Card className="border-primary/5 shadow-2xl shadow-primary/5 rounded-[2.5rem] overflow-hidden bg-white/80 backdrop-blur-xl">
           <CardContent className="p-10 lg:p-16 text-center">
             <div className="relative mb-10 inline-block">

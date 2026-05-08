@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLogin } from "@/hooks/use-login";
 import { useLoginApplicationGate } from "@/hooks/use-login-application-gate";
-import { ShieldCheck, Truck, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { ShieldCheck, Truck, Mail, Lock, Eye, EyeOff, ArrowRight, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -133,33 +133,33 @@ const Login: React.FC = () => {
         {/* Left Side: Illustration & Branding */}
         <div className="relative hidden lg:flex lg:w-1/2 bg-secondary overflow-hidden group">
           <img
-            src="/images/auth_login_bg.png"
-            alt="Logistics Dashboard"
-            className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700 ease-out"
+            src="/og-image.png"
+            alt="CargoMax Logistics"
+            className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700 ease-out"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/20 to-transparent" />
 
           <div className="relative z-10 p-16 flex flex-col justify-end h-full w-full text-white">
-            <div className="flex items-center gap-3 mb-8 bg-white/10 backdrop-blur-md w-fit px-4 py-2 rounded-full border border-white/10">
+            <div className="flex items-center gap-3 mb-8 bg-white/10 backdrop-blur-md w-fit px-4 py-2 rounded-full border border-white/10 shadow-sm">
               <ShieldCheck className="h-5 w-5 text-primary" />
-              <span className="text-sm font-medium">Enterprise Grade Security</span>
+              <span className="text-sm font-medium text-white">Enterprise Grade Security</span>
             </div>
-            <h2 className="text-5xl font-bold leading-tight mb-6">
+            <h2 className="text-5xl font-black leading-tight mb-6 text-white">
               Empowering Global <br />
               <span className="text-primary">Logistics Networks</span>
             </h2>
-            <p className="text-slate-300 text-lg max-w-md leading-relaxed mb-12">
+            <p className="text-white/80 text-lg max-w-md leading-relaxed mb-12">
               The all-in-one platform for fleet management, real-time tracking, and marketplace collaboration.
             </p>
 
             <div className="grid grid-cols-2 gap-8 border-t border-white/10 pt-8">
               <div>
-                <p className="text-2xl font-bold text-white">2.5k+</p>
-                <p className="text-slate-400 text-sm">Active Carriers</p>
+                <p className="text-2xl font-black text-white">2.5k+</p>
+                <p className="text-white/60 text-sm font-medium uppercase tracking-wider">Active Carriers</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">99.9%</p>
-                <p className="text-slate-400 text-sm">Uptime SLA</p>
+                <p className="text-2xl font-black text-white">99.9%</p>
+                <p className="text-white/60 text-sm font-medium uppercase tracking-wider">Uptime SLA</p>
               </div>
             </div>
           </div>
@@ -168,11 +168,11 @@ const Login: React.FC = () => {
         {/* Right Side: Form */}
         <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-20 flex flex-col justify-center bg-white">
           <div className="mb-12 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="bg-primary p-2 rounded-xl">
-                <Truck className="h-6 w-6 text-white" />
+            <div className="flex items-center gap-2 group">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-lg shadow-primary/20 transition-all duration-300 group-hover:rotate-6 overflow-hidden border border-slate-100">
+                <img src="/favicon.png" alt="CargoMax Logo" className="h-full w-full object-contain p-1.5" />
               </div>
-              <span className="text-2xl font-bold tracking-tight text-slate-900">Cargo<span className="text-primary">Dash</span></span>
+              <span className="text-2xl font-black tracking-tight text-slate-900">Cargo<span className="text-primary">Max</span></span>
             </div>
             <Link to="/signup" className="text-sm font-semibold text-primary hover:opacity-80 transition-opacity">
               Create an account
@@ -249,6 +249,16 @@ const Login: React.FC = () => {
               </Button>
             </div>
           </form>
+
+          <div className="mt-8 text-center">
+            <Link 
+              to="/manual" 
+              className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-primary transition-colors bg-slate-50 px-4 py-2 rounded-full border border-slate-100"
+            >
+              <FileText className="h-4 w-4" />
+              View CargoMax Operational Manual
+            </Link>
+          </div>
 
           <div className="mt-12 pt-8 border-t border-slate-100 flex items-center justify-center gap-6">
             <div className="flex -space-x-3 overflow-hidden">
