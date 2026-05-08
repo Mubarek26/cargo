@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { RouteMap } from "@/components/RouteMap";
 import { calculateDistance, formatDistance } from "@/utils/distance";
+import { ChatPanel } from "@/components/chat/ChatPanel";
 
 const milestoneConfig: any = {
   STARTED: { label: "Started", icon: Clock, className: "text-blue-500 bg-blue-500/10", next: "ARRIVED", action: "Arrive at Pickup" },
@@ -170,7 +171,13 @@ export default function DriverTripDetails() {
           <h1 className="text-2xl font-bold text-foreground">Trip Details</h1>
           <p className="text-muted-foreground">Order: {order?.orderNumber}</p>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-3">
+          <ChatPanel 
+            orderId={order?._id}
+            orderNumber={order?.orderNumber}
+            recipientName={order?.targetCompanyId?.companyName || order?.createdBy?.fullName || "Admin"}
+            recipientId={order?.targetCompanyId?.ownerId || order?.createdBy?._id || order?.createdBy}
+          />
           <Badge className={cn("gap-1 py-1.5 px-3 text-sm", currentMilestone.className)}>
             <StatusIcon className="h-4 w-4" />
             {currentMilestone.label}

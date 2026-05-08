@@ -494,8 +494,25 @@ export default function OrderDetails() {
                       <Building2 className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Transport Company</p>
-                      <p className="font-bold text-sm text-foreground">{order.targetCompanyId?.companyName}</p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Transport Company</p>
+                          <p className="font-bold text-sm text-foreground">{order.targetCompanyId?.companyName}</p>
+                        </div>
+                        {currentUser?.role === 'DRIVER' && (
+                          <ChatPanel 
+                            orderId={order._id}
+                            orderNumber={order.orderNumber}
+                            recipientName={order.targetCompanyId?.companyName}
+                            recipientId={order.targetCompanyId?.ownerId}
+                            trigger={
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10">
+                                <MessageSquare className="h-4 w-4" />
+                              </Button>
+                            }
+                          />
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground">{order.targetCompanyId?.email}</p>
                       <p className="text-xs text-muted-foreground">{order.targetCompanyId?.phoneNumber}</p>
                     </div>
@@ -508,8 +525,25 @@ export default function OrderDetails() {
                       <User className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Assigned Driver</p>
-                      <p className="font-bold text-sm text-foreground">{order.targetTransporterId?.fullName}</p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Assigned Driver</p>
+                          <p className="font-bold text-sm text-foreground">{order.targetTransporterId?.fullName}</p>
+                        </div>
+                        {currentUser?.role === 'COMPANY_ADMIN' && (
+                          <ChatPanel 
+                            orderId={order._id}
+                            orderNumber={order.orderNumber}
+                            recipientName={order.targetTransporterId?.fullName}
+                            recipientId={order.targetTransporterId?._id || order.targetTransporterId}
+                            trigger={
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10">
+                                <MessageSquare className="h-4 w-4" />
+                              </Button>
+                            }
+                          />
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground">{order.targetTransporterId?.phoneNumber}</p>
                     </div>
                   </div>
