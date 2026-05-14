@@ -3,7 +3,8 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { 
   FileText, Search, User, Plus,
   CheckCircle, XCircle, MoreVertical,
-  Handshake, Loader2, Check, X, Clock
+  Handshake, Loader2, Check, X, Clock,
+  Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,10 +43,29 @@ export default function CompanyContracts() {
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<any>(null);
 
+  const userRole = typeof window !== 'undefined' ? localStorage.getItem("userRole") : null;
+  const isSuperAdmin = userRole === "SUPER_ADMIN";
+
   useEffect(() => {
     fetchContracts();
     fetchVendors();
-  }, []);
+    if (isSuperAdmin) fetchCompanies();
+  }, [isSuperAdmin]);
+
+  const [allCompanies, setAllCompanies] = useState<any[]>([]);
+  const fetchCompanies = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "https://fleet-management-kzif.onrender.com"}/api/v1/company`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` }
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setAllCompanies(data.data.companies || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch companies", error);
+    }
+  };
 
   const fetchVendors = async () => {
     try {
@@ -256,6 +276,7 @@ export default function CompanyContracts() {
               <thead>
                 <tr className="border-b border-border bg-secondary/50">
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Vendor</th>
+                  {isSuperAdmin && <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company</th>}
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Request Date</th>
                   <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
@@ -279,6 +300,14 @@ export default function CompanyContracts() {
                         </div>
                       </div>
                     </td>
+                    {isSuperAdmin && (
+                      <td className="whitespace-nowrap px-5 py-4">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-primary" />
+                          <span className="font-medium">{contract.transporterCompanyId?.companyName || "Unknown Company"}</span>
+                        </div>
+                      </td>
+                    )}
                     <td className="whitespace-nowrap px-5 py-4">
                       {getStatusBadge(contract.status)}
                     </td>
@@ -384,6 +413,16 @@ export default function CompanyContracts() {
           </DialogHeader>
           {selectedContract && (
             <div className="py-4 space-y-6">
+              {isSuperAdmin && (
+                <div className="space-y-1 pb-4 border-b border-border">
+                  <p className="text-xs text-muted-foreground uppercase font-semibold">Associated Company</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Building2 className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-medium">{selectedContract.transporterCompanyId?.companyName || "Unknown Company"}</p>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground uppercase font-semibold">Vendor Name</p>

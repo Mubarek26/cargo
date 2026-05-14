@@ -94,8 +94,6 @@ const navigation: NavSection[] = [
     titleKey: "nav:sections.vendorsClients",
     items: [
       { labelKey: "nav:items.vendorDirectory", href: "/vendors", icon: Building2 },
-      { labelKey: "nav:items.addVendor", href: "/vendors/add", icon: UserPlus },
-      { labelKey: "nav:items.clientsList", href: "/clients", icon: Contact },
       { labelKey: "nav:items.clientFeedback", href: "/clients/feedback", icon: MessageSquare },
     ],
   },
@@ -156,18 +154,21 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
     prefixes: ["/home"],
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"],
   },
-
-  {
-    prefixes: ["/marketplace"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR", "DRIVER"],
-  },
   {
     prefixes: ["/dashboard"],
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN"],
   },
   {
+    prefixes: ["/marketplace"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "VENDOR", "DRIVER"],
+  },
+  {
+    prefixes: ["/analytics"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"],
+  },
+  {
     prefixes: ["/vendors/contracts"],
-    roles: ["SUPER_ADMIN", "VENDOR"],
+    roles: ["VENDOR"],
   },
   {
     prefixes: ["/companies/contracts"],
@@ -179,7 +180,7 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   },
   {
     prefixes: ["/shipper/orders", "/shipments/create", "/shipments/track"],
-    roles: ["SUPER_ADMIN", "SHIPPER"],
+    roles: ["SHIPPER"],
   },
   {
     prefixes: ["/fleet"],
@@ -188,10 +189,6 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
   {
     prefixes: ["/vendors", "/clients"],
     roles: ["SUPER_ADMIN"],
-  },
-  {
-    prefixes: ["/orders"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"],
   },
   {
     prefixes: ["/companies"],
@@ -206,27 +203,25 @@ const ROLE_RULES: Array<{ prefixes: string[]; roles: string[] }> = [
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", "DRIVER", "VENDOR"],
   },
   {
-    prefixes: ["/applications", "/admin"],
+    prefixes: ["/transactions"],
+    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER"],
+  },
+  {
+    prefixes: ["/admin", "/applications"],
     roles: ["SUPER_ADMIN"],
   },
   {
-    prefixes: ["/driver"],
-    roles: ["DRIVER", "SUPER_ADMIN", "COMPANY_ADMIN"],
-  },
-  {
-    prefixes: ["/transactions"],
-    roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "SHIPPER", ],
-  },
-  
-  {
-    prefixes: ["/analytics"],
+    prefixes: ["/orders"],
     roles: ["SUPER_ADMIN", "COMPANY_ADMIN", "VENDOR"],
+  },
+  {
+    prefixes: ["/driver"],
+    roles: ["DRIVER"],
   },
 ];
 
 const isRouteAllowed = (role: string | null, href: string) => {
   if (!role) return false;
-  if (role === "SUPER_ADMIN") return true;
 
   // Special check for Marketplace and Drivers
   if (href.startsWith("/marketplace") && role === "DRIVER") {
@@ -238,8 +233,14 @@ const isRouteAllowed = (role: string | null, href: string) => {
     entry.prefixes.some((prefix) => href.startsWith(prefix))
   );
 
-  if (!rule) return false;
-  return rule.roles.includes(role);
+  if (rule) {
+    return rule.roles.includes(role);
+  }
+
+  // Default: Super Admin has access to everything not explicitly governed by rules
+  if (role === "SUPER_ADMIN") return true;
+
+  return false;
 };
 
 
