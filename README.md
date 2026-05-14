@@ -1,64 +1,37 @@
-Welcome to the Project
-Project Info
+# Cargo Logistics Platform
 
-This project is a modern web application built with React, TypeScript, and Vite.
+A modern cargo logistics and fleet coordination platform built with React, TypeScript, and Vite. The system streamlines cargo shipment management, vehicle coordination, and delivery tracking through a responsive and scalable web interface.
 
-Getting Started
-Prerequisites
+## Project Goal
 
-Make sure you have the following installed:
+The goal of this project is to digitize and optimize cargo transportation and fleet management operations by providing an efficient platform for shipment coordination, delivery tracking, and logistics automation. The system aims to improve operational efficiency, reduce manual processes, and enhance communication between shippers, transporters, and brokers.
 
-Node.js
-npm
+## Features
 
-You can install Node.js using nvm:
+- Cargo shipment management
+- Fleet and vehicle coordination
+- Delivery tracking system
+- Role-based dashboards
+- Secure authentication
+- Responsive modern UI
 
-https://github.com/nvm-sh/nvm#installing-and-updating
-Running the Project Locally
+## User Roles
 
-Clone the repository and start the development server:
+- Customer/Shipper
+- Transporter/Driver
+- Broker/Dispatcher
+- Administrator
 
-# Step 1: Clone the repository
-git clone <YOUR_GIT_URL>
+## Tech Stack
 
-# Step 2: Navigate into the project folder
-cd <YOUR_PROJECT_NAME>
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- shadcn/ui
 
-# Step 3: Install dependencies
+## Getting Started
+
+```bash
 npm install
-
-# Step 4: Start the development server
 npm run dev
-
-The app will start with hot-reload enabled for development.
-
-Editing the Project
-
-You can edit the project using:
-
-Your preferred IDE
-GitHub web editor
-GitHub Codespaces
-Edit Directly in GitHub
-Open the repository on GitHub
-Navigate to the file you want to edit
-Click the pencil icon
-Commit your changes
-Using GitHub Codespaces
-Open the repository on GitHub
-Click the Code button
-Open the Codespaces tab
-Create a new Codespace
-Tech Stack
-
-This project uses:
-
-React
-TypeScript
-Vite
-Tailwind CSS
-shadcn/ui
-Build for Production
-npm run build
-Preview Production Build
-npm run preview
