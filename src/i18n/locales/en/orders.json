@@ -1,0 +1,127 @@
+{
+  "allOrders": {
+    "title": "All Orders",
+    "subtitle": "Manage customer orders and fulfillment",
+    "export": "Export",
+    "newOrder": "New Order",
+    "stats": {
+      "total": "Total Orders",
+      "pending": "Pending",
+      "inTransit": "In Transit",
+      "totalBudget": "Total Budget"
+    },
+    "searchPlaceholder": "Search by order #, city or title...",
+    "filterStatus": "Filter by status",
+    "filterOrderType": "Order Type",
+    "allStatuses": "All Statuses",
+    "allTypes": "All Types",
+    "clearFilters": "Clear Filters",
+    "loading": "Loading orders...",
+    "noOrders": "No orders found",
+    "noOrdersFiltered": "No orders match your filters",
+    "createFirst": "Create your first order",
+    "table": {
+      "orderInfo": "Order Info",
+      "route": "Route",
+      "type": "Type",
+      "status": "Status",
+      "budgetPayment": "Budget & Payment",
+      "actions": "Actions"
+    },
+    "details": "Details",
+    "accept": "Accept",
+    "reject": "Reject"
+  },
+  "status": {
+    "pending": "Pending",
+    "open": "Open",
+    "accepted": "Accepted",
+    "assigned": "Assigned",
+    "inTransit": "In Transit",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "rejected": "Rejected"
+  },
+  "assignmentModes": {
+    "openMarketplace": "Open Marketplace",
+    "directCompany": "Direct Company",
+    "directPrivateTransporter": "Direct Transporter",
+    "na": "N/A"
+  },
+  "payment": {
+    "paid": "Paid",
+    "pending": "Pending",
+    "failed": "Failed"
+  },
+  "common": {
+    "na": "N/A"
+  },
+  "messages": {
+    "fetchFailed": "Failed to fetch orders",
+    "accepted": "Order accepted",
+    "acceptFailed": "Failed to accept order",
+    "rejected": "Order rejected",
+    "rejectFailed": "Failed to reject order"
+  },
+  "orderDetails": {
+    "title": "Order {{orderNumber}}",
+    "subtitle": "Detailed view and management of shipment",
+    "notFound": "Order not found",
+    "backToOrders": "Back to Orders",
+    "actionsRequired": "Actions Required",
+    "acceptOrder": "Accept Order",
+    "rejectOrder": "Reject Order",
+    "acceptedInfo": "Order has been assigned. Trip is in progress.",
+    "assignHelp": "The order is accepted. Now assign a driver and a vehicle to start the trip.",
+    "selectDriver": "Select Driver",
+    "selectVehicle": "Select Vehicle",
+    "chooseDriver": "Choose a driver",
+    "chooseVehicle": "Choose a vehicle",
+    "assignStartTrip": "Assign & Start Trip",
+    "paymentTitle": "Secure Payment Required",
+    "paymentSubtitle": "Complete the payment to finalize the shipping process.",
+    "payNow": "Pay {{amount}} {{currency}} Now",
+    "routeInfo": "Route Information",
+    "optimalDistance": "Optimal Road Distance",
+    "estimatedTime": "Estimated Travel Time",
+    "minutes": "{{count}} mins",
+    "calculating": "Calculating...",
+    "pickup": "Pickup",
+    "delivery": "Delivery",
+    "unknown": "Unknown",
+    "noPhone": "No phone",
+    "cargoRequirements": "Cargo & Requirements",
+    "type": "Type",
+    "general": "General",
+    "weight": "Weight",
+    "quantity": "Quantity",
+    "vehicleReq": "Vehicle Req.",
+    "any": "Any",
+    "description": "Description",
+    "specialInstructions": "Special Instructions",
+    "fulfillmentDetails": "Fulfillment Details",
+    "pickupDate": "Pickup Date",
+    "deadline": "Deadline",
+    "budget": "Budget",
+    "createdBy": "Created By",
+    "assignedTransporter": "Assigned Transporter",
+    "transportCompany": "Transport Company",
+    "assignedDriver": "Assigned Driver",
+    "vehicleDetails": "Vehicle Details",
+    "transporter": "Transporter"
+  },
+  "paymentMessages": {
+    "checkoutFailed": "Failed to get checkout URL",
+    "paymentInitFailed": "Payment initialization failed"
+  },
+  "orderDetailsMessages": {
+    "fetchFailed": "Failed to fetch order details",
+    "acceptSuccess": "Order accepted successfully",
+    "acceptFailed": "Failed to accept order",
+    "rejectSuccess": "Order rejected",
+    "rejectFailed": "Failed to reject order",
+    "assignMissing": "Please select both a driver and a vehicle",
+    "assignSuccess": "Driver and vehicle assigned successfully",
+    "assignFailed": "Failed to assign order"
+  }
+}

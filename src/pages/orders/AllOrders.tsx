@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { orderService } from "@/services/orderService";
 import { toast } from "sonner";
 import { useCheckAuth } from "@/hooks/use-check-auth";
+import { useTranslation } from "react-i18next";
 import { 
   Select,
   SelectContent,
@@ -17,24 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const statusConfig: any = {
-  PENDING: { label: "Pending", icon: Clock, className: "text-warning bg-warning/10" },
-  OPEN: { label: "Open", icon: Package, className: "text-blue-500 bg-blue-500/10" },
-  ACCEPTED: { label: "Accepted", icon: CheckCircle, className: "text-success bg-success/10" },
-  ASSIGNED: { label: "Assigned", icon: Truck, className: "text-primary bg-primary/10" },
-  IN_TRANSIT: { label: "In Transit", icon: Truck, className: "text-primary bg-primary/10" },
-  DELIVERED: { label: "Delivered", icon: CheckCircle, className: "text-success bg-success/10" },
-  CANCELLED: { label: "Cancelled", icon: XCircle, className: "text-destructive bg-destructive/10" },
-  REJECTED: { label: "Rejected", icon: XCircle, className: "text-destructive bg-destructive/10" },
-};
-
-const paymentConfig: any = {
-  paid: { label: "Paid", className: "text-success bg-success/10" },
-  pending: { label: "Pending", className: "text-warning bg-warning/10" },
-  failed: { label: "Failed", className: "text-destructive bg-destructive/10" },
-};
-
 export default function AllOrders() {
+  const { t } = useTranslation("orders");
   const navigate = useNavigate();
   const { checkAuth, data: authData } = useCheckAuth();
   const [orders, setOrders] = useState<any[]>([]);
@@ -56,6 +41,29 @@ export default function AllOrders() {
     init();
   }, [checkAuth]);
 
+  const statusConfig: any = {
+    PENDING: { label: t("status.pending"), icon: Clock, className: "text-warning bg-warning/10" },
+    OPEN: { label: t("status.open"), icon: Package, className: "text-blue-500 bg-blue-500/10" },
+    ACCEPTED: { label: t("status.accepted"), icon: CheckCircle, className: "text-success bg-success/10" },
+    ASSIGNED: { label: t("status.assigned"), icon: Truck, className: "text-primary bg-primary/10" },
+    IN_TRANSIT: { label: t("status.inTransit"), icon: Truck, className: "text-primary bg-primary/10" },
+    DELIVERED: { label: t("status.delivered"), icon: CheckCircle, className: "text-success bg-success/10" },
+    CANCELLED: { label: t("status.cancelled"), icon: XCircle, className: "text-destructive bg-destructive/10" },
+    REJECTED: { label: t("status.rejected"), icon: XCircle, className: "text-destructive bg-destructive/10" },
+  };
+
+  const paymentConfig: any = {
+    paid: { label: t("payment.paid"), className: "text-success bg-success/10" },
+    pending: { label: t("payment.pending"), className: "text-warning bg-warning/10" },
+    failed: { label: t("payment.failed"), className: "text-destructive bg-destructive/10" },
+  };
+
+  const assignmentModeLabelMap: Record<string, string> = {
+    OPEN_MARKETPLACE: t("assignmentModes.openMarketplace"),
+    DIRECT_COMPANY: t("assignmentModes.directCompany"),
+    DIRECT_PRIVATE_TRANSPORTER: t("assignmentModes.directPrivateTransporter"),
+  };
+
   const fetchOrders = async () => {
     setIsLoading(true);
     try {
@@ -64,7 +72,7 @@ export default function AllOrders() {
         setOrders(res.data.orders);
       }
     } catch (error) {
-      toast.error("Failed to fetch orders");
+      toast.error(t("messages.fetchFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -87,10 +95,10 @@ export default function AllOrders() {
     e.stopPropagation();
     try {
       await orderService.acceptOrder(orderId);
-      toast.success("Order accepted");
+      toast.success(t("messages.accepted"));
       fetchOrders();
     } catch (error: any) {
-      toast.error(error.message || "Failed to accept order");
+      toast.error(error.message || t("messages.acceptFailed"));
     }
   };
 
@@ -98,10 +106,10 @@ export default function AllOrders() {
     e.stopPropagation();
     try {
       await orderService.rejectOrder(orderId);
-      toast.error("Order rejected");
+      toast.error(t("messages.rejected"));
       fetchOrders();
     } catch (error: any) {
-      toast.error(error.message || "Failed to reject order");
+      toast.error(error.message || t("messages.rejectFailed"));
     }
   };
 
@@ -109,17 +117,17 @@ export default function AllOrders() {
     <DashboardLayout>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">All Orders</h1>
-          <p className="text-muted-foreground">Manage customer orders and fulfillment</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("allOrders.title")}</h1>
+          <p className="text-muted-foreground">{t("allOrders.subtitle")}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />
-            Export
+            {t("allOrders.export")}
           </Button>
           <Button onClick={() => navigate("/shipments/create")}>
             <Plus className="mr-2 h-4 w-4" />
-            New Order
+            {t("allOrders.newOrder")}
           </Button>
         </div>
       </div>
@@ -133,7 +141,7 @@ export default function AllOrders() {
             </div>
             <div>
               <p className="text-2xl font-bold text-card-foreground">{orders.length}</p>
-              <p className="text-sm text-muted-foreground">Total Orders</p>
+              <p className="text-sm text-muted-foreground">{t("allOrders.stats.total")}</p>
             </div>
           </div>
         </div>
@@ -146,7 +154,7 @@ export default function AllOrders() {
               <p className="text-2xl font-bold text-card-foreground">
                 {orders.filter(o => o.status === "PENDING").length}
               </p>
-              <p className="text-sm text-muted-foreground">Pending</p>
+              <p className="text-sm text-muted-foreground">{t("allOrders.stats.pending")}</p>
             </div>
           </div>
         </div>
@@ -159,7 +167,7 @@ export default function AllOrders() {
               <p className="text-2xl font-bold text-card-foreground">
                 {orders.filter(o => ["IN_TRANSIT", "ASSIGNED"].includes(o.status)).length}
               </p>
-              <p className="text-sm text-muted-foreground">In Transit</p>
+              <p className="text-sm text-muted-foreground">{t("allOrders.stats.inTransit")}</p>
             </div>
           </div>
         </div>
@@ -172,7 +180,7 @@ export default function AllOrders() {
               <p className="text-2xl font-bold text-card-foreground">
                 {orders.reduce((acc, curr) => acc + (curr.pricing?.proposedBudget || 0), 0).toLocaleString()}
               </p>
-              <p className="text-sm text-muted-foreground">Total Budget</p>
+              <p className="text-sm text-muted-foreground">{t("allOrders.stats.totalBudget")}</p>
             </div>
           </div>
         </div>
@@ -183,7 +191,7 @@ export default function AllOrders() {
         <div className="relative lg:col-span-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input 
-            placeholder="Search by order #, city or title..." 
+            placeholder={t("allOrders.searchPlaceholder")} 
             className="pl-10"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -191,27 +199,27 @@ export default function AllOrders() {
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger>
-            <SelectValue placeholder="Filter by status" />
+            <SelectValue placeholder={t("allOrders.filterStatus")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">All Statuses</SelectItem>
-            <SelectItem value="PENDING">Pending</SelectItem>
-            <SelectItem value="ACCEPTED">Accepted</SelectItem>
-            <SelectItem value="ASSIGNED">Assigned</SelectItem>
-            <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
-            <SelectItem value="DELIVERED">Delivered</SelectItem>
-            <SelectItem value="CANCELLED">Cancelled</SelectItem>
+            <SelectItem value="ALL">{t("allOrders.allStatuses")}</SelectItem>
+            <SelectItem value="PENDING">{t("status.pending")}</SelectItem>
+            <SelectItem value="ACCEPTED">{t("status.accepted")}</SelectItem>
+            <SelectItem value="ASSIGNED">{t("status.assigned")}</SelectItem>
+            <SelectItem value="IN_TRANSIT">{t("status.inTransit")}</SelectItem>
+            <SelectItem value="DELIVERED">{t("status.delivered")}</SelectItem>
+            <SelectItem value="CANCELLED">{t("status.cancelled")}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={assignmentFilter} onValueChange={setAssignmentFilter}>
           <SelectTrigger>
-            <SelectValue placeholder="Order Type" />
+            <SelectValue placeholder={t("allOrders.filterOrderType")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">All Types</SelectItem>
-            <SelectItem value="OPEN_MARKETPLACE">Open Marketplace</SelectItem>
-            <SelectItem value="DIRECT_COMPANY">Direct Company</SelectItem>
-            <SelectItem value="DIRECT_PRIVATE_TRANSPORTER">Direct Transporter</SelectItem>
+            <SelectItem value="ALL">{t("allOrders.allTypes")}</SelectItem>
+            <SelectItem value="OPEN_MARKETPLACE">{t("assignmentModes.openMarketplace")}</SelectItem>
+            <SelectItem value="DIRECT_COMPANY">{t("assignmentModes.directCompany")}</SelectItem>
+            <SelectItem value="DIRECT_PRIVATE_TRANSPORTER">{t("assignmentModes.directPrivateTransporter")}</SelectItem>
           </SelectContent>
         </Select>
         { (searchQuery || statusFilter !== "ALL" || assignmentFilter !== "ALL") && (
@@ -224,7 +232,7 @@ export default function AllOrders() {
               setAssignmentFilter("ALL");
             }}
           >
-            <X className="h-4 w-4" /> Clear Filters
+            <X className="h-4 w-4" /> {t("allOrders.clearFilters")}
           </Button>
         )}
       </div>
@@ -234,16 +242,16 @@ export default function AllOrders() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-            <p className="text-muted-foreground">Loading orders...</p>
+            <p className="text-muted-foreground">{t("allOrders.loading")}</p>
           </div>
         ) : filteredOrders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <ShoppingCart className="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
             <p className="text-lg font-medium text-muted-foreground">
-              {orders.length === 0 ? "No orders found" : "No orders match your filters"}
+              {orders.length === 0 ? t("allOrders.noOrders") : t("allOrders.noOrdersFiltered")}
             </p>
             {orders.length === 0 && (
-              <Button variant="link" onClick={() => navigate("/shipments/create")}>Create your first order</Button>
+              <Button variant="link" onClick={() => navigate("/shipments/create")}>{t("allOrders.createFirst")}</Button>
             )}
           </div>
         ) : (
@@ -251,12 +259,12 @@ export default function AllOrders() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-secondary/50">
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Order Info</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Route</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Budget & Payment</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.orderInfo")}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.route")}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.type")}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.status")}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.budgetPayment")}</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -298,9 +306,9 @@ export default function AllOrders() {
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
                         <div className="flex items-center gap-1.5 text-xs">
-                           <span className="text-card-foreground font-medium">{order.pickupLocation?.city || "N/A"}</span>
+                           <span className="text-card-foreground font-medium">{order.pickupLocation?.city || t("common.na")}</span>
                            <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                           <span className="text-card-foreground font-medium">{order.deliveryLocation?.city || "N/A"}</span>
+                           <span className="text-card-foreground font-medium">{order.deliveryLocation?.city || t("common.na")}</span>
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
@@ -308,7 +316,7 @@ export default function AllOrders() {
                           "text-[10px] px-2 py-0 h-5 font-normal",
                           order.assignmentMode === 'OPEN_MARKETPLACE' ? "border-primary text-primary" : "border-muted-foreground/30 text-muted-foreground"
                         )}>
-                          {order.assignmentMode ? order.assignmentMode.replace(/_/g, ' ') : 'N/A'}
+                          {assignmentModeLabelMap[order.assignmentMode] || t("assignmentModes.na")}
                         </Badge>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
@@ -332,7 +340,7 @@ export default function AllOrders() {
                               onClick={(e) => handleAcceptOrder(e, order._id)}
                             >
                               <Check className="h-3.5 w-3.5" />
-                              Accept
+                              {t("allOrders.accept")}
                             </Button>
                             <Button 
                               size="sm" 
@@ -341,11 +349,11 @@ export default function AllOrders() {
                               onClick={(e) => handleRejectOrder(e, order._id)}
                             >
                               <X className="h-3.5 w-3.5" />
-                              Reject
+                              {t("allOrders.reject")}
                             </Button>
                           </div>
                         ) : (
-                          <Button variant="ghost" size="sm" className="h-8">Details</Button>
+                            <Button variant="ghost" size="sm" className="h-8">{t("allOrders.details")}</Button>
                         )}
                       </td>
                     </tr>

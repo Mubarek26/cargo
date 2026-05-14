@@ -30,11 +30,13 @@ import {
   Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 type NavSection = {
-  title: string;
+  id: string;
+  titleKey: string;
   items: {
-    label: string;
+    labelKey: string;
     href: string;
     icon: React.ComponentType<{ className?: string }>;
   }[];
@@ -42,92 +44,103 @@ type NavSection = {
 
 const navigation: NavSection[] = [
   {
-    title: "Dashboard",
+    id: "dashboard",
+    titleKey: "nav:sections.dashboard",
     items: [
-      { label: "Overview", href: "/home", icon: LayoutDashboard },
-      { label: "Live Shipment Map", href: "/dashboard/map", icon: Map },
-      { label: "Fleet Status", href: "/dashboard/fleet-status", icon: Truck },
-      { label: "Marketplace", href: "/marketplace", icon: Briefcase },
+      { labelKey: "nav:items.overview", href: "/home", icon: LayoutDashboard },
+      { labelKey: "nav:items.liveShipmentMap", href: "/dashboard/map", icon: Map },
+      { labelKey: "nav:items.fleetStatus", href: "/dashboard/fleet-status", icon: Truck },
+      { labelKey: "nav:items.marketplace", href: "/marketplace", icon: Briefcase },
     ],
   },
   {
-    title: "Analytics",
+    id: "analytics",
+    titleKey: "nav:sections.analytics",
     items: [
-      { label: "Analytics & Reporting", href: "/analytics", icon: TrendingUp },
+      { labelKey: "nav:items.analyticsReporting", href: "/analytics", icon: TrendingUp },
     ],
   },
   {
-    title: "Partnerships",
+    id: "partnerships",
+    titleKey: "nav:sections.partnerships",
     items: [
-      { label: "My Contracts", href: "/vendors/contracts", icon: Handshake },
-      { label: "Vendor Contracts", href: "/companies/contracts", icon: Handshake },
+      { labelKey: "nav:items.myContracts", href: "/vendors/contracts", icon: Handshake },
+      { labelKey: "nav:items.vendorContracts", href: "/companies/contracts", icon: Handshake },
     ],
   },
   {
-    title: "Shipments",
+    id: "shipments",
+    titleKey: "nav:sections.shipments",
     items: [
-      { label: "All Shipments", href: "/shipments", icon: Package },
-      { label: "My Orders", href: "/shipper/orders", icon: Package },
-      { label: "Track Shipment", href: "/shipments/track", icon: Navigation },
-      { label: "Create Order", href: "/shipments/create", icon: PlusCircle },
-      { label: "Delayed Shipments", href: "/shipments/delayed", icon: Clock },
+      { labelKey: "nav:items.allShipments", href: "/shipments", icon: Package },
+      { labelKey: "nav:items.myOrders", href: "/shipper/orders", icon: Package },
+      { labelKey: "nav:items.trackShipment", href: "/shipments/track", icon: Navigation },
+      { labelKey: "nav:items.createOrder", href: "/shipments/create", icon: PlusCircle },
+      { labelKey: "nav:items.delayedShipments", href: "/shipments/delayed", icon: Clock },
     ],
   },
   {
-    title: "Fleet Management",
+    id: "fleetManagement",
+    titleKey: "nav:sections.fleetManagement",
     items: [
-      { label: "Vehicle List", href: "/fleet/vehicles", icon: Car },
-      { label: "Maintenance Logs", href: "/fleet/maintenance", icon: Wrench },
-      { label: "Driver List", href: "/fleet/drivers", icon: Users },
-      { label: "Idle Detection", href: "/fleet/idle", icon: Clock },
+      { labelKey: "nav:items.vehicleList", href: "/fleet/vehicles", icon: Car },
+      { labelKey: "nav:items.maintenanceLogs", href: "/fleet/maintenance", icon: Wrench },
+      { labelKey: "nav:items.driverList", href: "/fleet/drivers", icon: Users },
+      { labelKey: "nav:items.idleDetection", href: "/fleet/idle", icon: Clock },
     ],
   },
   {
-    title: "Vendors & Clients",
+    id: "vendorsClients",
+    titleKey: "nav:sections.vendorsClients",
     items: [
-      { label: "Vendor Directory", href: "/vendors", icon: Building2 },
-      { label: "Add Vendor", href: "/vendors/add", icon: UserPlus },
-      { label: "Clients List", href: "/clients", icon: Contact },
-      { label: "Client Feedback", href: "/clients/feedback", icon: MessageSquare },
+      { labelKey: "nav:items.vendorDirectory", href: "/vendors", icon: Building2 },
+      { labelKey: "nav:items.addVendor", href: "/vendors/add", icon: UserPlus },
+      { labelKey: "nav:items.clientsList", href: "/clients", icon: Contact },
+      { labelKey: "nav:items.clientFeedback", href: "/clients/feedback", icon: MessageSquare },
     ],
   },
   {
-    title: "Companies",
+    id: "companies",
+    titleKey: "nav:sections.companies",
     items: [
-      { label: "Company Directory", href: "/companies", icon: Building2 },
-      { label: "Drivers Wallets", href: "/company/drivers/wallets", icon: Wallet },
+      { labelKey: "nav:items.companyDirectory", href: "/companies", icon: Building2 },
+      { labelKey: "nav:items.driversWallets", href: "/company/drivers/wallets", icon: Wallet },
     ],
   },
   {
-    title: "Account",
+    id: "account",
+    titleKey: "nav:sections.account",
     items: [
-      { label: "Profile", href: "/profile", icon: User },
-      { label: "Messages", href: "/chat", icon: MessageSquare },
-      { label: "Transactions", href: "/transactions", icon: DollarSign },
+      { labelKey: "nav:items.profile", href: "/profile", icon: User },
+      { labelKey: "nav:items.messages", href: "/chat", icon: MessageSquare },
+      { labelKey: "nav:items.transactions", href: "/transactions", icon: DollarSign },
     ],
   },
   {
-    title: "Administration",
+    id: "administration",
+    titleKey: "nav:sections.administration",
     items: [
-      { label: "User Management", href: "/admin/users", icon: Users },
-      { label: "Roles & Permissions", href: "/admin/roles", icon: Users },
-      { label: "Permissions", href: "/admin/permissions", icon: ClipboardCheck },
-      { label: "Review Applications", href: "/applications", icon: ClipboardCheck },
-      { label: "Pricing Config", href: "/admin/pricing-config", icon: DollarSign },
-      { label: "Commission Settings", href: "/admin/commission-config", icon: TrendingUp },
+      { labelKey: "nav:items.userManagement", href: "/admin/users", icon: Users },
+      { labelKey: "nav:items.rolesPermissions", href: "/admin/roles", icon: Users },
+      { labelKey: "nav:items.permissions", href: "/admin/permissions", icon: ClipboardCheck },
+      { labelKey: "nav:items.reviewApplications", href: "/applications", icon: ClipboardCheck },
+      { labelKey: "nav:items.pricingConfig", href: "/admin/pricing-config", icon: DollarSign },
+      { labelKey: "nav:items.commissionSettings", href: "/admin/commission-config", icon: TrendingUp },
     ],
   },
   {
-    title: "Orders",
+    id: "orders",
+    titleKey: "nav:sections.orders",
     items: [
-      { label: "All Orders", href: "/orders", icon: ShoppingCart },
+      { labelKey: "nav:items.allOrders", href: "/orders", icon: ShoppingCart },
     ],
   },
   {
-    title: "Driver Portal",
+    id: "driverPortal",
+    titleKey: "nav:sections.driverPortal",
     items: [
-      { label: "My Trips", href: "/driver/trips", icon: Truck },
-      { label: "My Wallet", href: "/driver/wallet", icon: Wallet },
+      { labelKey: "nav:items.myTrips", href: "/driver/trips", icon: Truck },
+      { labelKey: "nav:items.myWallet", href: "/driver/wallet", icon: Wallet },
     ],
   },
 ];
@@ -231,9 +244,10 @@ const isRouteAllowed = (role: string | null, href: string) => {
 
 
 export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
+  const { t } = useTranslation("nav");
   const navigate = useNavigate();
-  const [expandedSections, setExpandedSections] = useState<string[]>(
-    navigation.map((s) => s.title)
+  const [expandedSections, setExpandedSections] = useState<string[]>(() =>
+    navigation.map((s) => s.id)
   );
   const userRole = localStorage.getItem("userRole");
 
@@ -243,11 +257,11 @@ export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
     navigate("/login", { replace: true });
   };
 
-  const toggleSection = (title: string) => {
+  const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) =>
-      prev.includes(title)
-        ? prev.filter((s) => s !== title)
-        : [...prev, title]
+      prev.includes(sectionId)
+        ? prev.filter((s) => s !== sectionId)
+        : [...prev, sectionId]
     );
   };
 
@@ -264,33 +278,33 @@ export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-full bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out lg:translate-x-0",
+          "fixed left-0 top-0 z-50 h-full bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out lg:translate-x-0 shadow-[0_20px_60px_rgba(2,8,23,0.35)]",
           isOpen ? "translate-x-0" : "-translate-x-full",
           isCollapsed ? "w-20" : "w-64"
         )}
       >
         {/* Logo */}
-        <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
+        <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
           <div className="flex items-center gap-3 group">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-lg shadow-primary/20 transition-all duration-300 group-hover:rotate-6 overflow-hidden">
-              <img src="/favicon.png" alt="CargoMax Logo" className="h-full w-full object-contain p-1.5" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/95 shadow-[0_10px_30px_rgba(15,23,42,0.3)] transition-all duration-300 group-hover:rotate-3 overflow-hidden ring-1 ring-white/20">
+              <img src="/favicon.png" alt="CargoMax Logo" className="h-full w-full object-contain p-1" />
             </div>
             {!isCollapsed && (
-              <span className="text-xl font-black tracking-tight text-white animate-in fade-in slide-in-from-left-2 duration-300">
+              <span className="text-lg font-black tracking-[0.04em] text-white animate-in fade-in slide-in-from-left-2 duration-300">
                 Cargo<span className="text-primary">Max</span>
               </span>
             )}
           </div>
           <button
             onClick={onToggle}
-            className="rounded-lg p-1.5 hover:bg-sidebar-accent lg:hidden"
+            className="rounded-lg p-1.5 hover:bg-white/10 lg:hidden"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="h-[calc(100%-4rem)] overflow-y-auto p-4">
+        <nav className="h-[calc(100%-4rem)] overflow-y-auto p-4 space-y-3">
           {navigation
             .map((section) => ({
               ...section,
@@ -300,14 +314,14 @@ export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
             }))
             .filter((section) => section.items.length > 0)
             .map((section) => (
-              <div key={section.title} className="mb-4">
+              <div key={section.id} className="">
                 {!isCollapsed && (
                   <button
-                    onClick={() => toggleSection(section.title)}
-                    className="mb-2 flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-sidebar-muted px-2"
+                    onClick={() => toggleSection(section.id)}
+                    className="mb-2 flex w-full items-center justify-between text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 px-2"
                   >
-                    {section.title}
-                    {expandedSections.includes(section.title) ? (
+                    {t(section.titleKey)}
+                    {expandedSections.includes(section.id) ? (
                       <ChevronDown className="h-3 w-3" />
                     ) : (
                       <ChevronRight className="h-3 w-3" />
@@ -315,7 +329,7 @@ export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
                   </button>
                 )}
 
-                {expandedSections.includes(section.title) && (
+                {expandedSections.includes(section.id) && (
                   <ul className="space-y-1">
                     {section.items.map((item) => (
                       <li key={item.href}>
@@ -323,19 +337,19 @@ export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
                           to={item.href}
                           className={({ isActive }) =>
                             cn(
-                              "flex items-center rounded-xl text-sm transition-all duration-200 group",
-                              isCollapsed ? "justify-center h-12 w-12 mx-auto mb-2" : "gap-3 px-4 py-2.5 mb-1",
+                              "flex items-center rounded-xl text-sm transition-all duration-200 group relative overflow-hidden",
+                              isCollapsed ? "justify-center h-12 w-12 mx-auto mb-2" : "gap-3 px-3 py-2.5 mb-1",
                               isActive
-                                ? "bg-primary text-white shadow-lg shadow-primary/25 font-bold"
-                                : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-gradient-to-r from-primary/90 to-primary text-white shadow-[0_12px_30px_rgba(249,115,22,0.3)] font-semibold"
+                                : "text-white/70 hover:bg-white/8 hover:text-white"
                             )
                           }
-                          title={isCollapsed ? item.label : undefined}
+                          title={isCollapsed ? t(item.labelKey) : undefined}
                         >
-                          <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-110")} />
+                          <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-200 group-hover:scale-105")} />
                           {!isCollapsed && (
                             <span className="truncate animate-in fade-in slide-in-from-left-2 duration-300">
-                              {item.label}
+                              {t(item.labelKey)}
                             </span>
                           )}
                         </NavLink>
@@ -345,18 +359,18 @@ export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
                 )}
               </div>
             ))}
-          <div className={cn("mt-auto py-6 border-t border-white/5", isCollapsed ? "px-0 flex justify-center" : "px-4")}>
+          <div className={cn("mt-auto py-6 border-t border-white/10", isCollapsed ? "px-0 flex justify-center" : "px-3")}>
             <button
               type="button"
               onClick={handleLogout}
               className={cn(
-                "flex items-center font-semibold text-slate-400 hover:bg-red-500/10 hover:text-red-500 transition-all duration-200 group",
-                isCollapsed ? "h-12 w-12 justify-center rounded-xl" : "w-full gap-3 rounded-xl px-4 py-2.5 text-sm"
+                "flex items-center font-semibold text-white/60 hover:bg-red-500/15 hover:text-red-400 transition-all duration-200 group",
+                isCollapsed ? "h-12 w-12 justify-center rounded-xl" : "w-full gap-3 rounded-xl px-3 py-2.5 text-sm"
               )}
-              title={isCollapsed ? "Logout Session" : undefined}
+              title={isCollapsed ? t("nav:logoutSession") : undefined}
             >
               <X className="h-5 w-5 shrink-0 group-hover:rotate-90 transition-transform duration-300" />
-              {!isCollapsed && <span>Logout Session</span>}
+              {!isCollapsed && <span>{t("nav:logoutSession")}</span>}
             </button>
           </div>
         </nav>

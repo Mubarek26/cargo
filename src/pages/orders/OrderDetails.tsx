@@ -20,18 +20,10 @@ import { RouteMap } from "@/components/RouteMap";
 import { calculateDistance, formatDistance } from "@/utils/distance";
 import { toast } from "sonner";
 import { ChatPanel } from "@/components/chat/ChatPanel";
-const statusConfig: any = {
-  PENDING: { label: "Pending", icon: Clock, className: "text-warning bg-warning/10" },
-  OPEN: { label: "Open", icon: Package, className: "text-blue-500 bg-blue-500/10" },
-  ACCEPTED: { label: "Accepted", icon: CheckCircle, className: "text-success bg-success/10" },
-  ASSIGNED: { label: "Assigned", icon: Truck, className: "text-primary bg-primary/10" },
-  IN_TRANSIT: { label: "In Transit", icon: Truck, className: "text-primary bg-primary/10" },
-  DELIVERED: { label: "Delivered", icon: CheckCircle, className: "text-success bg-success/10" },
-  CANCELLED: { label: "Cancelled", icon: XCircle, className: "text-destructive bg-destructive/10" },
-  REJECTED: { label: "Rejected", icon: XCircle, className: "text-destructive bg-destructive/10" },
-};
+import { useTranslation } from "react-i18next";
 
 export default function OrderDetails() {
+  const { t } = useTranslation("orders");
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const { checkAuth } = useCheckAuth();
@@ -47,6 +39,17 @@ export default function OrderDetails() {
   const [selectedVehicle, setSelectedVehicle] = useState<string>("");
   const [roadData, setRoadData] = useState<{ distanceKm: number; durationMin: number } | null>(null);
   const [isPaying, setIsPaying] = useState(false);
+
+  const statusConfig: any = {
+    PENDING: { label: t("status.pending"), icon: Clock, className: "text-warning bg-warning/10" },
+    OPEN: { label: t("status.open"), icon: Package, className: "text-blue-500 bg-blue-500/10" },
+    ACCEPTED: { label: t("status.accepted"), icon: CheckCircle, className: "text-success bg-success/10" },
+    ASSIGNED: { label: t("status.assigned"), icon: Truck, className: "text-primary bg-primary/10" },
+    IN_TRANSIT: { label: t("status.inTransit"), icon: Truck, className: "text-primary bg-primary/10" },
+    DELIVERED: { label: t("status.delivered"), icon: CheckCircle, className: "text-success bg-success/10" },
+    CANCELLED: { label: t("status.cancelled"), icon: XCircle, className: "text-destructive bg-destructive/10" },
+    REJECTED: { label: t("status.rejected"), icon: XCircle, className: "text-destructive bg-destructive/10" },
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -90,7 +93,7 @@ export default function OrderDetails() {
         }
       }
     } catch (error) {
-      toast.error("Failed to fetch order details");
+      toast.error(t("orderDetailsMessages.fetchFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -101,10 +104,10 @@ export default function OrderDetails() {
     setIsActionLoading(true);
     try {
       await orderService.acceptOrder(orderId);
-      toast.success("Order accepted successfully");
+      toast.success(t("orderDetailsMessages.acceptSuccess"));
       fetchOrderDetails();
     } catch (error: any) {
-      toast.error(error.message || "Failed to accept order");
+      toast.error(error.message || t("orderDetailsMessages.acceptFailed"));
     } finally {
       setIsActionLoading(false);
     }
@@ -115,10 +118,10 @@ export default function OrderDetails() {
     setIsActionLoading(true);
     try {
       await orderService.rejectOrder(orderId);
-      toast.error("Order rejected");
+      toast.error(t("orderDetailsMessages.rejectSuccess"));
       fetchOrderDetails();
     } catch (error: any) {
-      toast.error(error.message || "Failed to reject order");
+      toast.error(error.message || t("orderDetailsMessages.rejectFailed"));
     } finally {
       setIsActionLoading(false);
     }
@@ -126,16 +129,16 @@ export default function OrderDetails() {
 
   const handleAssign = async () => {
     if (!orderId || !selectedDriver || !selectedVehicle) {
-      toast.error("Please select both a driver and a vehicle");
+      toast.error(t("orderDetailsMessages.assignMissing"));
       return;
     }
     setIsActionLoading(true);
     try {
       await orderService.assignOrder(orderId, selectedDriver, selectedVehicle);
-      toast.success("Driver and vehicle assigned successfully");
+      toast.success(t("orderDetailsMessages.assignSuccess"));
       fetchOrderDetails();
     } catch (error: any) {
-      toast.error(error.message || "Failed to assign order");
+      toast.error(error.message || t("orderDetailsMessages.assignFailed"));
     } finally {
       setIsActionLoading(false);
     }
@@ -155,10 +158,10 @@ export default function OrderDetails() {
         // Fallback in case of different nesting
         window.location.href = res.data.checkout_url;
       } else {
-        toast.error("Failed to get checkout URL");
+        toast.error(t("paymentMessages.checkoutFailed"));
       }
     } catch (error: any) {
-      toast.error(error.message || "Payment initialization failed");
+      toast.error(error.message || t("paymentMessages.paymentInitFailed"));
     } finally {
       setIsPaying(false);
     }
@@ -179,8 +182,8 @@ export default function OrderDetails() {
       <DashboardLayout>
         <div className="flex h-[60vh] flex-col items-center justify-center gap-4">
           <XCircle className="h-12 w-12 text-destructive opacity-20" />
-          <p className="text-xl font-medium text-muted-foreground">Order not found</p>
-          <Button onClick={() => navigate("/orders")}>Back to Orders</Button>
+          <p className="text-xl font-medium text-muted-foreground">{t("orderDetails.notFound")}</p>
+          <Button onClick={() => navigate("/orders")}>{t("orderDetails.backToOrders")}</Button>
         </div>
       </DashboardLayout>
     );
@@ -207,14 +210,14 @@ export default function OrderDetails() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Order {order.orderNumber}</h1>
-          <p className="text-muted-foreground">Detailed view and management of shipment</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("orderDetails.title", { orderNumber: order.orderNumber })}</h1>
+          <p className="text-muted-foreground">{t("orderDetails.subtitle")}</p>
         </div>
         <div className="ml-auto flex items-center gap-3">
           <ChatPanel 
             orderId={order._id}
             orderNumber={order.orderNumber}
-            recipientName={isCreator ? (order.targetCompanyId?.companyName || order.targetTransporterId?.fullName || "Transporter") : order.createdBy?.fullName}
+            recipientName={isCreator ? (order.targetCompanyId?.companyName || order.targetTransporterId?.fullName || t("orderDetails.transporter")) : order.createdBy?.fullName}
             recipientId={isCreator ? (order.targetCompanyId?.ownerId || order.targetTransporterId?._id || order.targetTransporterId) : (order.createdBy?._id || order.createdBy)}
           />
           <Badge className={cn("gap-1 py-1.5 px-3 text-sm", status.className)}>
@@ -232,31 +235,31 @@ export default function OrderDetails() {
             <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-6">
               <h3 className="mb-4 text-lg font-semibold text-foreground flex items-center gap-2">
                 <ExternalLink className="h-5 w-5 text-primary" />
-                Actions Required
+                {t("orderDetails.actionsRequired")}
               </h3>
               
               {order.status === 'PENDING' && (
                 <div className="flex gap-4">
                   <Button className="flex-1 gap-2 bg-success hover:bg-success/90" size="lg" onClick={handleAccept} disabled={isActionLoading}>
                     {isActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                    Accept Order
+                    {t("orderDetails.acceptOrder")}
                   </Button>
                   <Button variant="destructive" className="flex-1 gap-2" size="lg" onClick={handleReject} disabled={isActionLoading}>
                     {isActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
-                    Reject Order
+                    {t("orderDetails.rejectOrder")}
                   </Button>
                 </div>
               )}
 
               {order.status === 'ACCEPTED' && (
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">The order is accepted. Now assign a driver and a vehicle to start the trip.</p>
+                  <p className="text-sm text-muted-foreground">{t("orderDetails.assignHelp")}</p>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label>Select Driver</Label>
+                      <Label>{t("orderDetails.selectDriver")}</Label>
                       <Select value={selectedDriver} onValueChange={setSelectedDriver}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Choose a driver" />
+                          <SelectValue placeholder={t("orderDetails.chooseDriver")} />
                         </SelectTrigger>
                         <SelectContent>
                           {drivers.map(driver => {
@@ -271,10 +274,10 @@ export default function OrderDetails() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Select Vehicle</Label>
+                      <Label>{t("orderDetails.selectVehicle")}</Label>
                       <Select value={selectedVehicle} onValueChange={setSelectedVehicle}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Choose a vehicle" />
+                          <SelectValue placeholder={t("orderDetails.chooseVehicle")} />
                         </SelectTrigger>
                         <SelectContent>
                           {vehicles.map(vehicle => (
@@ -288,7 +291,7 @@ export default function OrderDetails() {
                   </div>
                   <Button className="w-full gap-2" size="lg" onClick={handleAssign} disabled={isActionLoading}>
                     {isActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Truck className="h-4 w-4" />}
-                    Assign & Start Trip
+                    {t("orderDetails.assignStartTrip")}
                   </Button>
                 </div>
               )}
@@ -298,7 +301,7 @@ export default function OrderDetails() {
                   <div className="rounded-full bg-success/20 p-1.5">
                     <CheckCircle className="h-5 w-5" />
                   </div>
-                  <span className="font-medium">Order has been assigned. Trip is in progress.</span>
+                  <span className="font-medium">{t("orderDetails.acceptedInfo")}</span>
                 </div>
               )}
             </div>
@@ -312,8 +315,8 @@ export default function OrderDetails() {
                     <DollarSign className="h-6 w-6 text-emerald-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-emerald-900 dark:text-emerald-400">Secure Payment Required</h3>
-                    <p className="text-sm text-emerald-700/80 dark:text-emerald-500/80">Complete the payment to finalize the shipping process.</p>
+                    <h3 className="text-lg font-bold text-emerald-900 dark:text-emerald-400">{t("orderDetails.paymentTitle")}</h3>
+                    <p className="text-sm text-emerald-700/80 dark:text-emerald-500/80">{t("orderDetails.paymentSubtitle")}</p>
                   </div>
                 </div>
                 <Button 
@@ -322,7 +325,7 @@ export default function OrderDetails() {
                   className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-8 h-12 rounded-xl shadow-lg shadow-emerald-500/20 gap-2"
                 >
                   {isPaying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-5 w-5" />}
-                  Pay {order.pricing?.proposedBudget || order.proposedBudget} {order.pricing?.currency || order.currency} Now
+                  {t("orderDetails.payNow", { amount: order.pricing?.proposedBudget || order.proposedBudget, currency: order.pricing?.currency || order.currency })}
                 </Button>
               </div>
             </div>
@@ -334,7 +337,7 @@ export default function OrderDetails() {
             <div className="rounded-xl border border-border bg-card p-6">
               <h3 className="mb-4 flex items-center gap-2 font-semibold text-card-foreground">
                 <MapPin className="h-5 w-5 text-primary" />
-                Route Information
+                {t("orderDetails.routeInfo")}
               </h3>
               
               {order.pickupLocation?.latitude && order.pickupLocation?.longitude && 
@@ -356,7 +359,7 @@ export default function OrderDetails() {
                   />
                   <div className="mt-3 grid grid-cols-2 gap-3">
                     <div className="flex flex-col gap-1 bg-secondary/30 p-3 rounded-xl border border-border">
-                      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Optimal Road Distance</span>
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{t("orderDetails.optimalDistance")}</span>
                       <span className="font-bold text-lg text-primary">
                         {roadData ? formatDistance(roadData.distanceKm) : formatDistance(calculateDistance(
                           order.pickupLocation.latitude, 
@@ -367,9 +370,9 @@ export default function OrderDetails() {
                       </span>
                     </div>
                     <div className="flex flex-col gap-1 bg-secondary/30 p-3 rounded-xl border border-border">
-                      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Estimated Travel Time</span>
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{t("orderDetails.estimatedTime")}</span>
                       <span className="font-bold text-lg text-foreground">
-                        {roadData ? `${Math.round(roadData.durationMin)} mins` : "Calculating..."}
+                        {roadData ? t("orderDetails.minutes", { count: Math.round(roadData.durationMin) }) : t("orderDetails.calculating")}
                       </span>
                     </div>
                   </div>
@@ -378,31 +381,31 @@ export default function OrderDetails() {
 
               <div className="space-y-6">
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Pickup</p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("orderDetails.pickup")}</p>
                   <p className="mt-1 font-medium">{order.pickupLocation?.address}</p>
                   <p className="text-sm text-muted-foreground">{order.pickupLocation?.city}, {order.pickupLocation?.state}</p>
                   {(order.pickupLocation?.contactName || order.pickupLocation?.contactPhone) && (
                     <div className="mt-2 flex flex-col gap-1">
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <User className="h-3 w-3" /> {order.pickupLocation.contactName || "Unknown"}
+                        <User className="h-3 w-3" /> {order.pickupLocation.contactName || t("orderDetails.unknown")}
                       </p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Phone className="h-3 w-3" /> {order.pickupLocation.contactPhone || "No phone"}
+                        <Phone className="h-3 w-3" /> {order.pickupLocation.contactPhone || t("orderDetails.noPhone")}
                       </p>
                     </div>
                   )}
                 </div>
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Delivery</p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("orderDetails.delivery")}</p>
                   <p className="mt-1 font-medium">{order.deliveryLocation?.address}</p>
                   <p className="text-sm text-muted-foreground">{order.deliveryLocation?.city}, {order.deliveryLocation?.state}</p>
                   {(order.deliveryLocation?.contactName || order.deliveryLocation?.contactPhone) && (
                     <div className="mt-2 flex flex-col gap-1">
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <User className="h-3 w-3" /> {order.deliveryLocation.contactName || "Unknown"}
+                        <User className="h-3 w-3" /> {order.deliveryLocation.contactName || t("orderDetails.unknown")}
                       </p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Phone className="h-3 w-3" /> {order.deliveryLocation.contactPhone || "No phone"}
+                        <Phone className="h-3 w-3" /> {order.deliveryLocation.contactPhone || t("orderDetails.noPhone")}
                       </p>
                     </div>
                   )}
@@ -414,36 +417,36 @@ export default function OrderDetails() {
             <div className="rounded-xl border border-border bg-card p-6">
               <h3 className="mb-4 flex items-center gap-2 font-semibold text-card-foreground">
                 <Package className="h-5 w-5 text-primary" />
-                Cargo & Requirements
+                {t("orderDetails.cargoRequirements")}
               </h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Type</p>
-                    <p className="font-medium">{order.cargo?.type || "General"}</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("orderDetails.type")}</p>
+                    <p className="font-medium">{order.cargo?.type || t("orderDetails.general")}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Weight</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("orderDetails.weight")}</p>
                     <p className="font-medium">{order.cargo?.weightKg} Kg</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Quantity</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("orderDetails.quantity")}</p>
                     <p className="font-medium">{order.cargo?.quantity} {order.cargo?.unit}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Vehicle Req.</p>
-                    <p className="font-medium">{order.vehicleRequirements?.vehicleType || "Any"}</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("orderDetails.vehicleReq")}</p>
+                    <p className="font-medium">{order.vehicleRequirements?.vehicleType || t("orderDetails.any")}</p>
                   </div>
                 </div>
                 {order.description && (
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Description</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("orderDetails.description")}</p>
                     <p className="text-sm">{order.description}</p>
                   </div>
                 )}
                 {order.specialInstructions && (
                   <div className="rounded-lg bg-secondary/50 p-3">
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Special Instructions</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">{t("orderDetails.specialInstructions")}</p>
                     <p className="text-sm italic">"{order.specialInstructions}"</p>
                   </div>
                 )}
@@ -455,22 +458,22 @@ export default function OrderDetails() {
         {/* Sidebar Info */}
         <div className="space-y-6">
           <div className="rounded-xl border border-border bg-card p-6">
-            <h3 className="mb-4 font-semibold text-card-foreground">Fulfillment Details</h3>
+            <h3 className="mb-4 font-semibold text-card-foreground">{t("orderDetails.fulfillmentDetails")}</h3>
             <div className="space-y-4">
               <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-muted-foreground flex items-center gap-2 text-sm"><Calendar className="h-4 w-4" /> Pickup Date</span>
+                <span className="text-muted-foreground flex items-center gap-2 text-sm"><Calendar className="h-4 w-4" /> {t("orderDetails.pickupDate")}</span>
                 <span className="font-medium text-sm">{new Date(order.pickupDate).toLocaleDateString()}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-muted-foreground flex items-center gap-2 text-sm"><Clock className="h-4 w-4" /> Deadline</span>
-                <span className="font-medium text-sm">{order.deliveryDeadline ? new Date(order.deliveryDeadline).toLocaleDateString() : "N/A"}</span>
+                <span className="text-muted-foreground flex items-center gap-2 text-sm"><Clock className="h-4 w-4" /> {t("orderDetails.deadline")}</span>
+                <span className="font-medium text-sm">{order.deliveryDeadline ? new Date(order.deliveryDeadline).toLocaleDateString() : t("common.na")}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-muted-foreground flex items-center gap-2 text-sm"><DollarSign className="h-4 w-4" /> Budget</span>
+                <span className="text-muted-foreground flex items-center gap-2 text-sm"><DollarSign className="h-4 w-4" /> {t("orderDetails.budget")}</span>
                 <span className="font-bold text-primary">{order.pricing?.proposedBudget} {order.pricing?.currency}</span>
               </div>
               <div className="flex justify-between py-2">
-                <span className="text-muted-foreground text-sm">Created By</span>
+                <span className="text-muted-foreground text-sm">{t("orderDetails.createdBy")}</span>
                 <span className="text-sm font-medium">{order.createdBy?.fullName}</span>
               </div>
               {order.createdBy?.email && (
@@ -485,7 +488,7 @@ export default function OrderDetails() {
             <div className="rounded-xl border border-border bg-card p-6">
               <h3 className="mb-4 font-semibold text-card-foreground flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-primary" />
-                Assigned Transporter
+                {t("orderDetails.assignedTransporter")}
               </h3>
               <div className="space-y-6">
                 {order.targetCompanyId && (
@@ -496,7 +499,7 @@ export default function OrderDetails() {
                     <div>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Transport Company</p>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t("orderDetails.transportCompany")}</p>
                           <p className="font-bold text-sm text-foreground">{order.targetCompanyId?.companyName}</p>
                         </div>
                         {currentUser?.role === 'DRIVER' && (
@@ -527,7 +530,7 @@ export default function OrderDetails() {
                     <div>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Assigned Driver</p>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t("orderDetails.assignedDriver")}</p>
                           <p className="font-bold text-sm text-foreground">{order.targetTransporterId?.fullName}</p>
                         </div>
                         {currentUser?.role === 'COMPANY_ADMIN' && (
@@ -555,7 +558,7 @@ export default function OrderDetails() {
                       <Truck className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Vehicle Details</p>
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t("orderDetails.vehicleDetails")}</p>
                       <p className="font-bold text-sm text-foreground">{order.assignedVehicleId?.plateNumber}</p>
                       <p className="text-xs text-muted-foreground">{order.assignedVehicleId?.vehicleType} • {order.assignedVehicleId?.model}</p>
                     </div>

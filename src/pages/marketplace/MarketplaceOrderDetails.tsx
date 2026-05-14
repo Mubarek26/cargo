@@ -22,6 +22,7 @@ import { useCheckAuth } from "@/hooks/use-check-auth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ChatPanel } from "@/components/chat/ChatPanel";
+import { useTranslation } from "react-i18next";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +44,7 @@ import {
 
 
 export default function MarketplaceOrderDetails() {
+  const { t } = useTranslation("marketplace");
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const { checkAuth } = useCheckAuth();
@@ -72,6 +74,12 @@ export default function MarketplaceOrderDetails() {
   const userRole = currentUser?.role || localStorage.getItem("userRole");
   const canPropose = userRole === "DRIVER" || userRole === "PRIVATE_TRANSPORTER" || userRole === "COMPANY_ADMIN";
 
+  const assignmentModeLabelMap: Record<string, string> = {
+    OPEN_MARKETPLACE: t("assignmentModes.openMarketplace"),
+    DIRECT_COMPANY: t("assignmentModes.directCompany"),
+    DIRECT_PRIVATE_TRANSPORTER: t("assignmentModes.directPrivateTransporter"),
+  };
+
   useEffect(() => {
     const init = async () => {
       const auth = await checkAuth();
@@ -98,7 +106,7 @@ export default function MarketplaceOrderDetails() {
         }));
       }
     } catch (error) {
-      toast.error("Failed to load order details");
+      toast.error(t("messages.loadDetailsFailed"));
     }
   };
 
@@ -128,13 +136,13 @@ export default function MarketplaceOrderDetails() {
         vehicleDetails: proposalForm.vehicleDetails
       });
       if (res.status === "success") {
-        toast.success("Proposal submitted successfully!");
+        toast.success(t("messages.proposalSubmitted"));
         fetchProposals();
       } else {
-        toast.error(res.message || "Failed to submit proposal");
+        toast.error(res.message || t("messages.proposalSubmitFailed"));
       }
     } catch (error: any) {
-      toast.error(error.message || "An error occurred");
+      toast.error(error.message || t("messages.errorOccurred"));
     } finally {
       setIsSubmittingProposal(false);
     }
@@ -145,12 +153,12 @@ export default function MarketplaceOrderDetails() {
     try {
       const res = await proposalService.acceptProposal(orderId!, proposalId);
       if (res.status === "success") {
-        toast.success("Proposal accepted! Order has been assigned.");
+        toast.success(t("messages.proposalAccepted"));
         fetchOrderDetails();
         fetchProposals();
       }
     } catch (error) {
-      toast.error("Failed to accept proposal");
+      toast.error(t("messages.proposalAcceptFailed"));
     } finally {
       setIsProcessingProposal(null);
       setAcceptingProposalId(null);
@@ -158,18 +166,18 @@ export default function MarketplaceOrderDetails() {
   };
 
   const handleRejectProposal = async (proposalId: string) => {
-    const reason = prompt("Enter rejection reason (optional):");
+    const reason = prompt(t("messages.rejectionPrompt"));
     if (reason === null) return;
 
     setIsProcessingProposal(proposalId);
     try {
       const res = await proposalService.rejectProposal(orderId!, proposalId, reason);
       if (res.status === "success") {
-        toast.success("Proposal rejected");
+        toast.success(t("messages.proposalRejected"));
         fetchProposals();
       }
     } catch (error) {
-      toast.error("Failed to reject proposal");
+      toast.error(t("messages.proposalRejectFailed"));
     } finally {
       setIsProcessingProposal(null);
     }
@@ -177,20 +185,20 @@ export default function MarketplaceOrderDetails() {
 
   const handleAdminRejectOrder = async () => {
     if (!rejectionReason.trim()) {
-      toast.error("Please provide a rejection reason");
+      toast.error(t("messages.rejectionReasonRequired"));
       return;
     }
 
     try {
       setIsAdminRejecting(true);
       await (orderService as any).adminRejectOrder(orderId!, rejectionReason);
-      toast.success("Order post rejected by admin");
+      toast.success(t("messages.adminRejected"));
       setShowRejectDialog(false);
       setRejectionReason("");
       fetchOrderDetails();
       fetchProposals();
     } catch (error: any) {
-      toast.error(error.message || "Failed to reject order");
+      toast.error(error.message || t("messages.adminRejectFailed"));
     } finally {
       setIsAdminRejecting(false);
     }
@@ -201,7 +209,7 @@ export default function MarketplaceOrderDetails() {
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="mt-4 text-muted-foreground">Loading details...</p>
+          <p className="mt-4 text-muted-foreground">{t("messages.loadingDetails")}</p>
         </div>
       </DashboardLayout>
     );
@@ -213,15 +221,17 @@ export default function MarketplaceOrderDetails() {
         onClick={() => navigate("/marketplace")}
         className="flex items-center gap-2 text-muted-foreground hover:text-primary mb-6 transition-colors"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to Marketplace
+        <ArrowLeft className="h-4 w-4" /> {t("details.back")}
       </button>
 
       {order.status === "REJECTED" && order.adminRejectionReason && (
         <div className="mb-6 rounded-2xl bg-destructive/10 border border-destructive/20 p-6 flex items-start gap-4">
           <XCircle className="h-6 w-6 text-destructive shrink-0" />
           <div>
-            <h3 className="font-bold text-destructive">Order Post Rejected by Administrator</h3>
-            <p className="text-sm text-destructive/80 mt-1">Reason: {order.adminRejectionReason}</p>
+            <h3 className="font-bold text-destructive">{t("details.rejectedTitle")}</h3>
+            <p className="text-sm text-destructive/80 mt-1">
+              {t("details.rejectedReason", { reason: order.adminRejectionReason })}
+            </p>
           </div>
         </div>
       )}
@@ -233,16 +243,20 @@ export default function MarketplaceOrderDetails() {
             <div className="flex items-start justify-between mb-6">
               <div>
                 <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
-                  {order.assignmentMode.replace(/_/g, ' ')}
+                  {assignmentModeLabelMap[order.assignmentMode] || order.assignmentMode?.replace(/_/g, ' ') || t("assignmentModes.openMarketplace")}
                 </Badge>
                 <h1 className="text-3xl font-bold text-card-foreground">{order.title}</h1>
                 <div className="flex items-center gap-4 mt-3 text-muted-foreground">
-                  <span className="flex items-center gap-1 text-sm"><Clock className="h-4 w-4" /> Posted {new Date(order.createdAt).toLocaleDateString()}</span>
-                  <span className="flex items-center gap-1 text-sm"><Building2 className="h-4 w-4" /> {order.createdBy?.fullName || "Verified Vendor"}</span>
+                  <span className="flex items-center gap-1 text-sm">
+                    <Clock className="h-4 w-4" /> {t("details.posted", { date: new Date(order.createdAt).toLocaleDateString() })}
+                  </span>
+                  <span className="flex items-center gap-1 text-sm">
+                    <Building2 className="h-4 w-4" /> {order.createdBy?.fullName || t("verifiedVendor")}
+                  </span>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">Budget</p>
+                <p className="text-sm text-muted-foreground">{t("budgetLabel")}</p>
                 <p className="text-3xl font-bold text-primary">
                   {order.pricing?.proposedBudget || order.proposedBudget} {order.pricing?.currency || order.currency}
                 </p>
@@ -251,7 +265,7 @@ export default function MarketplaceOrderDetails() {
 
             <div className="grid grid-cols-2 gap-8 py-8 border-y border-border">
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Route Information</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("details.routeInfo")}</h3>
                 <div className="space-y-4">
                   <div className="flex gap-3">
                     <div className="mt-1 h-6 w-6 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
@@ -275,32 +289,32 @@ export default function MarketplaceOrderDetails() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Shipment Details</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("details.shipmentDetails")}</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">Cargo Type</p>
+                    <p className="text-xs text-muted-foreground mb-1">{t("details.cargoType")}</p>
                     <p className="text-sm font-medium flex items-center gap-2"><Truck className="h-3 w-3" /> {order.cargo?.type || order.cargoType}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">Weight</p>
+                    <p className="text-xs text-muted-foreground mb-1">{t("details.weight")}</p>
                     <p className="text-sm font-medium">{order.cargo?.weightKg || order.weightKg} Kg</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">Pickup Date</p>
+                    <p className="text-xs text-muted-foreground mb-1">{t("details.pickupDate")}</p>
                     <p className="text-sm font-medium">{new Date(order.pickupDate).toLocaleDateString()}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">Deadline</p>
-                    <p className="text-sm font-medium">{order.deliveryDeadline ? new Date(order.deliveryDeadline).toLocaleDateString() : "Flexible"}</p>
+                    <p className="text-xs text-muted-foreground mb-1">{t("details.deadline")}</p>
+                    <p className="text-sm font-medium">{order.deliveryDeadline ? new Date(order.deliveryDeadline).toLocaleDateString() : t("details.flexible")}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="mt-8">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">Description</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t("details.description")}</h3>
               <p className="text-card-foreground leading-relaxed whitespace-pre-wrap">
-                {order.description || "No additional description provided."}
+                {order.description || t("details.noDescription")}
               </p>
             </div>
           </div>
@@ -308,16 +322,16 @@ export default function MarketplaceOrderDetails() {
           <Tabs defaultValue="proposals" className="w-full">
             <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
               <TabsTrigger value="proposals" className="gap-2">
-                Proposals <Badge variant="secondary" className="h-5 px-1.5">{proposals.length}</Badge>
+                {t("details.proposalsTab")} <Badge variant="secondary" className="h-5 px-1.5">{proposals.length}</Badge>
               </TabsTrigger>
-              <TabsTrigger value="questions">Questions</TabsTrigger>
+              <TabsTrigger value="questions">{t("details.questionsTab")}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="proposals" className="mt-6 space-y-4">
               {proposals.length === 0 ? (
                 <div className="text-center py-12 rounded-3xl border border-dashed border-border">
                   <MessageSquare className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
-                  <p className="text-muted-foreground">No proposals yet. Be the first to bid!</p>
+                  <p className="text-muted-foreground">{t("details.noProposals")}</p>
                 </div>
               ) : (
                 proposals.map((proposal) => (
@@ -342,23 +356,23 @@ export default function MarketplaceOrderDetails() {
                             </h4>
                             {proposal.status === "ACCEPTED" && (
                               <Badge className="bg-success/10 text-success border-success/20 gap-1">
-                                <CheckCircle2 className="h-3 w-3" /> Accepted
+                                <CheckCircle2 className="h-3 w-3" /> {t("details.accepted")}
                               </Badge>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {proposal.proposalType.replace(/_/g, ' ')} • Submitted {new Date(proposal.createdAt).toLocaleDateString()}
+                            {proposal.proposalType.replace(/_/g, ' ')} • {t("proposals.submitted", { date: new Date(proposal.createdAt).toLocaleDateString() })}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="text-2xl font-bold text-primary">{proposal.proposedPrice} {proposal.currency}</p>
-                        <p className="text-xs text-muted-foreground">Bid Amount</p>
+                        <p className="text-xs text-muted-foreground">{t("details.bidAmount")}</p>
                       </div>
                     </div>
 
                     <div className="mt-4 pl-16">
-                      <p className="text-sm text-card-foreground/80 italic">"{proposal.message || "No message provided."}"</p>
+                      <p className="text-sm text-card-foreground/80 italic">"{proposal.message || t("details.proposalMessageFallback")}"</p>
                       
                       {proposal.vehicleDetails && (
                         <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground bg-secondary/50 p-2 rounded-lg inline-flex">
@@ -375,7 +389,7 @@ export default function MarketplaceOrderDetails() {
                             disabled={isProcessingProposal === proposal._id}
                           >
                             {isProcessingProposal === proposal._id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                            Accept Bid
+                            {t("details.acceptBid")}
                           </Button>
                           <ChatPanel 
                              orderId={order._id}
@@ -384,7 +398,7 @@ export default function MarketplaceOrderDetails() {
                              recipientId={proposal.submittedByUserId?._id || proposal.submittedByUserId}
                              trigger={
                                <Button variant="outline" size="sm" className="h-8 gap-1 border-primary/20 text-primary hover:bg-primary/5">
-                                 <MessageSquare className="h-3.5 w-3.5" /> Chat
+                                 <MessageSquare className="h-3.5 w-3.5" /> {t("details.chat")}
                                </Button>
                              }
                           />
@@ -395,7 +409,7 @@ export default function MarketplaceOrderDetails() {
                             onClick={() => handleRejectProposal(proposal._id)}
                             disabled={isProcessingProposal === proposal._id}
                           >
-                            <XCircle className="h-3.5 w-3.5" /> Reject
+                            <XCircle className="h-3.5 w-3.5" /> {t("details.reject")}
                           </Button>
                         </div>
                       )}
@@ -407,7 +421,7 @@ export default function MarketplaceOrderDetails() {
 
             <TabsContent value="questions" className="mt-6">
                <div className="text-center py-12">
-                  <p className="text-muted-foreground">Question and answer section coming soon.</p>
+                <p className="text-muted-foreground">{t("details.qaComing")}</p>
                </div>
             </TabsContent>
           </Tabs>
@@ -420,14 +434,16 @@ export default function MarketplaceOrderDetails() {
               <CardHeader className="bg-primary/5 pb-6">
                 <CardTitle className="text-xl flex items-center gap-2">
                   <Gavel className="h-5 w-5 text-primary" />
-                  Submit Proposal
+                  {t("details.submitProposal")}
                 </CardTitle>
-                <CardDescription>Enter your bid for this shipment</CardDescription>
+                <CardDescription>{t("details.proposalDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
                 <form onSubmit={handleSubmitProposal} className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Proposed Price ({order.pricing?.currency || order.currency})</label>
+                    <label className="text-sm font-medium">
+                      {t("details.proposedPrice", { currency: order.pricing?.currency || order.currency })}
+                    </label>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
@@ -441,15 +457,15 @@ export default function MarketplaceOrderDetails() {
                     </div>
                     {order.pricing?.negotiable === false && (
                       <p className="text-[10px] text-warning flex items-center gap-1">
-                        <Info className="h-3 w-3" /> This is a fixed-price order.
+                        <Info className="h-3 w-3" /> {t("details.fixedPrice")}
                       </p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Message to Vendor</label>
+                    <label className="text-sm font-medium">{t("details.messageToVendor")}</label>
                     <Textarea 
-                      placeholder="Explain why you're a good fit..."
+                      placeholder={t("details.messagePlaceholder")}
                       value={proposalForm.message}
                       onChange={(e) => setProposalForm({...proposalForm, message: e.target.value})}
                       className="h-24 resize-none"
@@ -457,9 +473,9 @@ export default function MarketplaceOrderDetails() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Vehicle Details (Optional)</label>
+                    <label className="text-sm font-medium">{t("details.vehicleDetails")}</label>
                     <Input 
-                      placeholder="e.g. 5-ton Refrigerator Truck"
+                      placeholder={t("details.vehiclePlaceholder")}
                       value={proposalForm.vehicleDetails}
                       onChange={(e) => setProposalForm({...proposalForm, vehicleDetails: e.target.value})}
                     />
@@ -467,7 +483,7 @@ export default function MarketplaceOrderDetails() {
 
                   <Button className="w-full h-12 gap-2 mt-4 shadow-lg shadow-primary/20" disabled={isSubmittingProposal}>
                     {isSubmittingProposal ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    Submit Bid
+                    {t("details.submitBid")}
                   </Button>
 
                   <ChatPanel 
@@ -477,7 +493,7 @@ export default function MarketplaceOrderDetails() {
                     recipientId={order.createdBy?._id || order.createdBy}
                     trigger={
                       <Button type="button" variant="ghost" className="w-full h-10 gap-2 mt-2 text-muted-foreground hover:text-primary">
-                        <MessageSquare className="h-4 w-4" /> Chat with Vendor
+                        <MessageSquare className="h-4 w-4" /> {t("details.chatVendor")}
                       </Button>
                     }
                   />
@@ -490,7 +506,7 @@ export default function MarketplaceOrderDetails() {
             <Card className="rounded-3xl bg-secondary/20 border-none">
               <CardContent className="p-6">
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <History className="h-4 w-4" /> Management
+                  <History className="h-4 w-4" /> {t("details.management")}
                 </h3>
                 <div className="space-y-3">
                   {isCreator && (
@@ -500,10 +516,10 @@ export default function MarketplaceOrderDetails() {
                         className="w-full justify-start gap-2 bg-background border-border h-11"
                         onClick={() => navigate('/chat')}
                       >
-                        <MessageSquare className="h-4 w-4" /> Go to Messages
+                        <MessageSquare className="h-4 w-4" /> {t("details.goMessages")}
                       </Button>
                       <Button variant="outline" className="w-full justify-start gap-2 bg-background border-border h-11">
-                        <Info className="h-4 w-4" /> Edit Post
+                        <Info className="h-4 w-4" /> {t("details.editPost")}
                       </Button>
                     </>
                   )}
@@ -513,12 +529,12 @@ export default function MarketplaceOrderDetails() {
                       className="w-full justify-start gap-2 h-11"
                       onClick={() => setShowRejectDialog(true)}
                     >
-                      <XCircle className="h-4 w-4" /> Reject Order Post
+                      <XCircle className="h-4 w-4" /> {t("details.rejectPost")}
                     </Button>
                   )}
                   {isCreator && (
                     <Button variant="outline" className="w-full justify-start gap-2 bg-background border-border h-11 text-destructive hover:bg-destructive/5">
-                      <XCircle className="h-4 w-4" /> Close Listing
+                      <XCircle className="h-4 w-4" /> {t("details.closeListing")}
                     </Button>
                   )}
                 </div>
@@ -528,20 +544,20 @@ export default function MarketplaceOrderDetails() {
 
           <div className="rounded-3xl border border-border bg-card p-6">
             <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-success" /> Load Reliability
+              <ShieldCheck className="h-4 w-4 text-success" /> {t("details.loadReliability")}
             </h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Payment Protection</span>
-                <span className="font-medium text-success">Enabled</span>
+                <span className="text-muted-foreground">{t("details.paymentProtection")}</span>
+                <span className="font-medium text-success">{t("details.enabled")}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Insurance Cover</span>
-                <span className="font-medium">Up to $50k</span>
+                <span className="text-muted-foreground">{t("details.insuranceCover")}</span>
+                <span className="font-medium">{t("details.insuranceValue")}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Dispute Resolution</span>
-                <span className="font-medium">Active</span>
+                <span className="text-muted-foreground">{t("details.disputeResolution")}</span>
+                <span className="font-medium">{t("details.active")}</span>
               </div>
             </div>
           </div>
@@ -552,18 +568,20 @@ export default function MarketplaceOrderDetails() {
       <AlertDialog open={!!acceptingProposalId} onOpenChange={(open) => !open && setAcceptingProposalId(null)}>
         <AlertDialogContent className="rounded-3xl border-none">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-bold">Accept Proposal?</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl font-bold">{t("details.acceptProposalTitle")}</AlertDialogTitle>
             <AlertDialogDescription className="text-base">
-              Are you sure you want to accept this bid? This will assign the order to this transporter and close the bidding process for all other participants.
+              {t("details.acceptProposalBody")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6">
-            <AlertDialogCancel className="rounded-2xl h-12 border-none bg-secondary hover:bg-secondary/80">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-2xl h-12 border-none bg-secondary hover:bg-secondary/80">
+              {t("common.cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => acceptingProposalId && handleAcceptProposal(acceptingProposalId)}
               className="rounded-2xl h-12 bg-success hover:bg-success/90 text-success-foreground"
             >
-              {isProcessingProposal ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Acceptance"}
+              {isProcessingProposal ? <Loader2 className="h-4 w-4 animate-spin" /> : t("details.confirmAcceptance")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -573,14 +591,14 @@ export default function MarketplaceOrderDetails() {
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
         <DialogContent className="rounded-3xl border-none max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">Reject Order Post</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">{t("details.rejectPost")}</DialogTitle>
             <DialogDescription>
-              Please provide a detailed reason for rejecting this order post. This reason will be visible to the vendor.
+              {t("details.rejectPostDescription")}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Textarea 
-              placeholder="e.g. Incomplete documentation, suspicious pricing, etc."
+              placeholder={t("details.rejectPostPlaceholder")}
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               className="min-h-[120px] rounded-2xl resize-none border-border focus:ring-primary"
@@ -592,14 +610,14 @@ export default function MarketplaceOrderDetails() {
               onClick={() => setShowRejectDialog(false)}
               className="rounded-2xl h-12 border-none bg-secondary hover:bg-secondary/80"
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button 
               onClick={handleAdminRejectOrder}
               disabled={isAdminRejecting || !rejectionReason.trim()}
               className="rounded-2xl h-12 bg-destructive hover:bg-destructive/90 text-destructive-foreground min-w-[120px]"
             >
-              {isAdminRejecting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Reject Post"}
+              {isAdminRejecting ? <Loader2 className="h-4 w-4 animate-spin" /> : t("details.rejectPost")}
             </Button>
           </DialogFooter>
         </DialogContent>

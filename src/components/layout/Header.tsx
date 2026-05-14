@@ -10,12 +10,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuLabel,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { SidebarToggle } from "./Sidebar";
+import { useTranslation } from "react-i18next";
+import { languageOptions, setLanguage } from "@/i18n";
 
 interface HeaderProps {
   onSidebarToggle: () => void;
@@ -25,6 +30,7 @@ interface HeaderProps {
 
 export function Header({ onSidebarToggle, isCollapsed, onCollapseToggle }: HeaderProps) {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation(["header", "common"]);
 
   const { theme, setTheme } = useTheme();
 
@@ -52,7 +58,7 @@ export function Header({ onSidebarToggle, isCollapsed, onCollapseToggle }: Heade
   };
 
   const handleSettings = () => {
-    toast.info("Settings page coming soon.");
+    toast.info(t("settingsComingSoon"));
   };
 
   return (
@@ -74,7 +80,7 @@ export function Header({ onSidebarToggle, isCollapsed, onCollapseToggle }: Heade
           <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" />
           <Input
             type="search"
-            placeholder="Search shipments, fleet, or records..."
+            placeholder={t("searchPlaceholder")}
             className="w-96 pl-12 h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-primary/20 rounded-xl transition-all"
           />
         </div>
@@ -102,9 +108,23 @@ export function Header({ onSidebarToggle, isCollapsed, onCollapseToggle }: Heade
         </Button>
 
         {/* Language */}
-        <Button variant="ghost" size="icon" className="hidden sm:flex">
-          <Globe className="h-5 w-5" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="hidden sm:flex" aria-label={t("language")}>
+              <Globe className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuLabel>{t("language")}</DropdownMenuLabel>
+            <DropdownMenuRadioGroup value={i18n.language} onValueChange={setLanguage}>
+              {languageOptions.map((option) => (
+                <DropdownMenuRadioItem key={option.code} value={option.code}>
+                  {t(option.labelKey)}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Profile */}
         <DropdownMenu>
@@ -119,10 +139,10 @@ export function Header({ onSidebarToggle, isCollapsed, onCollapseToggle }: Heade
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem onClick={handleProfile}>Profile</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleSettings}>Settings</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleProfile}>{t("profile")}</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSettings}>{t("settings")}</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>{t("logout")}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

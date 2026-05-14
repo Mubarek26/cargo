@@ -1,0 +1,127 @@
+{
+  "allOrders": {
+    "title": "ሁሉም ትዕዛዞች",
+    "subtitle": "የደንበኞች ትዕዛዞችን እና ፍፃሜን ያስተዳድሩ",
+    "export": "ኤክስፖርት",
+    "newOrder": "አዲስ ትዕዛዝ",
+    "stats": {
+      "total": "ጠቅላላ ትዕዛዞች",
+      "pending": "በመጠባበቅ ላይ",
+      "inTransit": "በመጓጓዣ ላይ",
+      "totalBudget": "ጠቅላላ በጀት"
+    },
+    "searchPlaceholder": "በትዕዛዝ ቁጥር፣ ከተማ ወይም ርዕስ ፈልግ...",
+    "filterStatus": "በሁኔታ አጣር",
+    "filterOrderType": "የትዕዛዝ አይነት",
+    "allStatuses": "ሁሉም ሁኔታዎች",
+    "allTypes": "ሁሉም አይነቶች",
+    "clearFilters": "ማጣሪያዎችን አጥፋ",
+    "loading": "ትዕዛዞችን በመጫን ላይ...",
+    "noOrders": "ምንም ትዕዛዝ አልተገኘም",
+    "noOrdersFiltered": "ማጣሪያዎችዎን የሚያሟሉ ትዕዛዞች የሉም",
+    "createFirst": "የመጀመሪያ ትዕዛዝዎን ፍጠር",
+    "table": {
+      "orderInfo": "የትዕዛዝ መረጃ",
+      "route": "መንገድ",
+      "type": "አይነት",
+      "status": "ሁኔታ",
+      "budgetPayment": "በጀት እና ክፍያ",
+      "actions": "እርምጃዎች"
+    },
+    "details": "ዝርዝር",
+    "accept": "ተቀበል",
+    "reject": "አስወግድ"
+  },
+  "status": {
+    "pending": "በመጠባበቅ ላይ",
+    "open": "ክፍት",
+    "accepted": "ተቀባ",
+    "assigned": "ተመደበ",
+    "inTransit": "በመጓጓዣ ላይ",
+    "delivered": "ተላክ",
+    "cancelled": "ተሰርዟል",
+    "rejected": "ተቀባይነት አልተሰጠም"
+  },
+  "assignmentModes": {
+    "openMarketplace": "ክፍት ገበያ",
+    "directCompany": "ቀጥታ ኩባንያ",
+    "directPrivateTransporter": "ቀጥታ ትራንስፖርተር",
+    "na": "የለም"
+  },
+  "payment": {
+    "paid": "ተከፍሏል",
+    "pending": "በመጠባበቅ ላይ",
+    "failed": "አልተሳካም"
+  },
+  "common": {
+    "na": "የለም"
+  },
+  "messages": {
+    "fetchFailed": "ትዕዛዞችን ማምጣት አልተሳካም",
+    "accepted": "ትዕዛዙ ተቀባ",
+    "acceptFailed": "ትዕዛዝ መቀበል አልተሳካም",
+    "rejected": "ትዕዛዙ ተሰርዟል",
+    "rejectFailed": "ትዕዛዝ ማስወገድ አልተሳካም"
+  },
+  "orderDetails": {
+    "title": "ትዕዛዝ {{orderNumber}}",
+    "subtitle": "የጭነት ዝርዝር እይታ እና አስተዳደር",
+    "notFound": "ትዕዛዝ አልተገኘም",
+    "backToOrders": "ወደ ትዕዛዞች ተመለስ",
+    "actionsRequired": "ያስፈልጉ እርምጃዎች",
+    "acceptOrder": "ትዕዛዝ ተቀበል",
+    "rejectOrder": "ትዕዛዝ አስወግድ",
+    "acceptedInfo": "ትዕዛዙ ተመደበ፣ ጉዞው በሂደት ላይ ነው።",
+    "assignHelp": "ትዕዛዙ ተቀባ። አሁን ሾፌር እና ተሽከርካሪ መመደብ አለብዎት።",
+    "selectDriver": "ሾፌር ይምረጡ",
+    "selectVehicle": "ተሽከርካሪ ይምረጡ",
+    "chooseDriver": "ሾፌር ይምረጡ",
+    "chooseVehicle": "ተሽከርካሪ ይምረጡ",
+    "assignStartTrip": "መመደብ እና ጉዞ ጀምር",
+    "paymentTitle": "የተጠናቀቀ ክፍያ ያስፈልጋል",
+    "paymentSubtitle": "የጭነት ሂደቱን ለማጠናቀቅ ክፍያውን ያከናውኑ።",
+    "payNow": "አሁን {{amount}} {{currency}} ክፈል",
+    "routeInfo": "የመንገድ መረጃ",
+    "optimalDistance": "ተመጣጣኝ የመንገድ ርቀት",
+    "estimatedTime": "የጉዞ ጊዜ ግምት",
+    "minutes": "{{count}} ደቂቃ",
+    "calculating": "በመቆጠር ላይ...",
+    "pickup": "መጫኛ",
+    "delivery": "መድረሻ",
+    "unknown": "ያልታወቀ",
+    "noPhone": "ስልክ የለም",
+    "cargoRequirements": "ጭነት እና መስፈርቶች",
+    "type": "አይነት",
+    "general": "አጠቃላይ",
+    "weight": "ክብደት",
+    "quantity": "መጠን",
+    "vehicleReq": "የተሽከርካሪ መስፈርት",
+    "any": "ማንኛውም",
+    "description": "ማብራሪያ",
+    "specialInstructions": "ልዩ መመሪያዎች",
+    "fulfillmentDetails": "የፍፃሜ ዝርዝሮች",
+    "pickupDate": "መጫኛ ቀን",
+    "deadline": "የመጨረሻ ቀን",
+    "budget": "በጀት",
+    "createdBy": "የፈጠረው",
+    "assignedTransporter": "የተመደበ ትራንስፖርተር",
+    "transportCompany": "የመጓጓዣ ኩባንያ",
+    "assignedDriver": "የተመደበ ሾፌር",
+    "vehicleDetails": "የተሽከርካሪ ዝርዝር",
+    "transporter": "ትራንስፖርተር"
+  },
+  "paymentMessages": {
+    "checkoutFailed": "የክፍያ አድራሻ አልተገኘም",
+    "paymentInitFailed": "የክፍያ መነሻ አልተሳካም"
+  },
+  "orderDetailsMessages": {
+    "fetchFailed": "የትዕዛዝ ዝርዝር ማምጣት አልተሳካም",
+    "acceptSuccess": "ትዕዛዙ በተሳካ ሁኔታ ተቀባ",
+    "acceptFailed": "ትዕዛዝ መቀበል አልተሳካም",
+    "rejectSuccess": "ትዕዛዙ ተሰርዟል",
+    "rejectFailed": "ትዕዛዝ ማስወገድ አልተሳካም",
+    "assignMissing": "ሾፌርና ተሽከርካሪ ሁለቱንም ይምረጡ",
+    "assignSuccess": "ሾፌርና ተሽከርካሪ ተመድበዋል",
+    "assignFailed": "ትዕዛዝ መመደብ አልተሳካም"
+  }
+}
