@@ -6,7 +6,9 @@ import { MapPin, Package, Truck, Clock, Filter, Search, Loader2, Navigation, Ale
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { tripService } from "@/services/tripService";
+import { tripService, getTrips } from "@/services/tripService";
+import { getCompanies } from "@/services/companyService";
+import { useCheckAuth } from "@/hooks/use-check-auth";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -51,6 +53,11 @@ function MapController({ center, trips }: { center: [number, number] | null; tri
 }
 
 export default function LiveShipmentMap() {
+  const { checkAuth } = useCheckAuth();
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [isInitialAuthDone, setIsInitialAuthDone] = useState(false);
   const [trips, setTrips] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,19 +66,56 @@ export default function LiveShipmentMap() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
-    fetchTrips();
-    const interval = setInterval(fetchTrips, 30000); // Auto-refresh every 30s
-    return () => clearInterval(interval);
+    const init = async () => {
+      try {
+        const auth = await checkAuth();
+        if (auth.isAuthenticated) {
+          const userData = (auth.data as any)?.data?.user || (auth.data as any)?.user;
+          const role = userData?.role;
+          if (role === "SUPER_ADMIN") {
+            setIsSuperAdmin(true);
+            try {
+              const compRes = await getCompanies(localStorage.getItem("authToken") || "");
+              if (compRes.ok) setCompanies((compRes.data as any).data.companies || []);
+            } catch (err) {
+              // ignore company fetch failure
+            }
+          }
+        }
+      } catch (err) {
+        // ignore
+      } finally {
+        setIsInitialAuthDone(true);
+      }
+    };
+
+    init();
   }, []);
 
-  const fetchTrips = async () => {
+  useEffect(() => {
+    if (isInitialAuthDone) {
+      fetchTrips();
+      const interval = setInterval(() => fetchTrips(false), 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isInitialAuthDone, isSuperAdmin, selectedCompanyId]);
+
+  const fetchTrips = async (showLoader = true) => {
+    if (showLoader) setIsLoading(true);
     try {
-      const res = await tripService.getCompanyTrips();
+      let res;
+      if (isSuperAdmin) {
+        // Use general trips endpoint and allow company filtering via query param
+        const params: Record<string, string> = {};
+        if (selectedCompanyId) params.companyId = selectedCompanyId;
+        res = await getTrips(undefined, params);
+      } else {
+        res = await tripService.getCompanyTrips();
+      }
+
       if (res.ok && res.data?.status === "success") {
         // Include all trips that have location data, regardless of status
-        const activeTrips = res.data.data.trips.filter((t: any) => 
-          t.location?.coordinates
-        );
+        const activeTrips = res.data.data.trips.filter((t: any) => t.location?.coordinates);
         setTrips(activeTrips);
       } else {
         setError("Failed to load live tracking data");
@@ -111,18 +155,7 @@ export default function LiveShipmentMap() {
     return [9.03, 38.74] as [number, number]; // Addis Ababa default
   }, [selectedTrip, trips]);
 
-  if (isLoading && trips.length === 0) {
-    return (
-      <DashboardLayout>
-        <div className="flex h-[70vh] items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
-            <p className="mt-4 text-muted-foreground font-medium">Initializing tracking system...</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+
 
   return (
     <DashboardLayout>
@@ -259,6 +292,31 @@ export default function LiveShipmentMap() {
             </div>
             
             <div className="space-y-3">
+              {isSuperAdmin && (
+                <div>
+                  <Select 
+                    value={selectedCompanyId || "all"} 
+                    onValueChange={(v) => {
+                      setIsLoading(true);
+                      setSelectedCompanyId(v === "all" ? null : v);
+                    }}
+                  >
+                    <SelectTrigger className="h-9 w-full text-xs bg-background border border-border rounded-md font-medium text-foreground">
+                      <SelectValue placeholder="Filter by Company" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-md border border-border shadow-lg bg-popover text-popover-foreground">
+                      <SelectItem value="all" className="py-2 text-sm">
+                        All Companies
+                      </SelectItem>
+                      {companies.map((c) => (
+                        <SelectItem key={c._id} value={c._id} className="py-2 text-sm font-medium">
+                          {c.companyName || c.name || "Unnamed Company"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="relative">
                 <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input 
@@ -301,7 +359,13 @@ export default function LiveShipmentMap() {
             </div>
           </div>
           
-          <div className="flex-1 overflow-y-auto divide-y divide-border scrollbar-hide">
+          <div className="flex-1 overflow-y-auto divide-y divide-border scrollbar-hide relative">
+            {isLoading && (
+              <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center gap-2">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Updating...</p>
+              </div>
+            )}
             {filteredTrips.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                 <Package className="h-10 w-10 text-muted-foreground/30 mb-3" />

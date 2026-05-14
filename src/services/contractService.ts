@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "@/lib/api";
 
 export const contractService = {
-  async initiateContract(companyId: string, startDate: string, endDate: string, message?: string) {
+  async initiateContract(payload: { transporterCompanyId?: string; vendorId?: string; startDate: string; endDate: string; message?: string }) {
     const token = localStorage.getItem("authToken");
     const response = await fetch(`${API_BASE_URL}/api/v1/contract/initiate`, {
       method: "POST",
@@ -9,12 +9,7 @@ export const contractService = {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ 
-        transporterCompanyId: companyId,
-        startDate,
-        endDate,
-        message
-      }),
+      body: JSON.stringify(payload),
     });
     return response.json();
   },

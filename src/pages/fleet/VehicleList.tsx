@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { cn } from "@/lib/utils";
 import { getCompanies } from "@/services/companyService";
 import { useToast } from "@/hooks/use-toast";
+import { FrontendPagination } from "@/components/FrontendPagination";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -133,6 +134,10 @@ export default function VehicleList() {
   const [editingVehicle, setEditingVehicle] = React.useState<VehicleRecord | null>(null);
   const [isEditOpen, setIsEditOpen] = React.useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 8; // Grid layout looks better with multiples of 4
+
   const loadVehicles = React.useCallback(() => {
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -163,30 +168,43 @@ export default function VehicleList() {
       })
       .catch(() => setError("Unable to load vehicles."))
       .finally(() => setIsLoading(false));
-  }, [navigate, isCompanyAdmin]);
+  }, [navigate, userRole]);
 
   React.useEffect(() => {
     loadVehicles();
   }, [loadVehicles]);
 
-  const filteredVehicles = vehicles.filter((vehicle) => {
-    const status = getVehicleStatus(vehicle);
-    const company = vehicle.companyId;
-    const companyId = typeof company === 'string' ? company : (company as any)?._id;
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [query, selectedCompany, selectedStatus]);
 
-    if (selectedStatus !== "all" && status !== selectedStatus) return false;
-    if (selectedCompany !== "all" && companyId !== selectedCompany) return false;
+  const filteredVehicles = React.useMemo(() => {
+    return vehicles.filter((vehicle) => {
+      const status = getVehicleStatus(vehicle);
+      const company = vehicle.companyId;
+      const companyId = typeof company === 'string' ? company : (company as any)?._id;
 
-    if (!query) return true;
-    const q = query.toLowerCase();
-    return (
-      vehicle.plateNumber?.toLowerCase().includes(q) ||
-      vehicle.model?.toLowerCase().includes(q) ||
-      vehicle.vehicleType?.toLowerCase().includes(q) ||
-      getVehicleDriverName(vehicle).toLowerCase().includes(q) ||
-      getCompanyDisplayName(vehicle.companyId).toLowerCase().includes(q)
-    );
-  });
+      if (selectedStatus !== "all" && status !== selectedStatus) return false;
+      if (selectedCompany !== "all" && companyId !== selectedCompany) return false;
+
+      if (!query) return true;
+      const q = query.toLowerCase();
+      return (
+        vehicle.plateNumber?.toLowerCase().includes(q) ||
+        vehicle.model?.toLowerCase().includes(q) ||
+        vehicle.vehicleType?.toLowerCase().includes(q) ||
+        getVehicleDriverName(vehicle).toLowerCase().includes(q) ||
+        getCompanyDisplayName(vehicle.companyId).toLowerCase().includes(q)
+      );
+    });
+  }, [vehicles, query, selectedCompany, selectedStatus]);
+
+  // Paginated vehicles
+  const paginatedVehicles = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredVehicles.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredVehicles, currentPage]);
 
   const handleAddVehicle = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -441,107 +459,117 @@ export default function VehicleList() {
           )}
         </div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredVehicles.map((vehicle, index) => {
-            const statusKey = getVehicleStatus(vehicle) as keyof typeof statusConfig;
-            const status = statusConfig[statusKey] || statusConfig.unknown;
-            const StatusIcon = status.icon;
+        <>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {paginatedVehicles.map((vehicle, index) => {
+              const statusKey = getVehicleStatus(vehicle) as keyof typeof statusConfig;
+              const status = statusConfig[statusKey] || statusConfig.unknown;
+              const StatusIcon = status.icon;
 
-            return (
-              <div 
-                key={getVehicleId(vehicle, index)}
-                className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-xl transition-all duration-300"
-              >
-                {/* Status Bar */}
-                <div className={cn("h-1.5 w-full", status.className.split(' ')[1])} />
-                
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 group-hover:scale-110 transition-transform">
-                      <Truck className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <Badge variant="outline" className={cn("px-2.5 py-1 text-[10px] font-bold border", status.className)}>
-                        <StatusIcon className="mr-1 h-3 w-3" />
-                        {status.label.toUpperCase()}
-                      </Badge>
-                      
-                      {isCompanyAdmin && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-secondary">
-                              <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => openEditDialog(vehicle)}>
-                              <Edit className="mr-2 h-4 w-4" /> Edit Details
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground font-bold">Update Status</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleStatusChange(vehicle, "ACTIVE")}>
-                              <CheckCircle className="mr-2 h-4 w-4 text-emerald-500" /> Mark Active
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(vehicle, "MAINTENANCE")}>
-                              <Wrench className="mr-2 h-4 w-4 text-amber-500" /> Set Maintenance
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(vehicle, "INACTIVE")}>
-                              <XCircle className="mr-2 h-4 w-4 text-slate-400" /> Deactivate
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => handleDeleteVehicle(vehicle)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete Vehicle
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mb-6">
-                    <h3 className="text-xl font-bold text-foreground leading-tight">{vehicle.plateNumber}</h3>
-                    <p className="text-sm font-medium text-muted-foreground">{vehicle.model || "Unknown Model"}</p>
-                  </div>
-
-                  <div className="space-y-3 pt-4 border-t border-border/50">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Type</span>
-                      <span className="font-semibold text-foreground px-2 py-0.5 rounded bg-secondary">{vehicle.vehicleType}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Capacity</span>
-                      <span className="font-semibold text-foreground">{vehicle.capacityKg} kg</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Company</span>
-                      <span className="font-medium text-foreground truncate max-w-[120px]">
-                        {getCompanyDisplayName(vehicle.companyId)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 rounded-xl bg-secondary/30 p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-background flex items-center justify-center">
-                        <User className="h-4 w-4 text-muted-foreground" />
+              return (
+                <div 
+                  key={getVehicleId(vehicle, index)}
+                  className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-xl transition-all duration-300"
+                >
+                  {/* Status Bar */}
+                  <div className={cn("h-1.5 w-full", status.className.split(' ')[1])} />
+                  
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 group-hover:scale-110 transition-transform">
+                        <Truck className="h-6 w-6 text-primary" />
                       </div>
-                      <div className="overflow-hidden">
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Current Driver</p>
-                        <p className="text-xs font-semibold text-foreground truncate">
-                          {getVehicleDriverName(vehicle)}
-                        </p>
+                      <div className="flex flex-col items-end gap-2">
+                        <Badge variant="outline" className={cn("px-2.5 py-1 text-[10px] font-bold border", status.className)}>
+                          <StatusIcon className="mr-1 h-3 w-3" />
+                          {status.label.toUpperCase()}
+                        </Badge>
+                        
+                        {isCompanyAdmin && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-secondary">
+                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => openEditDialog(vehicle)}>
+                                <Edit className="mr-2 h-4 w-4" /> Edit Details
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuLabel className="text-[10px] uppercase text-muted-foreground font-bold">Update Status</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => handleStatusChange(vehicle, "ACTIVE")}>
+                                <CheckCircle className="mr-2 h-4 w-4 text-emerald-500" /> Mark Active
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleStatusChange(vehicle, "MAINTENANCE")}>
+                                <Wrench className="mr-2 h-4 w-4 text-amber-500" /> Set Maintenance
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleStatusChange(vehicle, "INACTIVE")}>
+                                <XCircle className="mr-2 h-4 w-4 text-slate-400" /> Deactivate
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => handleDeleteVehicle(vehicle)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete Vehicle
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <h3 className="text-xl font-bold text-foreground leading-tight">{vehicle.plateNumber}</h3>
+                      <p className="text-sm font-medium text-muted-foreground">{vehicle.model || "Unknown Model"}</p>
+                    </div>
+
+                    <div className="space-y-3 pt-4 border-t border-border/50">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Type</span>
+                        <span className="font-semibold text-foreground px-2 py-0.5 rounded bg-secondary">{vehicle.vehicleType}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Capacity</span>
+                        <span className="font-semibold text-foreground">{vehicle.capacityKg} kg</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Company</span>
+                        <span className="font-medium text-foreground truncate max-w-[120px]">
+                          {getCompanyDisplayName(vehicle.companyId)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 rounded-xl bg-secondary/30 p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-background flex items-center justify-center">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Current Driver</p>
+                          <p className="text-xs font-semibold text-foreground truncate">
+                            {getVehicleDriverName(vehicle)}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+          <div className="mt-8 flex justify-end bg-card p-4 rounded-xl border border-border">
+            <FrontendPagination 
+              totalItems={filteredVehicles.length}
+              itemsPerPage={itemsPerPage}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        </>
       )}
     </DashboardLayout>
   );

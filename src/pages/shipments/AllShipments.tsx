@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { getCompanyTrips, getDriverTripsHistory, getTrips } from "@/services/tripService";
+import { FrontendPagination } from "@/components/FrontendPagination";
 import { 
   Select,
   SelectContent,
@@ -117,6 +118,10 @@ export default function AllShipments() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 10;
+
   const loadTrips = React.useCallback(async () => {
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -152,24 +157,37 @@ export default function AllShipments() {
     loadTrips();
   }, [loadTrips]);
 
-  const filteredTrips = trips.filter((trip, index) => {
-    const id = resolveTripId(trip, index);
-    const orderNumber = trip.orderId?.orderNumber || (trip as any)?.orderNumber || id;
-    const title = trip.orderId?.title || "Shipment";
-    const driver = resolveDriverName(trip);
-    const vehicle = resolveVehicleLabel(trip);
-    const cityFrom = trip.orderId?.pickupLocation?.city || "";
-    const cityTo = trip.orderId?.deliveryLocation?.city || "";
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [query, statusFilter]);
 
-    const matchesQuery = !query.trim() || [
-      id, orderNumber, title, driver, vehicle, cityFrom, cityTo
-    ].some(v => String(v).toLowerCase().includes(query.toLowerCase()));
+  const filteredTrips = React.useMemo(() => {
+    return trips.filter((trip, index) => {
+      const id = resolveTripId(trip, index);
+      const orderNumber = trip.orderId?.orderNumber || (trip as any)?.orderNumber || id;
+      const title = trip.orderId?.title || "Shipment";
+      const driver = resolveDriverName(trip);
+      const vehicle = resolveVehicleLabel(trip);
+      const cityFrom = trip.orderId?.pickupLocation?.city || "";
+      const cityTo = trip.orderId?.deliveryLocation?.city || "";
 
-    const currentStatus = resolveStatus(trip.milestone);
-    const matchesStatus = statusFilter === "ALL" || currentStatus === statusFilter.toLowerCase();
+      const matchesQuery = !query.trim() || [
+        id, orderNumber, title, driver, vehicle, cityFrom, cityTo
+      ].some(v => String(v).toLowerCase().includes(query.toLowerCase()));
 
-    return matchesQuery && matchesStatus;
-  });
+      const currentStatus = resolveStatus(trip.milestone);
+      const matchesStatus = statusFilter === "ALL" || currentStatus === statusFilter.toLowerCase();
+
+      return matchesQuery && matchesStatus;
+    });
+  }, [trips, query, statusFilter]);
+
+  // Paginated trips
+  const paginatedTrips = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredTrips.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredTrips, currentPage]);
 
   const stats = React.useMemo(() => {
     return {
@@ -282,7 +300,7 @@ export default function AllShipments() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredTrips.map((trip, index) => {
+                {paginatedTrips.map((trip, index) => {
                   const id = resolveTripId(trip, index);
                   const statusKey = resolveStatus(trip.milestone);
                   const status = statusConfig[statusKey] || statusConfig.pending;
@@ -345,10 +363,19 @@ export default function AllShipments() {
               </tbody>
             </table>
           </div>
-          {filteredTrips.length === 0 && (
+          {filteredTrips.length === 0 ? (
             <div className="px-6 py-12 text-center">
               <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
               <p className="text-muted-foreground">No shipments found.</p>
+            </div>
+          ) : (
+            <div className="px-4 py-4 border-t border-border bg-card">
+              <FrontendPagination 
+                totalItems={filteredTrips.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
             </div>
           )}
         </div>

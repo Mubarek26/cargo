@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ShoppingCart, Search, Filter, Download, Plus, Package, Clock, CheckCircle, Truck, XCircle, DollarSign, Loader2, ArrowRight, Check, X } from "lucide-react";
@@ -10,6 +10,7 @@ import { orderService } from "@/services/orderService";
 import { toast } from "sonner";
 import { useCheckAuth } from "@/hooks/use-check-auth";
 import { useTranslation } from "react-i18next";
+import { FrontendPagination } from "@/components/FrontendPagination";
 import { 
   Select,
   SelectContent,
@@ -28,6 +29,10 @@ export default function AllOrders() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [assignmentFilter, setAssignmentFilter] = useState<string>("ALL");
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const init = async () => {
@@ -40,6 +45,11 @@ export default function AllOrders() {
     };
     init();
   }, [checkAuth]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, assignmentFilter]);
 
   const statusConfig: any = {
     PENDING: { label: t("status.pending"), icon: Clock, className: "text-warning bg-warning/10" },
@@ -78,18 +88,26 @@ export default function AllOrders() {
     }
   };
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      order.orderNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.pickupLocation?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.deliveryLocation?.city?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === "ALL" || order.status === statusFilter;
-    const matchesAssignment = assignmentFilter === "ALL" || order.assignmentMode === assignmentFilter;
-    
-    return matchesSearch && matchesStatus && matchesAssignment;
-  });
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      const matchesSearch = 
+        order.orderNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.pickupLocation?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.deliveryLocation?.city?.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesStatus = statusFilter === "ALL" || order.status === statusFilter;
+      const matchesAssignment = assignmentFilter === "ALL" || order.assignmentMode === assignmentFilter;
+      
+      return matchesSearch && matchesStatus && matchesAssignment;
+    });
+  }, [orders, searchQuery, statusFilter, assignmentFilter]);
+
+  // Paginated orders
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredOrders.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredOrders, currentPage]);
 
   const handleAcceptOrder = async (e: React.MouseEvent, orderId: string) => {
     e.stopPropagation();
@@ -255,113 +273,123 @@ export default function AllOrders() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-secondary/50">
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.orderInfo")}</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.route")}</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.type")}</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.status")}</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.budgetPayment")}</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.actions")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredOrders.map((order) => {
-                  const status = statusConfig[order.status] || { label: order.status, icon: Clock, className: "" };
-                  const StatusIcon = status.icon;
-                  const payment = paymentConfig[order.paymentStatus] || { label: order.paymentStatus, className: "" };
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border bg-secondary/50">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.orderInfo")}</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.route")}</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.type")}</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.status")}</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.budgetPayment")}</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("allOrders.table.actions")}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {paginatedOrders.map((order) => {
+                    const status = statusConfig[order.status] || { label: order.status, icon: Clock, className: "" };
+                    const StatusIcon = status.icon;
+                    const payment = paymentConfig[order.paymentStatus] || { label: order.paymentStatus, className: "" };
 
-                  // Check if the current user can accept/reject this order
-                  const isAssignedToMyCompany = 
-                    (user?.role === 'COMPANY_ADMIN' && (order.targetCompanyId?._id === user.companyId || order.targetCompanyId === user.companyId)) ||
-                    user?.role === 'SUPER_ADMIN';
-                  
-                  const canAction = order.assignmentMode === 'DIRECT_COMPANY' && isAssignedToMyCompany && order.status === 'PENDING';
+                    // Check if the current user can accept/reject this order
+                    const isAssignedToMyCompany = 
+                      (user?.role === 'COMPANY_ADMIN' && (order.targetCompanyId?._id === user.companyId || order.targetCompanyId === user.companyId)) ||
+                      user?.role === 'SUPER_ADMIN';
+                    
+                    const canAction = order.assignmentMode === 'DIRECT_COMPANY' && isAssignedToMyCompany && order.status === 'PENDING';
 
-                  return (
-                    <tr 
-                        key={order._id} 
-                        className="hover:bg-secondary/30 transition-colors cursor-pointer" 
-                        onClick={() => {
-                          if (order.assignmentMode === 'OPEN_MARKETPLACE') {
-                            navigate(`/marketplace/orders/${order._id}`);
-                          } else {
-                            navigate(`/orders/${order._id}`);
-                          }
-                        }}
-                      >
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="rounded-full bg-primary/10 p-1.5 shrink-0">
-                            <ShoppingCart className="h-3.5 w-3.5 text-primary" />
+                    return (
+                      <tr 
+                          key={order._id} 
+                          className="hover:bg-secondary/30 transition-colors cursor-pointer" 
+                          onClick={() => {
+                            if (order.assignmentMode === 'OPEN_MARKETPLACE') {
+                              navigate(`/marketplace/orders/${order._id}`);
+                            } else {
+                              navigate(`/orders/${order._id}`);
+                            }
+                          }}
+                        >
+                        <td className="whitespace-nowrap px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="rounded-full bg-primary/10 p-1.5 shrink-0">
+                              <ShoppingCart className="h-3.5 w-3.5 text-primary" />
+                            </div>
+                            <div className="text-sm">
+                              <p className="font-bold text-card-foreground leading-tight">{order.orderNumber}</p>
+                              <p className="text-xs text-muted-foreground truncate max-w-[140px]">{order.title}</p>
+                              <p className="text-[10px] text-muted-foreground/60">{new Date(order.createdAt).toLocaleDateString()}</p>
+                            </div>
                           </div>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3">
+                          <div className="flex items-center gap-1.5 text-xs">
+                             <span className="text-card-foreground font-medium">{order.pickupLocation?.city || t("common.na")}</span>
+                             <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                             <span className="text-card-foreground font-medium">{order.deliveryLocation?.city || t("common.na")}</span>
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3">
+                          <Badge variant="outline" className={cn(
+                            "text-[10px] px-2 py-0 h-5 font-normal",
+                            order.assignmentMode === 'OPEN_MARKETPLACE' ? "border-primary text-primary" : "border-muted-foreground/30 text-muted-foreground"
+                          )}>
+                            {assignmentModeLabelMap[order.assignmentMode] || t("assignmentModes.na")}
+                          </Badge>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3">
+                          <Badge className={cn("gap-1 text-[10px] px-2 py-0 h-5", status.className)}>
+                            <StatusIcon className="h-3 w-3" />
+                            {status.label}
+                          </Badge>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3">
                           <div className="text-sm">
-                            <p className="font-bold text-card-foreground leading-tight">{order.orderNumber}</p>
-                            <p className="text-xs text-muted-foreground truncate max-w-[140px]">{order.title}</p>
-                            <p className="text-[10px] text-muted-foreground/60">{new Date(order.createdAt).toLocaleDateString()}</p>
+                            <p className="font-bold text-card-foreground">{order.pricing?.proposedBudget} <span className="text-[10px] text-muted-foreground font-normal">{order.pricing?.currency}</span></p>
+                            <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 h-4 mt-1 font-normal", payment.className)}>{payment.label}</Badge>
                           </div>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <div className="flex items-center gap-1.5 text-xs">
-                           <span className="text-card-foreground font-medium">{order.pickupLocation?.city || t("common.na")}</span>
-                           <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                           <span className="text-card-foreground font-medium">{order.deliveryLocation?.city || t("common.na")}</span>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <Badge variant="outline" className={cn(
-                          "text-[10px] px-2 py-0 h-5 font-normal",
-                          order.assignmentMode === 'OPEN_MARKETPLACE' ? "border-primary text-primary" : "border-muted-foreground/30 text-muted-foreground"
-                        )}>
-                          {assignmentModeLabelMap[order.assignmentMode] || t("assignmentModes.na")}
-                        </Badge>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <Badge className={cn("gap-1 text-[10px] px-2 py-0 h-5", status.className)}>
-                          <StatusIcon className="h-3 w-3" />
-                          {status.label}
-                        </Badge>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <div className="text-sm">
-                          <p className="font-bold text-card-foreground">{order.pricing?.proposedBudget} <span className="text-[10px] text-muted-foreground font-normal">{order.pricing?.currency}</span></p>
-                          <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 h-4 mt-1 font-normal", payment.className)}>{payment.label}</Badge>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right">
-                        {canAction ? (
-                          <div className="flex justify-end gap-2">
-                            <Button 
-                              size="sm" 
-                              className="h-8 gap-1 bg-success hover:bg-success/90" 
-                              onClick={(e) => handleAcceptOrder(e, order._id)}
-                            >
-                              <Check className="h-3.5 w-3.5" />
-                              {t("allOrders.accept")}
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="destructive" 
-                              className="h-8 gap-1"
-                              onClick={(e) => handleRejectOrder(e, order._id)}
-                            >
-                              <X className="h-3.5 w-3.5" />
-                              {t("allOrders.reject")}
-                            </Button>
-                          </div>
-                        ) : (
-                            <Button variant="ghost" size="sm" className="h-8">{t("allOrders.details")}</Button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-right">
+                          {canAction ? (
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                size="sm" 
+                                className="h-8 gap-1 bg-success hover:bg-success/90" 
+                                onClick={(e) => handleAcceptOrder(e, order._id)}
+                              >
+                                <Check className="h-3.5 w-3.5" />
+                                {t("allOrders.accept")}
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="destructive" 
+                                className="h-8 gap-1"
+                                onClick={(e) => handleRejectOrder(e, order._id)}
+                              >
+                                <X className="h-3.5 w-3.5" />
+                                {t("allOrders.reject")}
+                              </Button>
+                            </div>
+                          ) : (
+                              <Button variant="ghost" size="sm" className="h-8">{t("allOrders.details")}</Button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="px-4 py-4 border-t border-border bg-card">
+              <FrontendPagination 
+                totalItems={filteredOrders.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          </>
         )}
       </div>
     </DashboardLayout>

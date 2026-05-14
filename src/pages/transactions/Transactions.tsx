@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { 
   Card, 
@@ -35,11 +35,17 @@ import { transactionService, Transaction } from "@/services/transactionService";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { FrontendPagination } from "@/components/FrontendPagination";
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const userRole = localStorage.getItem("userRole");
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : null;
@@ -47,6 +53,11 @@ export default function Transactions() {
   useEffect(() => {
     fetchTransactions();
   }, []);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const fetchTransactions = async (companyId?: string) => {
     setIsLoading(true);
@@ -62,11 +73,18 @@ export default function Transactions() {
     }
   };
 
-  const filteredTransactions = transactions.filter(tx => 
-    tx.trx_ref.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tx.shipperId?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tx.companyId?.companyName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(tx => 
+      tx.trx_ref.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tx.shipperId?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tx.companyId?.companyName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [transactions, searchTerm]);
+
+  const paginatedTransactions = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredTransactions.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredTransactions, currentPage]);
 
   const handleExportCSV = () => {
     if (!filteredTransactions || filteredTransactions.length === 0) {
@@ -224,14 +242,14 @@ export default function Transactions() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTransactions.length === 0 ? (
+                {paginatedTransactions.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-32 text-center text-muted-foreground italic">
                       No financial records found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredTransactions.map((tx) => (
+                  paginatedTransactions.map((tx) => (
                     <TableRow key={tx._id} className="hover:bg-muted/10 transition-colors group">
                       <TableCell>
                         <div className="flex flex-col">
@@ -288,6 +306,14 @@ export default function Transactions() {
                 )}
               </TableBody>
             </Table>
+            <div className="p-4 border-t border-border bg-card">
+              <FrontendPagination 
+                totalItems={filteredTransactions.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { getCompanies, getCompanyMe } from "@/services/companyService";
 import { getAllDrivers, getCompanyDrivers, updateDriver, deleteDriver, addDriver } from "@/services/driverService";
 import { useToast } from "@/hooks/use-toast";
+import { FrontendPagination } from "@/components/FrontendPagination";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -166,6 +167,10 @@ export default function DriverList() {
     licenseNumber: "",
   });
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 10;
+
   const getCompanyIdFromMe = (payload: Record<string, unknown> | null) => {
     if (!payload) return null;
     const company =
@@ -243,28 +248,41 @@ export default function DriverList() {
     loadDrivers();
   }, [loadDrivers]);
 
-  const normalizedQuery = query.trim().toLowerCase();
-  const filteredDrivers = drivers.filter((driver) => {
-    const status = getDriverStatus(driver);
-    const companyId = getDriverCompanyId(driver);
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [query, selectedCompany, selectedStatus]);
 
-    if (selectedStatus !== "all" && status !== selectedStatus) return false;
-    if (selectedCompany !== "all" && companyId !== selectedCompany) return false;
+  const filteredDrivers = React.useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return drivers.filter((driver) => {
+      const status = getDriverStatus(driver);
+      const companyId = getDriverCompanyId(driver);
 
-    if (!normalizedQuery) return true;
-    const haystack = [
-      driver.fullName,
-      driver.email,
-      driver.phoneNumber,
-      driver.licenseNumber,
-      getDriverCompanyName(driver),
-    ]
-      .filter(Boolean)
-      .map((value) => String(value).toLowerCase())
-      .join(" ");
+      if (selectedStatus !== "all" && status !== selectedStatus) return false;
+      if (selectedCompany !== "all" && companyId !== selectedCompany) return false;
 
-    return haystack.includes(normalizedQuery);
-  });
+      if (!normalizedQuery) return true;
+      const haystack = [
+        driver.fullName,
+        driver.email,
+        driver.phoneNumber,
+        driver.licenseNumber,
+        getDriverCompanyName(driver),
+      ]
+        .filter(Boolean)
+        .map((value) => String(value).toLowerCase())
+        .join(" ");
+
+      return haystack.includes(normalizedQuery);
+    });
+  }, [drivers, query, selectedCompany, selectedStatus]);
+
+  // Paginated drivers
+  const paginatedDrivers = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredDrivers.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredDrivers, currentPage]);
 
   const statusOptions = React.useMemo(() => {
     const seen = new Set<string>();
@@ -624,7 +642,7 @@ export default function DriverList() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredDrivers.map((driver, index) => {
+                {paginatedDrivers.map((driver, index) => {
                   const driverId = getDriverId(driver, index);
                   const statusKey = getDriverStatus(driver) as keyof typeof statusConfig;
                   const status = statusConfig[statusKey] ?? statusConfig.unknown;
@@ -775,9 +793,18 @@ export default function DriverList() {
               </tbody>
             </table>
           </div>
-          {filteredDrivers.length === 0 && (
+          {filteredDrivers.length === 0 ? (
             <div className="border-t border-border px-6 py-8 text-center text-sm text-muted-foreground">
               No drivers found.
+            </div>
+          ) : (
+            <div className="px-4 py-4 border-t border-border bg-card">
+              <FrontendPagination 
+                totalItems={filteredDrivers.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
             </div>
           )}
         </div>

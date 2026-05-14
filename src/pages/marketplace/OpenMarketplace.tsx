@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import {
@@ -29,6 +29,7 @@ import { useCheckAuth } from "@/hooks/use-check-auth";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { FrontendPagination } from "@/components/FrontendPagination";
 
 export default function OpenMarketplace() {
   const { t } = useTranslation("marketplace");
@@ -47,6 +48,9 @@ export default function OpenMarketplace() {
   const [withdrawingProposal, setWithdrawingProposal] = useState<any>(null);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   useEffect(() => {
     const init = async () => {
@@ -59,6 +63,11 @@ export default function OpenMarketplace() {
     };
     init();
   }, [checkAuth]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterMode, locationQuery, locationField]);
 
   const fetchMarketplaceData = async () => {
     setIsLoading(true);
@@ -86,34 +95,40 @@ export default function OpenMarketplace() {
     }
   };
 
-  const filteredOrders = orders.filter(order => {
-    // Check if the user is a driver and if they are allowed to see marketplace orders
-    const isDriver = currentUser?.role === 'DRIVER';
-    const isPrivateTransporter = currentUser?.isPrivateTransporter === true || currentUser?.role === 'PRIVATE_TRANSPORTER';
-    
-    // If user is a driver but not a private transporter, they shouldn't see marketplace orders
-    if (isDriver && !isPrivateTransporter) {
-      return false;
-    }
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      // Check if the user is a driver and if they are allowed to see marketplace orders
+      const isDriver = currentUser?.role === 'DRIVER';
+      const isPrivateTransporter = currentUser?.isPrivateTransporter === true || currentUser?.role === 'PRIVATE_TRANSPORTER';
+      
+      // If user is a driver but not a private transporter, they shouldn't see marketplace orders
+      if (isDriver && !isPrivateTransporter) {
+        return false;
+      }
 
-    const matchesSearch =
-      order.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.pickupLocation?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.deliveryLocation?.city?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch =
+        order.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.pickupLocation?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.deliveryLocation?.city?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const normalizedLocation = locationQuery.trim().toLowerCase();
-    const pickupCity = order.pickupLocation?.city?.toLowerCase() || "";
-    const deliveryCity = order.deliveryLocation?.city?.toLowerCase() || "";
-    const matchesLocation =
-      !normalizedLocation ||
-      (locationField === "PICKUP" && pickupCity.includes(normalizedLocation)) ||
-      (locationField === "DELIVERY" && deliveryCity.includes(normalizedLocation)) ||
-      (locationField === "ANY" && (pickupCity.includes(normalizedLocation) || deliveryCity.includes(normalizedLocation)));
+      const normalizedLocation = locationQuery.trim().toLowerCase();
+      const pickupCity = order.pickupLocation?.city?.toLowerCase() || "";
+      const deliveryCity = order.deliveryLocation?.city?.toLowerCase() || "";
+      const matchesLocation =
+        !normalizedLocation ||
+        (locationField === "PICKUP" && pickupCity.includes(normalizedLocation)) ||
+        (locationField === "DELIVERY" && deliveryCity.includes(normalizedLocation)) ||
+        (locationField === "ANY" && (pickupCity.includes(normalizedLocation) || deliveryCity.includes(normalizedLocation)));
 
-    if (filterMode === "ALL") return matchesSearch && matchesLocation;
-    return matchesSearch && matchesLocation && order.assignmentMode === filterMode;
-  });
+      if (filterMode === "ALL") return matchesSearch && matchesLocation;
+      return matchesSearch && matchesLocation && order.assignmentMode === filterMode;
+    });
+  }, [orders, currentUser, searchQuery, locationQuery, locationField, filterMode]);
 
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredOrders.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredOrders, currentPage]);
 
   const getRelativeTime = (date: string) => {
     const now = new Date();
@@ -315,99 +330,109 @@ export default function OpenMarketplace() {
                   <p className="text-muted-foreground mt-2">{t("noOrdersSubtitle")}</p>
                 </div>
               ) : (
-                filteredOrders.map((order) => (
-                  <div 
-                    key={order._id}
-                    className="group relative rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer overflow-hidden"
-                    onClick={() => navigate(`/marketplace/orders/${order._id}`)}
-                  >
-                    {/* Decorative background element */}
-                    <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary/5 group-hover:bg-primary/10 transition-colors" />
+                <>
+                  {paginatedOrders.map((order) => (
+                    <div 
+                      key={order._id}
+                      className="group relative rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer overflow-hidden"
+                      onClick={() => navigate(`/marketplace/orders/${order._id}`)}
+                    >
+                      {/* Decorative background element */}
+                      <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary/5 group-hover:bg-primary/10 transition-colors" />
 
-                    <div className="flex flex-col md:flex-row gap-6 relative z-10">
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              {getOrderStatusBadge(order)}
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Clock className="h-3 w-3" /> {getRelativeTime(order.createdAt)}
-                              </span>
+                      <div className="flex flex-col md:flex-row gap-6 relative z-10">
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                {getOrderStatusBadge(order)}
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Clock className="h-3 w-3" /> {getRelativeTime(order.createdAt)}
+                                </span>
+                              </div>
+                              <h3 className="text-xl font-bold text-card-foreground group-hover:text-primary transition-colors">
+                                {order.title}
+                              </h3>
                             </div>
-                            <h3 className="text-xl font-bold text-card-foreground group-hover:text-primary transition-colors">
-                              {order.title}
-                            </h3>
+                            <div className="text-right">
+                              <div className="text-2xl font-bold text-primary">
+                                {order.pricing?.proposedBudget || order.proposedBudget} {order.pricing?.currency || order.currency}
+                              </div>
+                              <p className="text-xs text-muted-foreground">{t("budgetLabel")}</p>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-primary">
-                              {order.pricing?.proposedBudget || order.proposedBudget} {order.pricing?.currency || order.currency}
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3 text-sm text-card-foreground/80">
+                                <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10">
+                                  <MapPin className="h-4 w-4 text-primary" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold flex items-center gap-2">
+                                    {order.pickupLocation?.city} <ArrowRight className="h-3 w-3" /> {order.deliveryLocation?.city}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                                    {order.pickupLocation?.address}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                                <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10">
+                                  <Calendar className="h-4 w-4 text-primary" />
+                                </div>
+                                <span>Pickup: {new Date(order.pickupDate).toLocaleDateString()}</span>
+                              </div>
                             </div>
-                            <p className="text-xs text-muted-foreground">{t("budgetLabel")}</p>
+
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                                <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10">
+                                  <Truck className="h-4 w-4 text-primary" />
+                                </div>
+                                <span>{order.cargo?.type || order.cargoType} • {order.cargo?.weightKg || order.weightKg} Kg</span>
+                              </div>
+                              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                                <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10">
+                                  <Building2 className="h-4 w-4 text-primary" />
+                                </div>
+                                <span className="flex items-center gap-1 text-card-foreground">
+                                  {t("postedBy", { name: order.createdBy?.fullName || t("verifiedVendor") })}
+                                  <CheckCircle2 className="h-3 w-3 text-success fill-success/20" />
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-3 text-sm text-card-foreground/80">
-                              <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10">
-                                <MapPin className="h-4 w-4 text-primary" />
-                              </div>
-                              <div>
-                                <p className="font-semibold flex items-center gap-2">
-                                  {order.pickupLocation?.city} <ArrowRight className="h-3 w-3" /> {order.deliveryLocation?.city}
-                                </p>
-                                <p className="text-xs text-muted-foreground truncate max-w-[200px]">
-                                  {order.pickupLocation?.address}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                              <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10">
-                                <Calendar className="h-4 w-4 text-primary" />
-                              </div>
-                              <span>Pickup: {new Date(order.pickupDate).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                              <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10">
-                                <Truck className="h-4 w-4 text-primary" />
-                              </div>
-                              <span>{order.cargo?.type || order.cargoType} • {order.cargo?.weightKg || order.weightKg} Kg</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                              <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10">
-                                <Building2 className="h-4 w-4 text-primary" />
-                              </div>
-                              <span className="flex items-center gap-1 text-card-foreground">
-                                {t("postedBy", { name: order.createdBy?.fullName || t("verifiedVendor") })}
-                                <CheckCircle2 className="h-3 w-3 text-success fill-success/20" />
-                              </span>
-                            </div>
-                          </div>
+                        <div className="flex flex-row md:flex-col justify-end gap-2 min-w-[120px]">
+                          <Button
+                            className={cn(
+                              "w-full gap-2 transition-transform",
+                              order.status === 'REJECTED' ? "bg-muted text-muted-foreground hover:bg-muted" : "group-hover:scale-105"
+                            )}
+                            disabled={order.status === 'REJECTED'}
+                          >
+                            {order.status === 'REJECTED' 
+                              ? t("cta.closed") 
+                              : (currentUser?.role === 'VENDOR' || currentUser?.role === 'SHIPPER') 
+                                ? t("cta.viewDetails") 
+                                : t("cta.bidNow")} 
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
                         </div>
-                      </div>
-
-                      <div className="flex flex-row md:flex-col justify-end gap-2 min-w-[120px]">
-                        <Button
-                          className={cn(
-                            "w-full gap-2 transition-transform",
-                            order.status === 'REJECTED' ? "bg-muted text-muted-foreground hover:bg-muted" : "group-hover:scale-105"
-                          )}
-                          disabled={order.status === 'REJECTED'}
-                        >
-                          {order.status === 'REJECTED' 
-                            ? t("cta.closed") 
-                            : (currentUser?.role === 'VENDOR' || currentUser?.role === 'SHIPPER') 
-                              ? t("cta.viewDetails") 
-                              : t("cta.bidNow")} 
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
                       </div>
                     </div>
+                  ))}
+                  <div className="mt-4 flex justify-end bg-card p-4 rounded-xl border border-border">
+                    <FrontendPagination 
+                      totalItems={filteredOrders.length}
+                      itemsPerPage={itemsPerPage}
+                      currentPage={currentPage}
+                      onPageChange={setCurrentPage}
+                    />
                   </div>
-                ))
+                </>
               )}
             </div>
           </div>
