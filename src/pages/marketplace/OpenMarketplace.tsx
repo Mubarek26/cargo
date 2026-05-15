@@ -25,7 +25,16 @@ import {
 
 import { orderService } from "@/services/orderService";
 import { proposalService } from "@/services/proposalService";
+import { getDriverApplication } from "@/services/driverService";
+import { getCompanyVehicles } from "@/services/vehicleService";
 import { useCheckAuth } from "@/hooks/use-check-auth";
+import { 
+  useMarketplaceOrders, 
+  useMyPostings, 
+  useMyProposals, 
+  useDriverApp, 
+  useCompanyVehiclesQuery 
+} from "@/hooks/use-marketplace-queries";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
@@ -35,10 +44,15 @@ export default function OpenMarketplace() {
   const { t } = useTranslation("marketplace");
   const navigate = useNavigate();
   const { checkAuth } = useCheckAuth();
-  const [orders, setOrders] = useState<any[]>([]);
-  const [myProposals, setMyProposals] = useState<any[]>([]);
-  const [myPostings, setMyPostings] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // React Query hooks
+  const { data: orders = [], isLoading: isLoadingOrders, refetch: refetchOrders } = useMarketplaceOrders();
+  const { data: myPostings = [], isLoading: isLoadingPostings, refetch: refetchPostings } = useMyPostings();
+  const { data: myProposals = [], isLoading: isLoadingProposals, refetch: refetchProposals } = useMyProposals();
+  const { data: driverApp, isLoading: isLoadingDriverApp } = useDriverApp();
+  const { data: companyVehicles = [], isLoading: isLoadingVehicles } = useCompanyVehiclesQuery();
+
+  const isLoading = isLoadingOrders || isLoadingPostings || isLoadingProposals || isLoadingDriverApp || isLoadingVehicles;
+
   const [activeTab, setActiveTab] = useState("marketplace");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterMode, setFilterMode] = useState("ALL");
@@ -59,7 +73,6 @@ export default function OpenMarketplace() {
         const userData = (auth.data as any)?.data?.user || (auth.data as any)?.user;
         setCurrentUser(userData);
       }
-      fetchMarketplaceData();
     };
     init();
   }, [checkAuth]);
@@ -70,30 +83,50 @@ export default function OpenMarketplace() {
   }, [searchQuery, filterMode, locationQuery, locationField]);
 
   const fetchMarketplaceData = async () => {
-    setIsLoading(true);
-    try {
-      const [marketRes, myOrdersRes] = await Promise.all([
-        orderService.getMarketplaceOrders(),
-        orderService.getMyOrders()
-      ]);
-
-      if (marketRes.status === "success") setOrders(marketRes.data.orders || []);
-      if (myOrdersRes.status === "success") {
-        setMyPostings(myOrdersRes.data.orders.filter((o: any) => o.assignmentMode === 'OPEN_MARKETPLACE'));
-      }
-
-      // Fetch proposals if user is a transporter or super admin
-      const role = localStorage.getItem("userRole");
-      if (role === "DRIVER" || role === "COMPANY_ADMIN" || role === "PRIVATE_TRANSPORTER" || role === "SUPER_ADMIN") {
-        const proposalsRes = await proposalService.listMyProposals();
-        if (proposalsRes.status === "success") setMyProposals(proposalsRes.data.proposals || []);
-      }
-    } catch (error) {
-      toast.error(t("messages.loadFailed"));
-    } finally {
-      setIsLoading(false);
-    }
+    await Promise.all([
+      refetchOrders(),
+      refetchPostings(),
+      refetchProposals()
+    ]);
   };
+
+  const matchedOrders = useMemo(() => {
+    const isTransporter = currentUser?.role === 'DRIVER' || currentUser?.role === 'PRIVATE_TRANSPORTER' || currentUser?.role === 'COMPANY_ADMIN';
+    if (!isTransporter) return [];
+
+    return orders.filter(order => {
+      // Basic match criteria: Vehicle Type and Capacity
+      const reqType = order.vehicleRequirements?.vehicleType?.toUpperCase();
+      const reqWeight = order.cargo?.weightKg || 0;
+
+      if (currentUser.role === 'DRIVER' || currentUser.role === 'PRIVATE_TRANSPORTER') {
+        if (!driverApp) return false;
+        const myType = driverApp.vehicleType?.toUpperCase();
+        const myCapacity = Number(driverApp.vehicleCapacityKg) || 0;
+
+        const typeMatches = !reqType || myType.includes(reqType) || reqType.includes(myType);
+        const capacityMatches = myCapacity >= reqWeight;
+        
+        return typeMatches && capacityMatches;
+      }
+
+      if (currentUser.role === 'COMPANY_ADMIN') {
+        if (companyVehicles.length === 0) return false;
+        
+        return companyVehicles.some(vehicle => {
+          const vType = vehicle.vehicleType?.toUpperCase();
+          const vCapacity = vehicle.capacityKg || 0;
+          
+          const typeMatches = !reqType || vType.includes(reqType) || reqType.includes(vType);
+          const capacityMatches = vCapacity >= reqWeight;
+          
+          return typeMatches && capacityMatches;
+        });
+      }
+
+      return false;
+    });
+  }, [orders, currentUser, driverApp, companyVehicles]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
@@ -199,6 +232,19 @@ export default function OpenMarketplace() {
             </TabsTrigger>
             {(currentUser?.role === "DRIVER" || currentUser?.role === "COMPANY_ADMIN" || currentUser?.role === "PRIVATE_TRANSPORTER" || currentUser?.role === "SUPER_ADMIN") && (
               <TabsTrigger 
+                value="matched" 
+                className="rounded-xl px-8 h-full data-[state=active]:bg-success data-[state=active]:text-success-foreground data-[state=active]:shadow-lg transition-all duration-300 relative"
+              >
+                {t("tabs.matchedForYou", { defaultValue: "Matched For You" })}
+                {matchedOrders.length > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] text-destructive-foreground animate-bounce">
+                    {matchedOrders.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            )}
+            {(currentUser?.role === "DRIVER" || currentUser?.role === "COMPANY_ADMIN" || currentUser?.role === "PRIVATE_TRANSPORTER" || currentUser?.role === "SUPER_ADMIN") && (
+              <TabsTrigger 
                 value="proposals" 
                 className="rounded-xl px-8 h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300"
               >
@@ -217,6 +263,109 @@ export default function OpenMarketplace() {
             )}
           </TabsList>
         </div>
+
+        <TabsContent value="matched">
+          <div className="space-y-4">
+            <div className="bg-success/10 border border-success/20 rounded-2xl p-6 mb-6 flex items-center gap-4">
+              <div className="h-12 w-12 rounded-full bg-success/20 flex items-center justify-center text-success">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-success text-lg">{t("matched.title", { defaultValue: "Automated Matching Active" })}</h3>
+                <p className="text-sm text-success/80">
+                  {currentUser?.role === 'COMPANY_ADMIN' 
+                    ? t("matched.companySubtitle", { defaultValue: "Showing orders that match your fleet's vehicle types and weight capacities." })
+                    : t("matched.driverSubtitle", { defaultValue: "Showing orders that match your registered vehicle type and capacity." })}
+                </p>
+              </div>
+            </div>
+
+            {matchedOrders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 rounded-3xl border-2 border-dashed border-border bg-card/50">
+                <Package className="h-16 w-16 text-muted-foreground/20 mb-4" />
+                <p className="text-xl font-semibold text-muted-foreground">{t("matched.emptyTitle", { defaultValue: "No Direct Matches Found" })}</p>
+                <p className="text-muted-foreground mt-2">{t("matched.emptySubtitle", { defaultValue: "Try updating your fleet information or browsing the full marketplace." })}</p>
+                <Button variant="link" onClick={() => setActiveTab("marketplace")}>{t("matched.browseAll", { defaultValue: "Browse All Orders" })}</Button>
+              </div>
+            ) : (
+              <div className="grid gap-6">
+                {matchedOrders.map((order) => (
+                   <div 
+                   key={order._id}
+                   className="group relative rounded-2xl border-2 border-success/20 bg-card p-6 shadow-sm hover:shadow-xl hover:border-success/50 transition-all duration-300 cursor-pointer overflow-hidden"
+                   onClick={() => navigate(`/marketplace/orders/${order._id}`)}
+                 >
+                   <div className="absolute top-0 right-0 p-4">
+                     <Badge className="bg-success text-success-foreground border-none">
+                       {t("matched.bestMatch", { defaultValue: "Best Match" })}
+                     </Badge>
+                   </div>
+
+                   <div className="flex flex-col md:flex-row gap-6 relative z-10">
+                     <div className="flex-1">
+                       <div className="flex items-start justify-between mb-3">
+                         <div>
+                           <div className="flex items-center gap-2 mb-1">
+                             {getOrderStatusBadge(order)}
+                             <span className="text-xs text-muted-foreground flex items-center gap-1">
+                               <Clock className="h-3 w-3" /> {getRelativeTime(order.createdAt)}
+                             </span>
+                           </div>
+                           <h3 className="text-xl font-bold text-card-foreground group-hover:text-success transition-colors">
+                             {order.title}
+                           </h3>
+                         </div>
+                         <div className="text-right pr-20 md:pr-0">
+                           <div className="text-2xl font-bold text-primary">
+                             {order.pricing?.proposedBudget || order.proposedBudget} {order.pricing?.currency || order.currency}
+                           </div>
+                           <p className="text-xs text-muted-foreground">{t("budgetLabel")}</p>
+                         </div>
+                       </div>
+
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                         <div className="space-y-3">
+                           <div className="flex items-center gap-3 text-sm text-card-foreground/80">
+                             <div className="h-8 w-8 rounded-full bg-success/5 flex items-center justify-center border border-success/10">
+                               <MapPin className="h-4 w-4 text-success" />
+                             </div>
+                             <div>
+                               <p className="font-semibold flex items-center gap-2">
+                                 {order.pickupLocation?.city} <ArrowRight className="h-3 w-3" /> {order.deliveryLocation?.city}
+                               </p>
+                               <p className="text-xs text-muted-foreground">
+                                 {order.pickupLocation?.address}
+                               </p>
+                             </div>
+                           </div>
+                         </div>
+
+                         <div className="space-y-3">
+                           <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                             <div className="h-8 w-8 rounded-full bg-success/5 flex items-center justify-center border border-success/10">
+                               <Truck className="h-4 w-4 text-success" />
+                             </div>
+                             <span className="font-bold text-card-foreground">{order.cargo?.type || order.cargoType} • {order.cargo?.weightKg || order.weightKg} Kg</span>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+
+                     <div className="flex flex-row md:flex-col justify-end gap-2 min-w-[120px]">
+                       <Button
+                         className="w-full gap-2 bg-success hover:bg-success/90 shadow-lg shadow-success/20"
+                       >
+                         {t("cta.bidNow")} 
+                         <ChevronRight className="h-4 w-4" />
+                       </Button>
+                     </div>
+                   </div>
+                 </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
 
         <TabsContent value="marketplace">
           <div className="grid gap-6 lg:grid-cols-4">

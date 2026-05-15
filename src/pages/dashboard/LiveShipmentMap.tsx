@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X } from "lucide-react";
+import { useTrips } from "@/hooks/use-shipment-queries";
 
 // Custom Truck Icon for Map
 const truckIcon = L.divIcon({
@@ -58,9 +59,27 @@ export default function LiveShipmentMap() {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isInitialAuthDone, setIsInitialAuthDone] = useState(false);
-  const [trips, setTrips] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const tripParams = useMemo(() => {
+    const params: Record<string, string> = {};
+    if (selectedCompanyId) params.companyId = selectedCompanyId;
+    return params;
+  }, [selectedCompanyId]);
+
+  const { 
+    data: allTrips = [], 
+    isLoading: isLoadingTrips, 
+    error: tripError,
+    refetch: refetchTrips 
+  } = useTrips(isInitialAuthDone ? tripParams : undefined);
+
+  const trips = useMemo(() => {
+    return allTrips.filter((t: any) => t.location?.coordinates);
+  }, [allTrips]);
+
+  const isLoading = isLoadingTrips || !isInitialAuthDone;
+  const error = tripError ? (tripError as Error).message : null;
+
+  const fetchTrips = () => refetchTrips();
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -90,42 +109,7 @@ export default function LiveShipmentMap() {
     };
 
     init();
-  }, []);
-
-  useEffect(() => {
-    if (isInitialAuthDone) {
-      fetchTrips();
-      const interval = setInterval(() => fetchTrips(false), 30000);
-      return () => clearInterval(interval);
-    }
-  }, [isInitialAuthDone, isSuperAdmin, selectedCompanyId]);
-
-  const fetchTrips = async (showLoader = true) => {
-    if (showLoader) setIsLoading(true);
-    try {
-      let res;
-      if (isSuperAdmin) {
-        // Use general trips endpoint and allow company filtering via query param
-        const params: Record<string, string> = {};
-        if (selectedCompanyId) params.companyId = selectedCompanyId;
-        res = await getTrips(undefined, params);
-      } else {
-        res = await tripService.getCompanyTrips();
-      }
-
-      if (res.ok && res.data?.status === "success") {
-        // Include all trips that have location data, regardless of status
-        const activeTrips = res.data.data.trips.filter((t: any) => t.location?.coordinates);
-        setTrips(activeTrips);
-      } else {
-        setError("Failed to load live tracking data");
-      }
-    } catch (err) {
-      setError("An error occurred while connecting to the tracking service");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [checkAuth]);
 
   const filteredTrips = useMemo(() => {
     return trips.filter(t => {
@@ -252,7 +236,7 @@ export default function LiveShipmentMap() {
                       <Button 
                         size="sm" 
                         className="w-full mt-3 h-8 text-xs gap-2"
-                        onClick={() => window.open(`/dashboard/orders/${trip.orderId?._id}`, '_blank')}
+                        onClick={() => window.open(`/orders/${trip.orderId?._id}`, '_blank')}
                       >
                         View Order Details
                       </Button>

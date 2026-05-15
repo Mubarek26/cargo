@@ -4,7 +4,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { 
   ArrowLeft, ShoppingCart, Calendar, MapPin, Package, User, 
   Truck, Scale, Clock, CheckCircle, XCircle, Loader2, Check, X,
-  ExternalLink, Phone, Mail, DollarSign, Building2
+  ExternalLink, Phone, Mail, DollarSign, Building2, MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

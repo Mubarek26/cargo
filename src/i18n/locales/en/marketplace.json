@@ -7,7 +7,17 @@
     "allProposals": "All Proposals",
     "myProposals": "My Proposals",
     "allPostings": "All Postings",
-    "myPostings": "My Postings"
+    "myPostings": "My Postings",
+    "matchedForYou": "Matched For You"
+  },
+  "matched": {
+    "title": "Automated Matching Active",
+    "companySubtitle": "Showing orders that match your fleet's vehicle types and weight capacities.",
+    "driverSubtitle": "Showing orders that match your registered vehicle type and capacity.",
+    "emptyTitle": "No Direct Matches Found",
+    "emptySubtitle": "Try updating your fleet information or browsing the full marketplace.",
+    "browseAll": "Browse All Orders",
+    "bestMatch": "Best Match"
   },
   "filters": {
     "title": "Filters",

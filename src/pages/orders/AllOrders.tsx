@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useCheckAuth } from "@/hooks/use-check-auth";
 import { useTranslation } from "react-i18next";
 import { FrontendPagination } from "@/components/FrontendPagination";
+import { useMyOrdersQuery } from "@/hooks/use-shipment-queries";
 import { 
   Select,
   SelectContent,
@@ -23,8 +24,8 @@ export default function AllOrders() {
   const { t } = useTranslation("orders");
   const navigate = useNavigate();
   const { checkAuth, data: authData } = useCheckAuth();
-  const [orders, setOrders] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: orders = [], isLoading: isLoadingOrders, refetch: refetchOrders } = useMyOrdersQuery();
+
   const [user, setUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -34,6 +35,8 @@ export default function AllOrders() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const isLoading = isLoadingOrders;
+
   useEffect(() => {
     const init = async () => {
       const auth = await checkAuth();
@@ -41,10 +44,11 @@ export default function AllOrders() {
         const userData = (auth.data as any)?.data?.user || (auth.data as any)?.user;
         setUser(userData);
       }
-      fetchOrders();
     };
     init();
   }, [checkAuth]);
+
+  const fetchOrders = () => refetchOrders();
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -72,20 +76,6 @@ export default function AllOrders() {
     OPEN_MARKETPLACE: t("assignmentModes.openMarketplace"),
     DIRECT_COMPANY: t("assignmentModes.directCompany"),
     DIRECT_PRIVATE_TRANSPORTER: t("assignmentModes.directPrivateTransporter"),
-  };
-
-  const fetchOrders = async () => {
-    setIsLoading(true);
-    try {
-      const res = await orderService.getMyOrders();
-      if (res.status === "success") {
-        setOrders(res.data.orders);
-      }
-    } catch (error) {
-      toast.error(t("messages.fetchFailed"));
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const filteredOrders = useMemo(() => {

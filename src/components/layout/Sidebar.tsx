@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   LayoutDashboard,
   Map,
@@ -252,7 +253,13 @@ export function Sidebar({ isOpen, onToggle, isCollapsed }: SidebarProps) {
   );
   const userRole = localStorage.getItem("userRole");
 
+  const queryClient = useQueryClient();
+
   const handleLogout = () => {
+    // Clear React Query cache
+    queryClient.clear();
+    
+    // Clear storage
     localStorage.removeItem("authToken");
     localStorage.removeItem("userRole");
     navigate("/login", { replace: true });

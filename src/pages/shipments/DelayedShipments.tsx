@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { getDelayedTrips } from "@/services/tripService";
 import { cn } from "@/lib/utils";
+import { useDelayedTrips } from "@/hooks/use-shipment-queries";
 
 type TripRecord = Record<string, unknown> & {
   _id?: string;
@@ -31,38 +32,18 @@ const extractTrips = (payload: unknown): TripRecord[] => {
 
 export default function DelayedShipments() {
   const navigate = useNavigate();
-  const [trips, setTrips] = React.useState<TripRecord[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+  const { data: allTrips = [], isLoading: isLoadingTrips, error: tripError, refetch: refetchTrips } = useDelayedTrips();
+
+  const trips = React.useMemo(() => {
+    return extractTrips(allTrips);
+  }, [allTrips]);
+
   const [searchQuery, setSearchQuery] = React.useState("");
 
-  const loadDelayedTrips = React.useCallback(async () => {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+  const isLoading = isLoadingTrips;
+  const error = tripError ? (tripError as Error).message : null;
 
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await getDelayedTrips(token);
-      if (result.ok) {
-        setTrips(extractTrips(result.data));
-      } else {
-        setError((result.data as any)?.message || "Failed to load delayed shipments.");
-      }
-    } catch (err) {
-      setError("Unable to connect to the server.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [navigate]);
-
-  React.useEffect(() => {
-    loadDelayedTrips();
-  }, [loadDelayedTrips]);
+  const loadDelayedTrips = () => refetchTrips();
 
   const filteredTrips = trips.filter(trip => {
     const searchStr = [

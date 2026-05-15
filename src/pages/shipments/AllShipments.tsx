@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { getCompanyTrips, getDriverTripsHistory, getTrips } from "@/services/tripService";
 import { FrontendPagination } from "@/components/FrontendPagination";
+import { useTrips } from "@/hooks/use-shipment-queries";
 import { 
   Select,
   SelectContent,
@@ -112,50 +113,21 @@ const statusConfig: Record<string, { label: string; icon: React.ComponentType<{ 
 
 export default function AllShipments() {
   const navigate = useNavigate();
-  const [trips, setTrips] = React.useState<TripRecord[]>([]);
+  const { data: allTrips = [], isLoading: isLoadingTrips, error: tripError, refetch: refetchTrips } = useTrips();
+
+  const trips = React.useMemo(() => {
+    return extractTrips(allTrips);
+  }, [allTrips]);
+
   const [query, setQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("ALL");
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-
-  // Pagination state
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 10;
 
-  const loadTrips = React.useCallback(async () => {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+  const isLoading = isLoadingTrips;
+  const error = tripError ? (tripError as Error).message : null;
 
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await getTrips(token);
-      
-      if (!result.ok) {
-        const message =
-          (result.data && typeof result.data === "object" && "message" in result.data && result.data.message) ||
-          "Unable to load trips.";
-        setError(String(message));
-        setTrips([]);
-        return;
-      }
-
-      setTrips(extractTrips(result.data));
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to load trips.";
-      setError(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [navigate]);
-
-  React.useEffect(() => {
-    loadTrips();
-  }, [loadTrips]);
+  const loadTrips = () => refetchTrips();
 
   // Reset to first page when filters change
   React.useEffect(() => {

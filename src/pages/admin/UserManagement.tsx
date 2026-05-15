@@ -20,48 +20,28 @@ import { getCompanies } from "@/services/companyService";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAllUsers } from "@/hooks/use-admin-queries";
 
 export default function UserManagement() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(27);
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [totalResults, setTotalResults] = useState<number>(0);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [assignTargetUser, setAssignTargetUser] = useState<any | null>(null);
   const [companies, setCompanies] = useState<any[]>([]);
   const [companiesLoading, setCompaniesLoading] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, limit, roleFilter]);
+  const roleParam = roleFilter === 'ALL' || roleFilter === 'PRIVATE_TRANSPORTER' ? undefined : roleFilter;
+  const { data: userRes, isLoading: isLoadingUsers, refetch: refetchUsers } = useAllUsers({ page, limit, role: roleParam });
 
-  const fetchUsers = async () => {
-    setIsLoading(true);
-    try {
-      const roleParam = roleFilter === 'ALL' || roleFilter === 'PRIVATE_TRANSPORTER' ? undefined : roleFilter;
-      const res = await userService.getAllUsers({ page, limit, role: roleParam });
-      if (res.status === "success") {
-        setUsers(res.data.data || res.data || []);
-        if (res.meta) {
-          setTotalResults(res.meta.totalResults || 0);
-          setTotalPages(res.meta.totalPages || 1);
-          setPage(res.meta.page || page);
-          setLimit(res.meta.limit || limit);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error(`Failed to fetch users: ${error instanceof Error ? error.message : "Unknown error"}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const users = userRes?.data?.data || userRes?.data || [];
+  const totalResults = userRes?.meta?.totalResults || 0;
+  const totalPages = userRes?.meta?.totalPages || 1;
+
+  const fetchUsers = () => refetchUsers();
+  const isLoading = isLoadingUsers;
 
   const handleUpdateStatus = async (userId: string, newStatus: string) => {
     try {
