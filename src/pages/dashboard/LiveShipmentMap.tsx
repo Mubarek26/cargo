@@ -281,7 +281,6 @@ export default function LiveShipmentMap() {
                   <Select 
                     value={selectedCompanyId || "all"} 
                     onValueChange={(v) => {
-                      setIsLoading(true);
                       setSelectedCompanyId(v === "all" ? null : v);
                     }}
                   >
